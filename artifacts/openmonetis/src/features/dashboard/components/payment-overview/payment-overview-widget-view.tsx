@@ -1,0 +1,67 @@
+import { RiMoneyDollarCircleLine, RiSlideshowLine } from "@remixicon/react";
+import type { PaymentConditionsData } from "@/features/dashboard/payments/payment-conditions-queries";
+import type { PaymentMethodsData } from "@/features/dashboard/payments/payment-methods-queries";
+import type { PaymentOverviewTab } from "@/features/dashboard/payments/payment-overview-tabs";
+import {
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+} from "@/shared/components/ui/tabs";
+import { PaymentConditionsWidget } from "./payment-conditions-widget";
+import { PaymentMethodsWidget } from "./payment-methods-widget";
+
+type PaymentOverviewWidgetViewProps = {
+	activeTab: PaymentOverviewTab;
+	paymentConditionsData: PaymentConditionsData;
+	paymentMethodsData: PaymentMethodsData;
+	onTabChange: (value: string) => void;
+	period: string;
+	adminPayerSlug: string | null;
+};
+
+export function PaymentOverviewWidgetView({
+	activeTab,
+	paymentConditionsData,
+	paymentMethodsData,
+	onTabChange,
+	period,
+	adminPayerSlug,
+}: PaymentOverviewWidgetViewProps) {
+	return (
+		<Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+			<TabsList className="grid grid-cols-2">
+				<TabsTrigger
+					value="conditions"
+					className="text-xs data-[state=active]:bg-transparent"
+				>
+					<RiSlideshowLine className="mr-1 size-3.5" />
+					Condições
+				</TabsTrigger>
+				<TabsTrigger
+					value="methods"
+					className="text-xs data-[state=active]:bg-transparent"
+				>
+					<RiMoneyDollarCircleLine className="mr-1 size-3.5" />
+					Formas de pagamento
+				</TabsTrigger>
+			</TabsList>
+
+			<TabsContent value="conditions" className="mt-2">
+				<PaymentConditionsWidget
+					data={paymentConditionsData}
+					period={period}
+					adminPayerSlug={adminPayerSlug}
+				/>
+			</TabsContent>
+
+			<TabsContent value="methods" className="mt-2">
+				<PaymentMethodsWidget
+					data={paymentMethodsData}
+					period={period}
+					adminPayerSlug={adminPayerSlug}
+				/>
+			</TabsContent>
+		</Tabs>
+	);
+}

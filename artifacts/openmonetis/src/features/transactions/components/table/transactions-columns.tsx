@@ -1,0 +1,590 @@
+import {
+	RiAttachment2,
+	RiChat1Line,
+	RiGroupLine,
+	RiTimeLine,
+} from "@remixicon/react";
+import type { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
+import Link from "next/link";
+import { DEFAULT_TRANSACTIONS_COLUMN_ORDER } from "@/features/transactions/lib/column-order";
+import {
+	CategoryIconBadge,
+	EstablishmentLogo,
+} from "@/shared/components/entity-avatar";
+import MoneyValues from "@/shared/components/money-values";
+import { TransactionTypeBadge } from "@/shared/components/transaction-type-badge";
+import {
+	Avatar,
+	AvatarFallback,
+	AvatarImage,
+} from "@/shared/components/ui/avatar";
+import { Badge } from "@/shared/components/ui/badge";
+import { Checkbox } from "@/shared/components/ui/checkbox";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/shared/components/ui/tooltip";
+import { resolveLogoSrc } from "@/shared/lib/logo";
+import { getAvatarSrc } from "@/shared/lib/payers/utils";
+import { formatDate } from "@/shared/utils/date";
+import { getConditionIcon, getPaymentMethodIcon } from "@/shared/utils/icons";
+import { cn } from "@/shared/utils/ui";
+import type { TransactionItem } from "../types";
+import { TransactionActionsMenu } from "./transaction-actions-menu";
+import { TransactionSettlementButton } from "./transaction-settlement-button";
+
+type BuildColumnsArgs = {
+	currentUserId: string;
+	noteAsColumn: boolean;
+	onEdit?: (item: TransactionItem) => void;
+	onCopy?: (item: TransactionItem) => void;
+	onImport?: (item: TransactionItem) => void;
+	onConfirmDelete?: (item: TransactionItem) => void;
+	onViewDetails?: (item: TransactionItem) => void;
+	onRefund?: (item: TransactionItem) => void;
+	onToggleSettlement?: (item: TransactionItem) => void;
+	onAnticipate?: (item: TransactionItem) => void;
+	onViewAnticipationHistory?: (item: TransactionItem) => void;
+	onConvertToInstallment?: (item: TransactionItem) => void;
+	onConvertToRecurring?: (item: TransactionItem) => void;
+	isSettlementLoading: (id: string) => boolean;
+	showActions: boolean;
+	showDateGroups: boolean;
+	columnOrder?: string[] | null;
+};
+
+function getPaymentMethodTableLabel(method: string) {
+	if (method === "Transferência bancária") return "Transf. bancária";
+	return method;
+}
+
+const FIXED_START_IDS = ["select", "purchaseDate"];
+const FIXED_END_IDS = ["actions"];
+
+function getColumnId(col: ColumnDef<TransactionItem>): string {
+	const c = col as { id?: string; accessorKey?: string };
+	return c.id ?? c.accessorKey ?? "";
+}
+
+function reorderColumnsByPreference<T>(
+	columns: ColumnDef<T>[],
+	orderPreference: string[] | null | undefined,
+): ColumnDef<T>[] {
+	if (!orderPreference || orderPreference.length === 0) return columns;
+
+	const order = orderPreference;
+	const fixedStart: ColumnDef<T>[] = [];
+	const reorderable: ColumnDef<T>[] = [];
+	const fixedEnd: ColumnDef<T>[] = [];
+
+	for (const col of columns) {
+		const id = getColumnId(col as ColumnDef<TransactionItem>);
+		if (FIXED_START_IDS.includes(id)) fixedStart.push(col);
+		else if (FIXED_END_IDS.includes(id)) fixedEnd.push(col);
+		else reorderable.push(col);
+	}
+
+	const sorted = [...reorderable].sort((a, b) => {
+		const idA = getColumnId(a as ColumnDef<TransactionItem>);
+		const idB = getColumnId(b as ColumnDef<TransactionItem>);
+		const indexA = order.indexOf(idA);
+		const indexB = order.indexOf(idB);
+		if (indexA === -1 && indexB === -1) return 0;
+		if (indexA === -1) return 1;
+		if (indexB === -1) return -1;
+		return indexA - indexB;
+	});
+
+	return [...fixedStart, ...sorted, ...fixedEnd];
+}
+
+function buildColumns({
+	currentUserId,
+	noteAsColumn,
+	onEdit,
+	onCopy,
+	onImport,
+	onConfirmDelete,
+	onViewDetails,
+	onRefund,
+	onToggleSettlement,
+	onAnticipate,
+	onViewAnticipationHistory,
+	onConvertToInstallment,
+	onConvertToRecurring,
+	isSettlementLoading,
+	showActions,
+	showDateGroups,
+}: BuildColumnsArgs): ColumnDef<TransactionItem>[] {
+	const noop = () => undefined;
+	const handleEdit = onEdit ?? noop;
+	const handleCopy = onCopy ?? noop;
+	const handleImport = onImport ?? noop;
+	const handleConfirmDelete = onConfirmDelete ?? noop;
+	const handleViewDetails = onViewDetails ?? noop;
+	const handleRefund = onRefund ?? noop;
+	const handleToggleSettlement = onToggleSettlement ?? noop;
+	const handleAnticipate = onAnticipate ?? noop;
+	const handleViewAnticipationHistory = onViewAnticipationHistory ?? noop;
+	const handleConvertToInstallment = onConvertToInstallment ?? noop;
+	const handleConvertToRecurring = onConvertToRecurring ?? noop;
+
+	const columns: ColumnDef<TransactionItem>[] = [
+		{
+			id: "select",
+			header: ({ table }) => (
+				<Checkbox
+					checked={
+						table.getIsAllPageRowsSelected() ||
+						(table.getIsSomePageRowsSelected() && "indeterminate")
+					}
+					onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+					aria-label="Selecionar todos"
+				/>
+			),
+			cell: ({ row }) => (
+				<Checkbox
+					checked={row.getIsSelected()}
+					disabled={!row.getCanSelect()}
+					onCheckedChange={(value) => row.toggleSelected(!!value)}
+					aria-label="Selecionar linha"
+				/>
+			),
+			enableSorting: false,
+			enableHiding: false,
+		},
+		{
+			id: "purchaseDate",
+			accessorKey: "purchaseDate",
+			header: () => null,
+			cell: () => null,
+		},
+		{
+			accessorKey: "name",
+			header: "Estabelecimento",
+			cell: ({ row }) => {
+				const {
+					name,
+					purchaseDate,
+					installmentCount,
+					currentInstallment,
+					paymentMethod,
+					dueDate,
+					note,
+					isDivided,
+					isAnticipated,
+					hasAttachments,
+				} = row.original;
+
+				const installmentBadge =
+					currentInstallment && installmentCount
+						? `${currentInstallment} de ${installmentCount}`
+						: null;
+
+				const isBoleto = paymentMethod === "Boleto" && dueDate;
+				const dueDateLabel =
+					isBoleto && dueDate ? `Venc. ${formatDate(dueDate)}` : null;
+				const hasNote = Boolean(note?.trim().length);
+				const isLastInstallment =
+					currentInstallment === installmentCount &&
+					installmentCount &&
+					installmentCount > 1;
+
+				return (
+					<span className="flex items-center gap-2">
+						<EstablishmentLogo name={name} size={32} />
+						<span className="flex flex-col py-0.5">
+							{showDateGroups ? null : (
+								<span className="text-xs text-muted-foreground flex items-center gap-2">
+									{formatDate(purchaseDate)}
+									{dueDateLabel ? (
+										<span className="text-primary">{dueDateLabel}</span>
+									) : null}
+								</span>
+							)}
+							<span className="flex items-center gap-1">
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<span className="line-clamp-2 max-w-[180px] font-semibold truncate">
+											{name}
+										</span>
+									</TooltipTrigger>
+									<TooltipContent side="top" className="max-w-xs">
+										{name}
+									</TooltipContent>
+								</Tooltip>
+
+								{isDivided && (
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<span className="inline-flex rounded-full p-1">
+												<RiGroupLine
+													size={14}
+													className="text-muted-foreground"
+													aria-hidden
+												/>
+												<span className="sr-only">Dividido entre pessoas</span>
+											</span>
+										</TooltipTrigger>
+										<TooltipContent side="top">
+											Dividido entre pessoas
+										</TooltipContent>
+									</Tooltip>
+								)}
+
+								{isLastInstallment ? (
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<span className="inline-flex">
+												<Image
+													src="/icons/party.svg"
+													alt="Última parcela"
+													width={16}
+													height={16}
+													className="h-4 w-4"
+												/>
+												<span className="sr-only">Última parcela</span>
+											</span>
+										</TooltipTrigger>
+										<TooltipContent side="top">Última parcela!</TooltipContent>
+									</Tooltip>
+								) : null}
+
+								{installmentBadge ? (
+									<Badge variant="outline" className="px-2 text-xs">
+										{installmentBadge}
+									</Badge>
+								) : null}
+
+								{showDateGroups && dueDateLabel ? (
+									<Badge
+										variant="outline"
+										className="px-2 text-xs text-primary"
+									>
+										{dueDateLabel}
+									</Badge>
+								) : null}
+
+								{isAnticipated && (
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<span className="inline-flex rounded-full p-1">
+												<RiTimeLine
+													size={14}
+													className="text-muted-foreground"
+													aria-hidden
+												/>
+												<span className="sr-only">Parcela antecipada</span>
+											</span>
+										</TooltipTrigger>
+										<TooltipContent side="top">
+											Parcela antecipada
+										</TooltipContent>
+									</Tooltip>
+								)}
+
+								{!noteAsColumn && hasNote ? (
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<span className="inline-flex rounded-full p-1 hover:bg-accent transition-colors duration-300">
+												<RiChat1Line
+													className="h-4 w-4 text-muted-foreground"
+													aria-hidden
+												/>
+												<span className="sr-only">Ver anotação</span>
+											</span>
+										</TooltipTrigger>
+										<TooltipContent
+											side="top"
+											align="start"
+											className="max-w-xs whitespace-pre-line"
+										>
+											{note}
+										</TooltipContent>
+									</Tooltip>
+								) : null}
+
+								{hasAttachments ? (
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<span className="inline-flex rounded-full p-1">
+												<RiAttachment2
+													className="h-4 w-4 text-muted-foreground"
+													aria-hidden
+												/>
+												<span className="sr-only">Possui anexos</span>
+											</span>
+										</TooltipTrigger>
+										<TooltipContent side="top">Possui anexos</TooltipContent>
+									</Tooltip>
+								) : null}
+							</span>
+						</span>
+					</span>
+				);
+			},
+		},
+		{
+			accessorKey: "transactionType",
+			header: "Transação",
+			cell: ({ row }) => {
+				const type =
+					row.original.categoriaName === "Saldo inicial"
+						? "Saldo inicial"
+						: row.original.transactionType;
+				return (
+					<TransactionTypeBadge
+						kind={
+							type as "Despesa" | "Receita" | "Transferência" | "Saldo inicial"
+						}
+					/>
+				);
+			},
+		},
+		{
+			accessorKey: "amount",
+			header: "Valor",
+			cell: ({ row }) => {
+				const isReceita = row.original.transactionType === "Receita";
+				const isTransfer = row.original.transactionType === "Transferência";
+				const isIncomingTransfer =
+					isTransfer && Number(row.original.amount) > 0;
+				return (
+					<MoneyValues
+						amount={row.original.amount}
+						showPositiveSign={isReceita || isIncomingTransfer}
+						className={cn(
+							"whitespace-nowrap",
+							isReceita ? "text-success" : "text-foreground",
+							isTransfer && "text-info",
+						)}
+					/>
+				);
+			},
+		},
+		{
+			accessorKey: "condition",
+			header: "Condição",
+			cell: ({ row }) => {
+				const condition = row.original.condition;
+				const icon = getConditionIcon(condition);
+				return (
+					<span className="flex items-center gap-2">
+						{icon}
+						<span>{condition}</span>
+					</span>
+				);
+			},
+		},
+		{
+			accessorKey: "paymentMethod",
+			header: "Forma de Pagamento",
+			cell: ({ row }) => {
+				const method = row.original.paymentMethod;
+				const icon = getPaymentMethodIcon(method);
+				return (
+					<span className="flex items-center gap-2">
+						{icon}
+						<span>{getPaymentMethodTableLabel(method)}</span>
+					</span>
+				);
+			},
+		},
+		{
+			accessorKey: "categoriaName",
+			header: "Categoria",
+			cell: ({ row }) => {
+				const { categoriaName, categoriaIcon } = row.original;
+				if (!categoriaName) {
+					return <span className="text-muted-foreground">—</span>;
+				}
+				return (
+					<span className="flex items-center gap-2">
+						<CategoryIconBadge
+							icon={categoriaIcon}
+							name={categoriaName}
+							size="sm"
+						/>
+						<span>{categoriaName}</span>
+					</span>
+				);
+			},
+		},
+		{
+			accessorKey: "pagadorName",
+			header: "Pessoa",
+			cell: ({ row }) => {
+				const { payerId, pagadorName, pagadorAvatar } = row.original;
+				const label = pagadorName?.trim() || "Sem pessoa";
+				const displayName = label.split(/\s+/)[0] ?? label;
+				const avatarSrc = getAvatarSrc(pagadorAvatar);
+				const initial = displayName.charAt(0).toUpperCase() || "?";
+				const content = (
+					<>
+						<Avatar className="size-8">
+							<AvatarImage src={avatarSrc} alt={`Avatar de ${label}`} />
+							<AvatarFallback className="text-xs font-medium uppercase">
+								{initial}
+							</AvatarFallback>
+						</Avatar>
+						<span className="truncate">{displayName}</span>
+					</>
+				);
+				if (!payerId) {
+					return (
+						<span className="inline-flex items-center gap-2">{content}</span>
+					);
+				}
+				return (
+					<Link
+						href={`/payers/${payerId}`}
+						className="inline-flex items-center gap-2 hover:underline"
+						title={label}
+					>
+						{content}
+					</Link>
+				);
+			},
+		},
+		{
+			id: "contaCartao",
+			header: "Conta/Cartão",
+			cell: ({ row }) => {
+				const {
+					cartaoName,
+					contaName,
+					cartaoLogo,
+					contaLogo,
+					cardId,
+					accountId,
+					userId,
+				} = row.original;
+				const isCartao = Boolean(cartaoName);
+				const label = cartaoName ?? contaName;
+				const logoSrc = resolveLogoSrc(cartaoLogo ?? contaLogo);
+				const href = cardId
+					? `/cards/${cardId}/invoice`
+					: accountId
+						? `/accounts/${accountId}/statement`
+						: null;
+				const isOwnData = userId === currentUserId;
+
+				const content = (
+					<span className="inline-flex items-center gap-2">
+						{logoSrc && (
+							<Avatar className="size-8">
+								<AvatarImage src={logoSrc} alt={`Logo de ${label}`} />
+								<AvatarFallback className="text-xs font-medium uppercase">
+									{label}
+								</AvatarFallback>
+							</Avatar>
+						)}
+						<span
+							className={cn(
+								"truncate underline-offset-2",
+								isOwnData && href && "group-hover:underline",
+							)}
+						>
+							{label}
+						</span>
+					</span>
+				);
+
+				if (!isOwnData || !href) {
+					return (
+						<Tooltip>
+							<TooltipTrigger asChild>{content}</TooltipTrigger>
+							<TooltipContent side="top">
+								{isCartao ? "Cartão" : "Conta"}: {label}
+							</TooltipContent>
+						</Tooltip>
+					);
+				}
+
+				return (
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Link href={href} className="group">
+								{content}
+							</Link>
+						</TooltipTrigger>
+						<TooltipContent side="top">
+							{isCartao ? "Cartão" : "Conta"}: {label}
+						</TooltipContent>
+					</Tooltip>
+				);
+			},
+		},
+	];
+
+	if (noteAsColumn) {
+		const accountCardIndex = columns.findIndex((c) => c.id === "contaCartao");
+		const noteColumn: ColumnDef<TransactionItem> = {
+			accessorKey: "note",
+			header: "Anotação",
+			cell: ({ row }) => {
+				const note = row.original.note;
+				if (!note?.trim())
+					return <span className="text-muted-foreground">—</span>;
+				return (
+					<span
+						className="max-w-[200px] truncate whitespace-pre-line text-sm"
+						title={note}
+					>
+						{note}
+					</span>
+				);
+			},
+		};
+		columns.splice(accountCardIndex, 0, noteColumn);
+	}
+
+	if (showActions) {
+		columns.push({
+			id: "actions",
+			header: "Ações",
+			enableSorting: false,
+			cell: ({ row }) => (
+				<div className="flex items-center gap-2">
+					<TransactionSettlementButton
+						item={row.original}
+						isLoading={isSettlementLoading(row.original.id)}
+						onToggle={handleToggleSettlement}
+					/>
+					<TransactionActionsMenu
+						item={row.original}
+						currentUserId={currentUserId}
+						onEdit={handleEdit}
+						onCopy={handleCopy}
+						onImport={handleImport}
+						onConfirmDelete={handleConfirmDelete}
+						onViewDetails={handleViewDetails}
+						onRefund={handleRefund}
+						onAnticipate={handleAnticipate}
+						onViewAnticipationHistory={handleViewAnticipationHistory}
+						onConvertToInstallment={
+							onConvertToInstallment ? handleConvertToInstallment : undefined
+						}
+						onConvertToRecurring={
+							onConvertToRecurring ? handleConvertToRecurring : undefined
+						}
+					/>
+				</div>
+			),
+		});
+	}
+
+	return columns;
+}
+
+export function getTransactionColumns(
+	args: BuildColumnsArgs,
+): ColumnDef<TransactionItem>[] {
+	const built = buildColumns(args);
+	const order = args.columnOrder?.length
+		? args.columnOrder
+		: DEFAULT_TRANSACTIONS_COLUMN_ORDER;
+	return reorderColumnsByPreference(built, order);
+}

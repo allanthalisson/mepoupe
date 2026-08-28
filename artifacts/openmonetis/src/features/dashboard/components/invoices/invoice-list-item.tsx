@@ -1,0 +1,236 @@
+import { RiCheckboxCircleFill, RiGroupLine } from "@remixicon/react";
+import Link from "next/link";
+import { dashboardWidgetListStyles as styles } from "@/features/dashboard/components/dashboard-widget-list-styles";
+import { PercentageChangeIndicator } from "@/features/dashboard/components/percentage-change-indicator";
+import {
+	buildInvoiceDetailsHref,
+	buildInvoiceInitials,
+	formatInvoicePaymentDate,
+	formatInvoiceWidgetOverdueLabel,
+	formatInvoiceWidgetPaymentDate,
+	getInvoiceShareLabel,
+	parseInvoiceDueDate,
+	parseInvoiceWidgetDueDate,
+} from "@/features/dashboard/invoices/invoices-helpers";
+import type { DashboardInvoice } from "@/features/dashboard/invoices/invoices-queries";
+import MoneyValues from "@/shared/components/money-values";
+import {
+	Avatar,
+	AvatarFallback,
+	AvatarImage,
+} from "@/shared/components/ui/avatar";
+import { Button } from "@/shared/components/ui/button";
+import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from "@/shared/components/ui/hover-card";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/shared/components/ui/tooltip";
+import { INVOICE_PAYMENT_STATUS } from "@/shared/lib/invoices";
+import { getAvatarSrc } from "@/shared/lib/payers/utils";
+import { isDateOnlyPast } from "@/shared/utils/date";
+import { InvoiceLogo } from "./invoice-logo";
+
+type InvoiceListItemProps = {
+	invoice: DashboardInvoice;
+	onPay: (invoiceId: string) => void;
+};
+
+export function InvoiceListItem({ invoice, onPay }: InvoiceListItemProps) {
+	const dueInfo = parseInvoiceWidgetDueDate(invoice.period, invoice.dueDay);
+	const absoluteDueInfo = parseInvoiceDueDate(invoice.period, invoice.dueDay);
+	const isPaid = invoice.paymentStatus === INVOICE_PAYMENT_STATUS.PAID;
+	const isOverdue =
+		!isPaid && dueInfo.date !== null && isDateOnlyPast(dueInfo.date);
+	const paymentInfo = formatInvoiceWidgetPaymentDate(invoice.paidAt);
+	const absolutePaymentInfo = formatInvoicePaymentDate(invoice.paidAt);
+	const breakdown = invoice.pagadorBreakdown ?? [];
+	const hasBreakdown = breakdown.length > 0;
+	const hasMultiplePayers = breakdown.length > 1;
+	const detailHref = buildInvoiceDetailsHref(invoice.cardId, invoice.period);
+	const overdueLabel = formatInvoiceWidgetOverdueLabel(dueInfo.date);
+	const dueTooltipLabel =
+		overdueLabel || dueInfo.label !== absoluteDueInfo.label
+			? absoluteDueInfo.label
+			: null;
+	const paymentTooltipLabel =
+		paymentInfo?.label && paymentInfo.label !== absolutePaymentInfo?.label
+			? absolutePaymentInfo?.label
+			: null;
+
+	const linkNode = (
+		<Link prefetch href={detailHref} className={styles.titleLink}>
+			<span className="truncate">{invoice.cardName}</span>
+		</Link>
+	);
+
+	return (
+		<li className={styles.row}>
+			<div className={styles.main}>
+				<InvoiceLogo
+					cardName={invoice.cardName}
+					logo={invoice.logo}
+					size={36}
+					containerClassName="size-9.5"
+				/>
+
+				<div className={styles.textStack}>
+					<div className="flex max-w-full items-center gap-1">
+						{hasBreakdown ? (
+							<HoverCard openDelay={150}>
+								<HoverCardTrigger asChild>{linkNode}</HoverCardTrigger>
+								<HoverCardContent align="start" className="w-80 space-y-3">
+									<p className="text-xs text-muted-foreground">
+										Distribuição por pessoa
+									</p>
+									<ul className="space-y-2">
+										{breakdown.map((share, index) => (
+											<li
+												key={`${invoice.id}-${
+													share.payerId ?? share.pagadorName ?? index
+												}`}
+												className="flex items-center gap-3"
+											>
+												<Avatar className="size-9">
+													<AvatarImage
+														src={getAvatarSrc(share.pagadorAvatar)}
+														alt={`Avatar de ${share.pagadorName}`}
+													/>
+													<AvatarFallback>
+														{buildInvoiceInitials(share.pagadorName)}
+													</AvatarFallback>
+												</Avatar>
+												<div className="min-w-0 flex-1">
+													<p className="truncate text-sm font-medium text-foreground">
+														{share.pagadorName}
+													</p>
+													<p className="text-xs text-muted-foreground">
+														{getInvoiceShareLabel(
+															share.amount,
+															Math.abs(invoice.totalAmount),
+														)}
+													</p>
+												</div>
+												<div className="flex shrink-0 flex-col items-end gap-0.5 text-sm font-medium text-foreground">
+													<MoneyValues
+														className="font-medium"
+														amount={share.amount}
+													/>
+													{share.percentageChange !== null ? (
+														<span className="flex items-center gap-1 text-xs text-muted-foreground">
+															<PercentageChangeIndicator
+																value={share.percentageChange}
+															/>
+															<span>vs. mês ant.</span>
+														</span>
+													) : null}
+												</div>
+											</li>
+										))}
+									</ul>
+								</HoverCardContent>
+							</HoverCard>
+						) : (
+							linkNode
+						)}
+						{hasMultiplePayers ? (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<span className="inline-flex shrink-0 cursor-help text-muted-foreground">
+										<RiGroupLine className="size-3.5" aria-hidden />
+										<span className="sr-only">Ver distribuição por pessoa</span>
+									</span>
+								</TooltipTrigger>
+								<TooltipContent side="top">
+									Ver distribuição por pessoa
+								</TooltipContent>
+							</Tooltip>
+						) : null}
+					</div>
+
+					<div className={styles.meta}>
+						{!isPaid ? (
+							dueTooltipLabel ? (
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<span
+											className={
+												isOverdue
+													? "cursor-help font-semibold text-destructive"
+													: "cursor-help"
+											}
+										>
+											{overdueLabel ?? dueInfo.label}
+										</span>
+									</TooltipTrigger>
+									<TooltipContent side="top">{dueTooltipLabel}</TooltipContent>
+								</Tooltip>
+							) : (
+								<span
+									className={
+										isOverdue ? "font-semibold text-destructive" : undefined
+									}
+								>
+									{overdueLabel ?? dueInfo.label}
+								</span>
+							)
+						) : null}
+						{isPaid && paymentInfo ? (
+							paymentTooltipLabel ? (
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<span className="cursor-help text-success font-semibold">
+											{paymentInfo.label}
+										</span>
+									</TooltipTrigger>
+									<TooltipContent side="top">
+										{paymentTooltipLabel}
+									</TooltipContent>
+								</Tooltip>
+							) : (
+								<span className="text-success font-semibold">
+									{paymentInfo.label}
+								</span>
+							)
+						) : null}
+					</div>
+				</div>
+			</div>
+
+			<div className={styles.trailing}>
+				<MoneyValues
+					className={styles.trailingValue}
+					amount={Math.abs(invoice.totalAmount)}
+				/>
+				{isPaid ? (
+					<span className={`${styles.trailingMeta} text-success`}>
+						<RiCheckboxCircleFill className="size-3.5" /> Pago
+					</span>
+				) : (
+					<Button
+						type="button"
+						size="sm"
+						variant="link"
+						className={styles.actionButton}
+						onClick={() => onPay(invoice.id)}
+					>
+						{isOverdue ? (
+							<span className="overdue-blink">
+								<span className="overdue-blink-primary text-destructive">
+									Atrasado
+								</span>
+								<span className="overdue-blink-secondary">Pagar</span>
+							</span>
+						) : (
+							<span>Pagar</span>
+						)}
+					</Button>
+				)}
+			</div>
+		</li>
+	);
+}

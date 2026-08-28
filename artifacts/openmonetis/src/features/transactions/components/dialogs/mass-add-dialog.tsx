@@ -1,0 +1,727 @@
+"use client";
+
+import { RiAddLine, RiDeleteBinLine } from "@remixicon/react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { groupAndSortCategories } from "@/features/transactions/lib/category-helpers";
+import {
+	PAYMENT_METHODS,
+	type TRANSACTION_TYPES,
+} from "@/features/transactions/lib/constants";
+import { ConfirmActionDialog } from "@/shared/components/confirm-action-dialog";
+import { Button } from "@/shared/components/ui/button";
+import { CurrencyInput } from "@/shared/components/ui/currency-input";
+import { DatePicker } from "@/shared/components/ui/date-picker";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/shared/components/ui/dialog";
+import { Label } from "@/shared/components/ui/label";
+import { MonthPicker } from "@/shared/components/ui/month-picker";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/shared/components/ui/popover";
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+} from "@/shared/components/ui/select";
+import { Separator } from "@/shared/components/ui/separator";
+import { Spinner } from "@/shared/components/ui/spinner";
+import { getTodayDateString } from "@/shared/utils/date";
+import { createClientSafeId } from "@/shared/utils/id";
+import {
+	dateToPeriod,
+	displayPeriod,
+	periodToDate,
+} from "@/shared/utils/period";
+import {
+	AccountCardSelectContent,
+	CategorySelectContent,
+	PayerSelectContent,
+	PaymentMethodSelectContent,
+	TransactionTypeSelectContent,
+} from "../select-items";
+import { EstablishmentInput } from "../shared/establishment-input";
+import type { SelectOption } from "../types";
+
+/** Payment methods sem Boleto para este modal */
+const MASS_ADD_PAYMENT_METHODS = PAYMENT_METHODS.filter((m) => m !== "Boleto");
+type MassAddTransactionType = (typeof TRANSACTION_TYPES)[number];
+type MassAddPaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+function InlinePeriodPicker({
+	period,
+	onPeriodChange,
+}: {
+	period: string;
+	onPeriodChange: (value: string) => void;
+}) {
+	const [open, setOpen] = useState(false);
+
+	return (
+		<div className="-mt-1">
+			<span className="text-xs text-muted-foreground">Fatura de </span>
+			<Popover modal open={open} onOpenChange={setOpen}>
+				<PopoverTrigger asChild>
+					<button
+						type="button"
+						className="text-xs text-primary underline-offset-2 hover:underline cursor-pointer lowercase"
+					>
+						{displayPeriod(period)}
+					</button>
+				</PopoverTrigger>
+				<PopoverContent className="w-auto p-0" align="start">
+					<MonthPicker
+						selectedMonth={periodToDate(period)}
+						onMonthSelect={(date) => {
+							onPeriodChange(dateToPeriod(date));
+							setOpen(false);
+						}}
+					/>
+				</PopoverContent>
+			</Popover>
+		</div>
+	);
+}
+
+interface MassAddDialogProps {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	onSubmit: (data: MassAddFormData) => Promise<void>;
+	payerOptions: SelectOption[];
+	accountOptions: SelectOption[];
+	cardOptions: SelectOption[];
+	categoryOptions: SelectOption[];
+	estabelecimentos: string[];
+	selectedPeriod: string;
+	defaultPayerId?: string | null;
+	defaultCardId?: string | null;
+}
+
+export type MassAddFormData = Parameters<
+	typeof import("@/features/transactions/actions").createMassTransactionsAction
+>[0];
+
+interface TransactionRow {
+	id: string;
+	purchaseDate: string;
+	name: string;
+	amount: string;
+	categoryId: string | undefined;
+	payerId: string | undefined;
+}
+
+function createEmptyTransactionRow(
+	defaultPayerId?: string | null,
+	lastPurchaseDate?: string,
+): TransactionRow {
+	return {
+		id: createClientSafeId(),
+		purchaseDate: lastPurchaseDate ?? getTodayDateString(),
+		name: "",
+		amount: "",
+		categoryId: undefined,
+		payerId: defaultPayerId ?? undefined,
+	};
+}
+
+export function MassAddDialog({
+	open,
+	onOpenChange,
+	onSubmit,
+	payerOptions,
+	accountOptions,
+	cardOptions,
+	categoryOptions,
+	estabelecimentos,
+	selectedPeriod,
+	defaultPayerId,
+	defaultCardId,
+}: MassAddDialogProps) {
+	const [loading, setLoading] = useState(false);
+	const [isDirty, setIsDirty] = useState(false);
+	const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
+	const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+
+	// Fixed fields state (sempre ativos, sem checkboxes)
+	const [transactionType, setTransactionType] =
+		useState<MassAddTransactionType>("Despesa");
+	const [paymentMethod, setPaymentMethod] = useState<MassAddPaymentMethod>(
+		PAYMENT_METHODS[0],
+	);
+	const [period, setPeriod] = useState<string>(selectedPeriod);
+	const [accountId, setContaId] = useState<string | undefined>(undefined);
+	const [cardId, setCartaoId] = useState<string | undefined>(
+		defaultCardId ?? undefined,
+	);
+
+	// Quando defaultCardId está definido, exibe apenas o cartão específico
+	const isLockedToCartao = !!defaultCardId;
+
+	const isCartaoSelected = paymentMethod === "Cartão de crédito";
+
+	// Transaction rows
+	const [transactions, setTransactions] = useState<TransactionRow[]>(() => [
+		createEmptyTransactionRow(defaultPayerId),
+	]);
+
+	// Categorias agrupadas e filtradas por tipo de transação
+	const groupedCategorias = useMemo(() => {
+		const filtered = categoryOptions.filter(
+			(option) => option.group?.toLowerCase() === transactionType.toLowerCase(),
+		);
+		return groupAndSortCategories(filtered);
+	}, [categoryOptions, transactionType]);
+
+	const resetForm = () => {
+		setTransactionType("Despesa");
+		setPaymentMethod(PAYMENT_METHODS[0]);
+		setPeriod(selectedPeriod);
+		setContaId(undefined);
+		setCartaoId(defaultCardId ?? undefined);
+		setTransactions([createEmptyTransactionRow(defaultPayerId)]);
+		setIsDirty(false);
+	};
+
+	const addTransaction = () => {
+		const lastTransaction = transactions[transactions.length - 1];
+		setTransactions([
+			...transactions,
+			createEmptyTransactionRow(defaultPayerId, lastTransaction?.purchaseDate),
+		]);
+		setIsDirty(true);
+	};
+
+	const removeTransaction = (id: string) => {
+		if (transactions.length === 1) {
+			toast.error("É necessário ter pelo menos uma transação");
+			return;
+		}
+		setTransactions(transactions.filter((t) => t.id !== id));
+		setIsDirty(true);
+	};
+
+	const updateTransaction = (
+		id: string,
+		field: keyof TransactionRow,
+		value: string | undefined,
+	) => {
+		setTransactions(
+			transactions.map((t) => (t.id === id ? { ...t, [field]: value } : t)),
+		);
+		setIsDirty(true);
+	};
+
+	const handleSubmit = async () => {
+		// Validate conta/cartao selection
+		if (isCartaoSelected && !cardId) {
+			toast.error("Selecione um cartão para continuar");
+			return;
+		}
+		if (!isCartaoSelected && !accountId) {
+			toast.error("Selecione uma conta para continuar");
+			return;
+		}
+
+		// Validate transactions
+		const invalidTransactions = transactions.filter(
+			(t) => !t.name.trim() || !t.amount.trim() || !t.purchaseDate,
+		);
+
+		if (invalidTransactions.length > 0) {
+			toast.error(
+				"Preencha todos os campos obrigatórios das transações (data, estabelecimento e valor)",
+			);
+			return;
+		}
+
+		// Build form data
+		const formData: MassAddFormData = {
+			fixedFields: {
+				transactionType,
+				paymentMethod,
+				condition: "À vista",
+				period,
+				accountId,
+				cardId,
+			},
+			transactions: transactions.map((t) => ({
+				purchaseDate: t.purchaseDate,
+				name: t.name.trim(),
+				amount: Number(t.amount.trim()),
+				categoryId: t.categoryId,
+				payerId: t.payerId,
+			})),
+		};
+
+		setLoading(true);
+		try {
+			await onSubmit(formData);
+			onOpenChange(false);
+			resetForm();
+		} catch (_error) {
+			// Error is handled by the onSubmit function
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	return (
+		<Dialog
+			open={open}
+			onOpenChange={(newOpen) => {
+				if (!newOpen && isDirty) {
+					setConfirmCloseOpen(true);
+				} else {
+					onOpenChange(newOpen);
+					if (newOpen === false) {
+						resetForm();
+					}
+				}
+			}}
+		>
+			<DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto p-6 sm:px-8">
+				<DialogHeader>
+					<DialogTitle>Adicionar múltiplos lançamentos</DialogTitle>
+					<DialogDescription>
+						Configure os valores padrão e adicione várias transações de uma vez.
+						Todos os lançamentos adicionados aqui são{" "}
+						<span className="font-medium">sempre à vista</span>.
+					</DialogDescription>
+				</DialogHeader>
+
+				<div className="space-y-4">
+					{/* Fixed Fields Section */}
+					<div className="space-y-4">
+						<h3 className="text-sm font-semibold">Valores Padrão</h3>
+						<div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+							{/* Transaction Type */}
+							<div className="space-y-2">
+								<Label htmlFor="transaction-type">Tipo de Transação</Label>
+								<Select
+									value={transactionType}
+									onValueChange={(value) => {
+										setTransactionType(value as MassAddTransactionType);
+										setIsDirty(true);
+									}}
+								>
+									<SelectTrigger id="transaction-type" className="w-full">
+										<SelectValue>
+											{transactionType && (
+												<TransactionTypeSelectContent label={transactionType} />
+											)}
+										</SelectValue>
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="Despesa">
+											<TransactionTypeSelectContent label="Despesa" />
+										</SelectItem>
+										<SelectItem value="Receita">
+											<TransactionTypeSelectContent label="Receita" />
+										</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+
+							{/* Payment Method */}
+							<div className="space-y-2">
+								<Label htmlFor="payment-method">Forma de Pagamento</Label>
+								<Select
+									value={paymentMethod}
+									onValueChange={(value) => {
+										setPaymentMethod(value as MassAddPaymentMethod);
+										setIsDirty(true);
+										// Reset conta/cartao when changing payment method
+										if (value === "Cartão de crédito") {
+											setContaId(undefined);
+										} else {
+											setCartaoId(undefined);
+										}
+									}}
+								>
+									<SelectTrigger id="payment-method" className="w-full">
+										<SelectValue>
+											{paymentMethod && (
+												<PaymentMethodSelectContent label={paymentMethod} />
+											)}
+										</SelectValue>
+									</SelectTrigger>
+									<SelectContent>
+										{MASS_ADD_PAYMENT_METHODS.map((method) => (
+											<SelectItem key={method} value={method}>
+												<PaymentMethodSelectContent label={method} />
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+
+							{/* Cartão (only for credit card) */}
+							{isCartaoSelected ? (
+								<div className="space-y-2">
+									<Label htmlFor="cartao">Cartão</Label>
+									<Select
+										value={cardId}
+										onValueChange={(value) => {
+											setCartaoId(value);
+											setIsDirty(true);
+										}}
+										disabled={isLockedToCartao}
+									>
+										<SelectTrigger id="cartao" className="w-full">
+											<SelectValue placeholder="Selecione">
+												{cardId &&
+													(() => {
+														const selectedOption = cardOptions.find(
+															(opt) => opt.value === cardId,
+														);
+														return selectedOption ? (
+															<AccountCardSelectContent
+																label={selectedOption.label}
+																logo={selectedOption.logo}
+																isCartao={true}
+															/>
+														) : null;
+													})()}
+											</SelectValue>
+										</SelectTrigger>
+										<SelectContent>
+											{cardOptions.length === 0 ? (
+												<div className="px-2 py-6 text-center">
+													<p className="text-sm text-muted-foreground">
+														Nenhum cartão cadastrado
+													</p>
+												</div>
+											) : (
+												cardOptions
+													.filter(
+														(option) =>
+															!isLockedToCartao ||
+															option.value === defaultCardId,
+													)
+													.map((option) => (
+														<SelectItem key={option.value} value={option.value}>
+															<AccountCardSelectContent
+																label={option.label}
+																logo={option.logo}
+																isCartao={true}
+															/>
+														</SelectItem>
+													))
+											)}
+										</SelectContent>
+									</Select>
+									{cardId ? (
+										<InlinePeriodPicker
+											period={period}
+											onPeriodChange={(value) => {
+												setPeriod(value);
+												setIsDirty(true);
+											}}
+										/>
+									) : null}
+								</div>
+							) : null}
+
+							{/* FinancialAccount (for non-credit-card methods) */}
+							{!isCartaoSelected ? (
+								<div className="space-y-2">
+									<Label htmlFor="conta">Conta</Label>
+									<Select
+										value={accountId}
+										onValueChange={(value) => {
+											setContaId(value);
+											setIsDirty(true);
+										}}
+									>
+										<SelectTrigger id="conta" className="w-full">
+											<SelectValue placeholder="Selecione">
+												{accountId &&
+													(() => {
+														const selectedOption = accountOptions.find(
+															(opt) => opt.value === accountId,
+														);
+														return selectedOption ? (
+															<AccountCardSelectContent
+																label={selectedOption.label}
+																logo={selectedOption.logo}
+																isCartao={false}
+															/>
+														) : null;
+													})()}
+											</SelectValue>
+										</SelectTrigger>
+										<SelectContent>
+											{accountOptions.length === 0 ? (
+												<div className="px-2 py-6 text-center">
+													<p className="text-sm text-muted-foreground">
+														Nenhuma conta cadastrada
+													</p>
+												</div>
+											) : (
+												accountOptions.map((option) => (
+													<SelectItem key={option.value} value={option.value}>
+														<AccountCardSelectContent
+															label={option.label}
+															logo={option.logo}
+															isCartao={false}
+														/>
+													</SelectItem>
+												))
+											)}
+										</SelectContent>
+									</Select>
+								</div>
+							) : null}
+						</div>
+					</div>
+
+					<Separator />
+
+					{/* Transactions Section */}
+					<div className="space-y-4">
+						<h3 className="text-sm font-semibold">Lançamentos</h3>
+
+						<div className="space-y-3">
+							{transactions.map((transaction, index) => (
+								<div
+									key={transaction.id}
+									className="grid gap-2 border-b pb-3 border-dashed last:border-0"
+								>
+									<div className="flex gap-2 w-full">
+										<div className="w-24 shrink-0">
+											<Label
+												htmlFor={`date-${transaction.id}`}
+												className="sr-only"
+											>
+												Data {index + 1}
+											</Label>
+											<DatePicker
+												id={`date-${transaction.id}`}
+												value={transaction.purchaseDate}
+												onChange={(value) =>
+													updateTransaction(
+														transaction.id,
+														"purchaseDate",
+														value,
+													)
+												}
+												placeholder="Data"
+												compact
+												required
+											/>
+										</div>
+										<div className="w-full">
+											<Label
+												htmlFor={`name-${transaction.id}`}
+												className="sr-only"
+											>
+												Estabelecimento {index + 1}
+											</Label>
+											<EstablishmentInput
+												id={`name-${transaction.id}`}
+												placeholder="Local"
+												value={transaction.name}
+												onChange={(value) =>
+													updateTransaction(transaction.id, "name", value)
+												}
+												estabelecimentos={estabelecimentos}
+												required
+											/>
+										</div>
+
+										<div className="w-full">
+											<Label
+												htmlFor={`amount-${transaction.id}`}
+												className="sr-only"
+											>
+												Valor {index + 1}
+											</Label>
+											<CurrencyInput
+												id={`amount-${transaction.id}`}
+												placeholder="R$ 0,00"
+												value={transaction.amount}
+												onValueChange={(value) =>
+													updateTransaction(transaction.id, "amount", value)
+												}
+												required
+											/>
+										</div>
+
+										<div className="w-full">
+											<Label
+												htmlFor={`pagador-${transaction.id}`}
+												className="sr-only"
+											>
+												Pessoa {index + 1}
+											</Label>
+											<Select
+												value={transaction.payerId}
+												onValueChange={(value) =>
+													updateTransaction(transaction.id, "payerId", value)
+												}
+											>
+												<SelectTrigger
+													id={`pagador-${transaction.id}`}
+													className="w-32 truncate"
+												>
+													<SelectValue placeholder="Pessoa">
+														{transaction.payerId &&
+															(() => {
+																const selectedOption = payerOptions.find(
+																	(opt) => opt.value === transaction.payerId,
+																);
+																return selectedOption ? (
+																	<PayerSelectContent
+																		label={selectedOption.label.split(" ")[0]}
+																		avatarUrl={selectedOption.avatarUrl}
+																	/>
+																) : null;
+															})()}
+													</SelectValue>
+												</SelectTrigger>
+												<SelectContent>
+													{payerOptions.map((option) => (
+														<SelectItem key={option.value} value={option.value}>
+															<PayerSelectContent
+																label={option.label}
+																avatarUrl={option.avatarUrl}
+															/>
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+
+										<div className="w-full">
+											<Label
+												htmlFor={`categoria-${transaction.id}`}
+												className="sr-only"
+											>
+												Categoria {index + 1}
+											</Label>
+											<Select
+												value={transaction.categoryId}
+												onValueChange={(value) =>
+													updateTransaction(transaction.id, "categoryId", value)
+												}
+											>
+												<SelectTrigger
+													id={`categoria-${transaction.id}`}
+													className="w-32 truncate"
+												>
+													<SelectValue placeholder="Categoria" />
+												</SelectTrigger>
+												<SelectContent>
+													{groupedCategorias.map((group) => (
+														<SelectGroup key={group.label}>
+															<SelectLabel>{group.label}</SelectLabel>
+															{group.options.map((option) => (
+																<SelectItem
+																	key={option.value}
+																	value={option.value}
+																>
+																	<CategorySelectContent
+																		label={option.label}
+																		icon={option.icon}
+																	/>
+																</SelectItem>
+															))}
+														</SelectGroup>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+										<Button
+											type="button"
+											variant="ghost"
+											size="icon"
+											className="size-7 shrink-0"
+											onClick={addTransaction}
+										>
+											<RiAddLine className="size-3.5" />
+											<span className="sr-only">Adicionar transação</span>
+										</Button>
+										<Button
+											type="button"
+											variant="ghost"
+											size="icon"
+											className="size-7 shrink-0"
+											onClick={() => removeTransaction(transaction.id)}
+											disabled={transactions.length === 1}
+										>
+											<RiDeleteBinLine className="size-3.5" />
+											<span className="sr-only">Remover transação</span>
+										</Button>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+
+				<DialogFooter>
+					<Button
+						variant="outline"
+						onClick={() => {
+							if (isDirty) {
+								setCancelConfirmOpen(true);
+							} else {
+								onOpenChange(false);
+							}
+						}}
+						disabled={loading}
+					>
+						Cancelar
+					</Button>
+					<Button onClick={handleSubmit} disabled={loading}>
+						{loading && <Spinner className="size-4" />}
+						Salvar {transactions.length}{" "}
+						{transactions.length === 1 ? "lançamento" : "lançamentos"}
+					</Button>
+				</DialogFooter>
+
+				<ConfirmActionDialog
+					open={confirmCloseOpen}
+					onOpenChange={setConfirmCloseOpen}
+					title="Descartar alterações?"
+					description="Há lançamentos não salvos. Se fechar agora, todos os dados serão perdidos."
+					confirmLabel="Descartar"
+					cancelLabel="Continuar editando"
+					confirmVariant="destructive"
+					onConfirm={() => {
+						setConfirmCloseOpen(false);
+						onOpenChange(false);
+						resetForm();
+					}}
+				/>
+
+				<ConfirmActionDialog
+					open={cancelConfirmOpen}
+					onOpenChange={setCancelConfirmOpen}
+					title="Cancelar adição de lançamentos?"
+					description="Há lançamentos não salvos. Se cancelar, todos os dados serão perdidos."
+					confirmLabel="Cancelar"
+					cancelLabel="Continuar editando"
+					confirmVariant="destructive"
+					onConfirm={() => {
+						setCancelConfirmOpen(false);
+						onOpenChange(false);
+						resetForm();
+					}}
+				/>
+			</DialogContent>
+		</Dialog>
+	);
+}

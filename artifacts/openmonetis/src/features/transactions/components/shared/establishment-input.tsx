@@ -1,0 +1,127 @@
+"use client";
+
+import { RiSearchLine } from "@remixicon/react";
+import * as React from "react";
+
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandItem,
+	CommandList,
+} from "@/shared/components/ui/command";
+import { Input } from "@/shared/components/ui/input";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/shared/components/ui/popover";
+
+interface EstablishmentInputProps {
+	id?: string;
+	value: string;
+	onChange: (value: string) => void;
+	estabelecimentos: string[];
+	placeholder?: string;
+	required?: boolean;
+	maxLength?: number;
+}
+
+export function EstablishmentInput({
+	id,
+	value,
+	onChange,
+	estabelecimentos = [],
+	placeholder = "Ex.: Padaria, Transferência, Saldo inicial",
+	required = false,
+	maxLength = 20,
+}: EstablishmentInputProps) {
+	const [open, setOpen] = React.useState(false);
+	const [searchValue, setSearchValue] = React.useState("");
+	const [width, setWidth] = React.useState<number | undefined>();
+	const containerRef = React.useRef<HTMLDivElement>(null);
+
+	React.useEffect(() => {
+		if (!open || !containerRef.current) return;
+		setWidth(containerRef.current.offsetWidth);
+	}, [open]);
+
+	const handleSelect = (selectedValue: string) => {
+		onChange(selectedValue);
+		setOpen(false);
+		setSearchValue("");
+	};
+
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const newValue = e.target.value;
+		onChange(newValue);
+		setSearchValue(newValue);
+
+		if (newValue.length > 0 && estabelecimentos.length > 0) {
+			setOpen(true);
+		}
+	};
+
+	const filteredEstabelecimentos = React.useMemo(() => {
+		if (!searchValue) return estabelecimentos;
+
+		const lowerSearch = searchValue.toLowerCase();
+		return estabelecimentos.filter((item) =>
+			item.toLowerCase().includes(lowerSearch),
+		);
+	}, [estabelecimentos, searchValue]);
+
+	return (
+		<Popover open={open} onOpenChange={setOpen} modal>
+			<PopoverTrigger asChild>
+				<div ref={containerRef} className="relative w-full">
+					<Input
+						id={id}
+						value={value}
+						onChange={handleInputChange}
+						placeholder={placeholder}
+						required={required}
+						maxLength={maxLength}
+						autoComplete="off"
+						className={estabelecimentos.length > 0 ? "pr-8" : undefined}
+					/>
+					{estabelecimentos.length > 0 && (
+						<RiSearchLine className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+					)}
+				</div>
+			</PopoverTrigger>
+			{estabelecimentos.length > 0 && (
+				<PopoverContent
+					className="p-0"
+					style={width ? { width } : undefined}
+					align="start"
+					onOpenAutoFocus={(e) => e.preventDefault()}
+				>
+					<Command>
+						<CommandList className="max-h-[300px] overflow-y-auto">
+							<CommandEmpty className="p-6">
+								Nenhum estabelecimento encontrado.
+							</CommandEmpty>
+							<CommandGroup className="p-1">
+								{filteredEstabelecimentos.map((item) => (
+									<CommandItem
+										key={item}
+										value={item}
+										onSelect={() => handleSelect(item)}
+										className="cursor-pointer"
+									>
+										<span
+											className={`truncate flex-1 ${value === item ? "font-medium" : ""}`}
+										>
+											{item}
+										</span>
+									</CommandItem>
+								))}
+							</CommandGroup>
+						</CommandList>
+					</Command>
+				</PopoverContent>
+			)}
+		</Popover>
+	);
+}

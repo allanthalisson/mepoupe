@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "OpenMonetis"
+description = "A personal finance workspace for organizing accounts, cards, transactions, budgets, reports, and shared household finances in Portuguese."
+version = "1.0.0"
+id = "artifacts/openmonetis"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23751
+
+[services.development]
+run = "pnpm --filter @workspace/openmonetis run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/openmonetis", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/openmonetis/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23751"
+BASE_PATH = "/"

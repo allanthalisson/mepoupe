@@ -1,0 +1,37 @@
+# OpenMonetis
+
+> OpenMonetis is a self-hosted personal finance web app for manual financial control. It helps users manage accounts, cards, invoices, budgets, notes, reports, attachments, and AI-generated insights. The product UI is in Brazilian Portuguese, the codebase uses English folder and import names, and there is no hosted SaaS version.
+>
+> **Stack:** Next.js 16, React 19, PostgreSQL, Drizzle ORM, Better Auth, Tailwind CSS 4, shadcn/ui. Package manager: pnpm. Linter: Biome.
+
+OpenMonetis is meant to be deployed by the user on their own machine or server.
+There is no Open Finance or automatic bank synchronization.
+Transactions can be entered manually or imported from OFX and XLS/XLSX files.
+Attachments are optional and require S3-compatible storage.
+The public website is mainly a landing page; the main technical documentation lives in the GitHub repository.
+
+## Docs
+
+- [Landing page](/): Public homepage and high-level product overview
+- [README](https://github.com/felipegcoutinho/openmonetis/blob/main/README.md): Main project documentation covering features, installation, Docker, environment variables, architecture, contributing, and license
+- [CHANGELOG](https://github.com/felipegcoutinho/openmonetis/blob/main/CHANGELOG.md): Release history and notable changes
+- [LICENSE](https://github.com/felipegcoutinho/openmonetis/blob/main/LICENSE): CC BY-NC-SA 4.0 license terms
+
+## Setup
+
+- [Setup script](https://raw.githubusercontent.com/felipegcoutinho/openmonetis/main/setup.mjs): Interactive installer for local or self-hosted setup
+- [Environment example](https://github.com/felipegcoutinho/openmonetis/blob/main/.env.example): Required and optional environment variables
+- [Docker Compose](https://github.com/felipegcoutinho/openmonetis/blob/main/docker-compose.yml): Local app and PostgreSQL stack definition
+
+## Architecture
+
+- [CLAUDE.md](https://github.com/felipegcoutinho/openmonetis/blob/main/CLAUDE.md): Project architecture, naming rules, query rules, and feature checklist
+
+## Optional
+
+- [robots.txt](/robots.txt): Crawl policy for the public site
+
+## Related Projects
+
+- [OpenMonetis Companion](https://github.com/felipegcoutinho/openmonetis-companion): Android app that captures bank notifications and sends them to the OpenMonetis inbox for review
+

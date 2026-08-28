@@ -1,0 +1,43 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": [
+    "src/main.tsx",
+    "src/App.tsx",
+    "src/global.d.ts",
+    "src/components/**/*.ts",
+    "src/components/**/*.tsx",
+    "src/pages/**/*.ts",
+    "src/pages/**/*.tsx",
+    "src/lib/**/*.ts",
+    "src/features/landing/constants.ts",
+    "src/features/landing/images.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "**/*.test.ts",
+    "src/app/**/*",
+    "src/db/**/*",
+    "src/shared/**/*",
+    "src/features/**/actions.ts",
+    "src/features/**/queries.ts"
+  ],
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "preserve",
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "moduleResolution": "bundler",
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "references": [
+    {
+      "path": "../../lib/api-client-react"
+    }
+  ]
+}

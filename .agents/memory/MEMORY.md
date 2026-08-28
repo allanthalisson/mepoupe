@@ -1,0 +1,2 @@
+- [Better Auth migration checks](better-auth-migration-checks.md) — validate installed schema compatibility and browser-equivalent origins before trusting auth smoke tests.
+- [Bulk import ownership](bulk-import-ownership.md) — validate every referenced resource before starting a user-scoped batch write.
