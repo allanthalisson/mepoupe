@@ -1,5 +1,6 @@
 "use client";
 import { RiFingerprintLine, RiLoader4Line } from "@remixicon/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -13,7 +14,7 @@ import {
 	FieldSeparator,
 } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
-import { authClient, googleSignInAvailable } from "@/shared/lib/auth/client";
+import { authClient } from "@/shared/lib/auth/client";
 import { cn } from "@/shared/utils/ui";
 import { AuthCardShell } from "./auth-card-shell";
 import { AuthErrorAlert } from "./auth-error-alert";
@@ -24,6 +25,7 @@ type DivProps = React.ComponentProps<"div">;
 
 interface LoginFormProps extends DivProps {
 	signupDisabled?: boolean;
+	googleSignInAvailable?: boolean;
 }
 
 const authLinkClassName =
@@ -32,10 +34,10 @@ const authLinkClassName =
 export function LoginForm({
 	className,
 	signupDisabled = false,
+	googleSignInAvailable = false,
 	...props
 }: LoginFormProps) {
 	const router = useRouter();
-	const isGoogleAvailable = googleSignInAvailable;
 
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -92,7 +94,7 @@ export function LoginForm({
 	}
 
 	async function handleGoogle() {
-		if (!isGoogleAvailable) {
+		if (!googleSignInAvailable) {
 			setError("Login com Google não está disponível no momento.");
 			return;
 		}
@@ -175,6 +177,12 @@ export function LoginForm({
 						<Field>
 							<div className="flex items-center">
 								<FieldLabel htmlFor="password">Senha</FieldLabel>
+								<Link
+									href="/forgot-password"
+									className="ml-auto text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+								>
+									Esqueci minha senha
+								</Link>
 							</div>
 							<Input
 								id="password"
@@ -220,46 +228,53 @@ export function LoginForm({
 							</Button>
 						</Field>
 
-						<FieldSeparator className="my-1.5 *:data-[slot=field-separator-content]:bg-card">
-							Ou continue com
-						</FieldSeparator>
+						{(googleSignInAvailable || passkeySupported) && (
+							<>
+								<FieldSeparator className="my-1.5 *:data-[slot=field-separator-content]:bg-card">
+									Ou continue com
+								</FieldSeparator>
 
-						<Field>
-							<div
-								className={cn(
-									passkeySupported ? "grid grid-cols-2 gap-2" : "flex",
-								)}
-							>
-								<GoogleAuthButton
-									onClick={handleGoogle}
-									loading={loadingGoogle}
-									disabled={
-										loadingEmail ||
-										loadingGoogle ||
-										loadingPasskey ||
-										!isGoogleAvailable
-									}
-									text="Google"
-								/>
-
-								{passkeySupported && (
-									<Button
-										variant="outline"
-										type="button"
-										onClick={handlePasskey}
-										disabled={loadingEmail || loadingGoogle || loadingPasskey}
-										className="w-full gap-2"
-									>
-										{loadingPasskey ? (
-											<RiLoader4Line className="h-4 w-4 animate-spin" />
-										) : (
-											<RiFingerprintLine className="h-5 w-5" />
+								<Field>
+									<div
+										className={cn(
+											googleSignInAvailable && passkeySupported
+												? "grid grid-cols-2 gap-2"
+												: "flex",
 										)}
-										<span>Passkey</span>
-									</Button>
-								)}
-							</div>
-						</Field>
+									>
+										{googleSignInAvailable && (
+											<GoogleAuthButton
+												onClick={handleGoogle}
+												loading={loadingGoogle}
+												disabled={
+													loadingEmail || loadingGoogle || loadingPasskey
+												}
+												text="Google"
+											/>
+										)}
+
+										{passkeySupported && (
+											<Button
+												variant="outline"
+												type="button"
+												onClick={handlePasskey}
+												disabled={
+													loadingEmail || loadingGoogle || loadingPasskey
+												}
+												className="w-full gap-2"
+											>
+												{loadingPasskey ? (
+													<RiLoader4Line className="h-4 w-4 animate-spin" />
+												) : (
+													<RiFingerprintLine className="h-5 w-5" />
+												)}
+												<span>Passkey</span>
+											</Button>
+										)}
+									</div>
+								</Field>
+							</>
+						)}
 
 						{!signupDisabled && (
 							<FieldDescription className="pt-1 text-center">
