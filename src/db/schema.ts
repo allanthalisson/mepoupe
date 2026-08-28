@@ -375,6 +375,87 @@ export const investmentAssets = pgTable(
 	}),
 );
 
+export const marketAssetSnapshots = pgTable(
+	"snapshots_mercado",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		assetId: uuid("ativo_id")
+			.notNull()
+			.references(() => investmentAssets.id, { onDelete: "cascade" }),
+		ticker: text("ticker").notNull(),
+		source: text("fonte").notNull().default("brapi"),
+		status: text("status").notNull().default("pending"),
+		marketPrice: numeric("preco_mercado", { precision: 16, scale: 4 }),
+		priceToEarnings: numeric("pl", { precision: 16, scale: 6 }),
+		priceToBook: numeric("pvp", { precision: 16, scale: 6 }),
+		enterpriseToEbit: numeric("ev_ebit", { precision: 16, scale: 6 }),
+		dividendYield: numeric("dividend_yield", { precision: 16, scale: 6 }),
+		returnOnEquity: numeric("roe", { precision: 16, scale: 6 }),
+		currentRatio: numeric("liquidez_corrente", { precision: 16, scale: 6 }),
+		debtToEquity: numeric("divida_patrimonio", { precision: 16, scale: 6 }),
+		revenueGrowth: numeric("crescimento_receita", { precision: 16, scale: 6 }),
+		profitMargin: numeric("margem_lucro", { precision: 16, scale: 6 }),
+		vacancyRate: numeric("vacancia", { precision: 16, scale: 6 }),
+		propertyCount: integer("quantidade_imoveis"),
+		dailyLiquidity: numeric("liquidez_diaria", { precision: 18, scale: 2 }),
+		rawData: jsonb("dados_brutos").$type<Record<string, unknown> | null>(),
+		quoteUpdatedAt: timestamp("cotacao_atualizada_em", {
+			mode: "date",
+			withTimezone: true,
+		}),
+		fundamentalsUpdatedAt: timestamp("fundamentos_atualizados_em", {
+			mode: "date",
+			withTimezone: true,
+		}),
+		lastError: text("ultimo_erro"),
+		createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+			.notNull()
+			.defaultNow(),
+		updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => ({
+		assetUniqueIdx: uniqueIndex("snapshots_mercado_ativo_idx").on(
+			table.assetId,
+		),
+		userIdIdx: index("snapshots_mercado_user_id_idx").on(table.userId),
+	}),
+);
+
+export const financialConsultations = pgTable(
+	"consultorias_financeiras",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		period: text("periodo").notNull(),
+		modelId: text("modelo_id"),
+		status: text("status").notNull().default("deterministic"),
+		data: jsonb("dados").$type<Record<string, unknown>>().notNull(),
+		marketDataUpdatedAt: timestamp("dados_mercado_atualizados_em", {
+			mode: "date",
+			withTimezone: true,
+		}),
+		createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+			.notNull()
+			.defaultNow(),
+		updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => ({
+		userPeriodIdx: uniqueIndex("consultorias_financeiras_user_period_idx").on(
+			table.userId,
+			table.period,
+		),
+	}),
+);
+
 export const categories = pgTable(
 	"categorias",
 	{
@@ -1276,6 +1357,8 @@ export type Invoice = typeof invoices.$inferSelect;
 export type Budget = typeof budgets.$inferSelect;
 export type Note = typeof notes.$inferSelect;
 export type SavedInsight = typeof savedInsights.$inferSelect;
+export type MarketAssetSnapshot = typeof marketAssetSnapshots.$inferSelect;
+export type FinancialConsultation = typeof financialConsultations.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
 export type InstallmentAnticipation =
 	typeof installmentAnticipations.$inferSelect;

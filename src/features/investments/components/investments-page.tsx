@@ -7,11 +7,18 @@ import {
 	RiEditLine,
 	RiFundsLine,
 	RiLightbulbFlashLine,
+	RiRefreshLine,
+	RiRobot2Line,
 } from "@remixicon/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { deleteInvestmentAssetAction } from "@/features/investments/actions";
+import {
+	deleteInvestmentAssetAction,
+	generateFinancialConsultationAction,
+	syncInvestmentMarketDataAction,
+} from "@/features/investments/actions";
 import { AssetDialog } from "@/features/investments/components/asset-dialog";
 import { ASSET_CLASS_LABELS } from "@/features/investments/lib/portfolio";
 import type { InvestmentsPageData } from "@/features/investments/queries";
@@ -35,6 +42,30 @@ const COURSE_ACTION_LABELS = {
 
 export function InvestmentsPage({ data }: { data: InvestmentsPageData }) {
 	const [isPending, startTransition] = useTransition();
+	const router = useRouter();
+
+	const syncMarket = () => {
+		startTransition(async () => {
+			const result = await syncInvestmentMarketDataAction();
+			if (result.success) {
+				toast.success(result.message);
+				router.refresh();
+			} else toast.error(result.error);
+		});
+	};
+
+	const refreshConsultation = () => {
+		startTransition(async () => {
+			const result = await generateFinancialConsultationAction({
+				period: data.period,
+				modelId: data.consultantModel,
+			});
+			if (result.success) {
+				toast.success(result.message);
+				router.refresh();
+			} else toast.error(result.error);
+		});
+	};
 
 	const removeAsset = (id: string) => {
 		if (!window.confirm("Remover este investimento?")) return;
@@ -55,6 +86,12 @@ export function InvestmentsPage({ data }: { data: InvestmentsPageData }) {
 					</p>
 				</div>
 				<div className="flex flex-wrap gap-2">
+					<Button variant="outline" disabled={isPending} onClick={syncMarket}>
+						<RiRefreshLine
+							className={cn("size-4", isPending && "animate-spin")}
+						/>
+						Atualizar mercado
+					</Button>
 					<AssetDialog
 						goals={data.goals}
 						trigger={
@@ -71,6 +108,135 @@ export function InvestmentsPage({ data }: { data: InvestmentsPageData }) {
 						</Link>
 					</Button>
 				</div>
+			</div>
+
+			<Card className="border-primary/20 bg-primary/5">
+				<CardHeader>
+					<div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
+						<div>
+							<CardTitle className="flex items-center gap-2">
+								<RiRobot2Line className="size-5 text-primary" />
+								Consultoria financeira integrada
+							</CardTitle>
+							<CardDescription>
+								Cruza despesas, sobra mensal, dívidas, metas, reserva, carteira
+								e fundamentos. Modelo: {data.consultantModel}.
+							</CardDescription>
+						</div>
+						<Button disabled={isPending} onClick={refreshConsultation}>
+							<RiRobot2Line className="size-4" />
+							{data.consultation ? "Atualizar análise" : "Gerar análise com IA"}
+						</Button>
+					</div>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					{data.consultation ? (
+						<>
+							<p className="text-sm leading-relaxed">
+								{data.consultation.data.summary}
+							</p>
+							<div className="grid gap-3 md:grid-cols-2">
+								{data.consultation.data.priorities.map((item) => (
+									<div
+										className="rounded-lg border bg-card p-4"
+										key={`${item.title}-${item.horizon}`}
+									>
+										<p className="font-medium text-sm">{item.title}</p>
+										<p className="mt-1 text-muted-foreground text-xs">
+											{item.rationale}
+										</p>
+										<p className="mt-2 text-sm">{item.action}</p>
+									</div>
+								))}
+							</div>
+							<div className="grid gap-4 md:grid-cols-3">
+								<div>
+									<p className="font-medium text-sm">
+										Despesas e fluxo de caixa
+									</p>
+									<ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground text-xs">
+										{data.consultation.data.expenseAnalysis.map((item) => (
+											<li key={item}>{item}</li>
+										))}
+									</ul>
+								</div>
+								<div>
+									<p className="font-medium text-sm">
+										Leitura dos investimentos
+									</p>
+									<ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground text-xs">
+										{data.consultation.data.investmentAnalysis.map((item) => (
+											<li key={item}>{item}</li>
+										))}
+									</ul>
+								</div>
+								<div>
+									<p className="font-medium text-sm">Próxima revisão mensal</p>
+									<ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground text-xs">
+										{data.consultation.data.nextMonthlyReview.map((item) => (
+											<li key={item}>{item}</li>
+										))}
+									</ul>
+								</div>
+							</div>
+							{(data.consultation.data.risks.length > 0 ||
+								data.consultation.data.dataGaps.length > 0) && (
+								<div className="rounded-lg border border-warning/30 bg-warning/5 p-4">
+									<p className="font-medium text-sm">
+										Riscos e limites da análise
+									</p>
+									<ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
+										{[
+											...data.consultation.data.risks,
+											...data.consultation.data.dataGaps,
+										].map((item) => (
+											<li key={item}>{item}</li>
+										))}
+									</ul>
+								</div>
+							)}
+							<p className="text-muted-foreground text-xs">
+								Atualizada em{" "}
+								{new Date(data.consultation.updatedAt).toLocaleString("pt-BR")}.{" "}
+								{data.consultation.data.disclaimer}
+							</p>
+						</>
+					) : (
+						<p className="text-muted-foreground text-sm">
+							A análise automática será criada mensalmente quando
+							FINANCIAL_CONSULTANT_MODEL e a chave do provider estiverem
+							configurados. Você também pode gerar agora.
+						</p>
+					)}
+					{data.consultationHistory.length > 1 && (
+						<p className="border-t pt-3 text-muted-foreground text-xs">
+							Histórico mensal preservado:{" "}
+							{data.consultationHistory.map((item) => item.period).join(" · ")}
+						</p>
+					)}
+				</CardContent>
+			</Card>
+
+			<div className="rounded-lg border px-4 py-3 text-sm">
+				<p className="font-medium">Dados de mercado · brapi</p>
+				<p className="text-muted-foreground text-xs">
+					{data.marketFreshness.latestQuoteAt
+						? `Última cotação em ${new Date(data.marketFreshness.latestQuoteAt).toLocaleString("pt-BR")}; ${data.marketFreshness.tracked} ativo(s) acompanhado(s).`
+						: data.marketFreshness.configured
+							? "Aguardando a primeira sincronização automática."
+							: "BRAPI_TOKEN não configurado. A atualização manual tentará a faixa pública, sujeita a limites."}
+				</p>
+				{(data.marketFreshness.partial > 0 ||
+					data.marketFreshness.failed > 0) && (
+					<p className="mt-1 text-warning text-xs">
+						{data.marketFreshness.partial > 0
+							? `${data.marketFreshness.partial} ativo(s) sem todos os fundamentos do plano da API. `
+							: ""}
+						{data.marketFreshness.failed > 0
+							? `${data.marketFreshness.failed} ativo(s) com falha na última cotação.`
+							: ""}
+					</p>
+				)}
 			</div>
 
 			<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -402,6 +568,45 @@ export function InvestmentsPage({ data }: { data: InvestmentsPageData }) {
 											{formatCurrency(asset.currentValue)}
 										</p>
 									</div>
+									{asset.screening && (
+										<div className="col-span-2 rounded-lg border p-3">
+											<p className="font-medium text-xs">
+												Triagem fundamental:{" "}
+												{asset.screening.status === "approved"
+													? "aprovado na triagem"
+													: asset.screening.status === "attention"
+														? "pontos de atenção"
+														: "dados insuficientes"}
+											</p>
+											<div className="mt-2 flex flex-wrap gap-1.5">
+												{asset.screening.metrics.map((metric) => (
+													<span
+														className={cn(
+															"rounded-full border px-2 py-1 text-[11px]",
+															metric.status === "pass" &&
+																"border-success/30 bg-success/10 text-success",
+															metric.status === "attention" &&
+																"border-warning/30 bg-warning/10 text-warning",
+															metric.status === "unavailable" &&
+																"text-muted-foreground",
+														)}
+														key={metric.label}
+														title={`Critério: ${metric.criterion}`}
+													>
+														{metric.label}: {metric.formatted}
+													</span>
+												))}
+											</div>
+											{asset.market?.fundamentalsUpdatedAt && (
+												<p className="mt-2 text-muted-foreground text-[11px]">
+													Fundamentos verificados em{" "}
+													{new Date(
+														asset.market.fundamentalsUpdatedAt,
+													).toLocaleDateString("pt-BR")}
+												</p>
+											)}
+										</div>
+									)}
 									<div>
 										<p className="text-muted-foreground text-xs">Na carteira</p>
 										<p className="font-semibold">
