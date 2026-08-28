@@ -452,7 +452,7 @@ MARKET_SYNC_SECRET=                   # protege o job interno de sincronização
 
 **2. `OPENAI_API_KEY` — ou outro provider de IA**
 1. Acesse [platform.openai.com/api-keys](https://platform.openai.com/api-keys) (ou o console do provider de sua escolha — veja a lista completa na seção [Opcionais](#opcionais): Anthropic, Google, MiniMax, OpenRouter ou Ollama local).
-2. Clique em **"Create new secret key"**, dê um nome (ex: `openmonetis-consultoria`) e copie o valor exibido — ele **só aparece uma vez**.
+2. Clique em **"Create new secret key"**, dê um nome (ex: `mepoupe-consultoria`) e copie o valor exibido — ele **só aparece uma vez**.
 3. Cole o valor na variável correspondente (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.).
 
 > Qualquer provider já suportado pelos insights de IA funciona aqui — a consultoria usa o mesmo mecanismo de resolução de modelo.

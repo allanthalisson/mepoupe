@@ -153,7 +153,7 @@ export function CompanionTab({ tokens }: CompanionTabProps) {
 						<li className="flex gap-2">
 							<span className="font-semibold text-foreground">4.</span>
 							<span>
-								Abra o app OpenMonetis Companion no seu celular Android, cole a
+								Abra o app me.poupe Companion no seu celular Android, cole a
 								chave no campo de configuração e conceda o acesso às
 								notificações quando solicitado.
 							</span>
@@ -163,7 +163,7 @@ export function CompanionTab({ tokens }: CompanionTabProps) {
 							<span>
 								Pronto! As notificações dos seus bancos (Nubank, Itaú, Bradesco,
 								Inter, C6 e outros) passam a chegar direto na sua caixa de
-								entrada do OpenMonetis.
+								entrada do me.poupe.
 							</span>
 						</li>
 					</ol>
