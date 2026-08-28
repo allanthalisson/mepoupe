@@ -17,6 +17,20 @@ const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const DEFAULT_SESSION_EXPIRES_IN_DAYS = 30;
 const DEFAULT_SESSION_UPDATE_AGE_HOURS = 24;
 
+function parseTrustedOrigins(): string[] {
+	const baseUrl = process.env.BETTER_AUTH_URL;
+	const extra = process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+
+	const origins = new Set<string>();
+	if (baseUrl) origins.add(baseUrl);
+	for (const origin of extra?.split(",") ?? []) {
+		const trimmed = origin.trim();
+		if (trimmed) origins.add(trimmed);
+	}
+
+	return [...origins];
+}
+
 function parsePositiveIntegerEnv(name: string, fallback: number): number {
 	const value = process.env[name];
 	if (!value) return fallback;
@@ -67,9 +81,7 @@ export const auth = betterAuth({
 	baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
 
 	// Trust host configuration for production environments
-	trustedOrigins: process.env.BETTER_AUTH_URL
-		? [process.env.BETTER_AUTH_URL]
-		: [],
+	trustedOrigins: parseTrustedOrigins(),
 
 	// Email/Password authentication
 	emailAndPassword: {
