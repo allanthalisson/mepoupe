@@ -7,17 +7,23 @@ experiência consistente entre dashboard, relatórios, formulários e landing pa
 ## 1. Direção visual
 
 O OpenMonetis busca tornar a gestão financeira clara e acolhedora. A interface
-usa superfícies quentes, poucos elementos decorativos e uma cor laranja de
-destaque para orientar o olhar sem transformar toda ação em urgência.
+usa superfícies quentes, poucos elementos decorativos e um laranja de pôr do
+sol — mais dessaturado que um laranja puro — para orientar o olhar sem
+transformar toda ação em urgência. Esse tom também existe como gradiente
+(`--brand-gradient`), reservado para destaques de marca: botão de ação
+principal, título de destaque na landing page e o wordmark "me.poupe".
 
 Princípios:
 
 - priorizar legibilidade e hierarquia em telas com muitos dados;
-- usar laranja para ações principais, seleção e foco;
+- usar laranja para ações principais, seleção e foco; reservar o gradiente da
+  marca para poucos destaques, nunca para texto de apoio ou dados;
 - manter superfícies leves no tema claro e contraste confortável no tema escuro;
 - aplicar cores semânticas para comunicar estado, não como decoração;
 - preservar espaço suficiente entre blocos para evitar ruído visual;
-- favorecer componentes responsivos e navegação acessível por teclado.
+- favorecer componentes responsivos e navegação acessível por teclado;
+- usar a curva `ease-brand` (`cubic-bezier(0.16, 1, 0.3, 1)`) nas transições de
+  hover e press para uma sensação de resposta suave e consistente.
 
 ## 2. Fonte de verdade
 
@@ -55,6 +61,18 @@ consistente. Não copie os valores para componentes: use os tokens semânticos.
 | `destructive` | Erros e ações destrutivas |
 | `border`, `input`, `ring` | Bordas, campos e foco |
 
+### Gradiente de marca
+
+`--brand-gradient` é um pôr do sol dessaturado (vermelho-terra → laranja da
+marca → âmbar dourado), disponível como utilitários:
+
+- `.bg-gradient-brand` — fundo do gradiente (ex.: botão `default`);
+- `.text-gradient-brand` — texto recortado pelo gradiente (`background-clip:
+  text`), usado com moderação em títulos de destaque.
+
+Use com parcimônia: é a assinatura visual da marca, não um substituto para
+`bg-primary`/`text-primary` no dia a dia da interface.
+
 ### Gráficos
 
 Gráficos usam `chart-1` a `chart-10`. Visualizações que precisam de uma escala
@@ -69,10 +87,17 @@ necessário, variantes Tailwind `dark:`.
 
 ## 4. Tipografia
 
-A família principal é **Bricolage Grotesque**, carregada com `next/font` em
-[`public/fonts/font_index.ts`](./public/fonts/font_index.ts). Os pesos
-disponíveis são `500`, `600` e `700`, com fallback para Arial e fontes sans-serif
-do sistema.
+A família principal é **Mona Sans Variable** (`@fontsource-variable/mona-sans`,
+importada em [`src/app/layout.tsx`](./src/app/layout.tsx)), com fallback para
+`Helvetica Neue`, `Helvetica`, `Arial` e sans-serif do sistema. É uma fonte
+variável: qualquer peso entre `200` e `900` funciona (`font-medium`,
+`font-semibold`, `font-bold`, etc.).
+
+O wordmark **"me.poupe"** é a única exceção: usa **Unbounded** (peso `700`/`800`),
+carregada em [`public/fonts/font_index.ts`](./public/fonts/font_index.ts) como
+`--font-logo` e aplicada apenas pelo componente
+[`LogoWordmark`](./src/shared/components/brand/logo-wordmark.tsx). Não use essa
+fonte em mais nenhum outro lugar da interface — ela existe só para o logotipo.
 
 Diretrizes:
 

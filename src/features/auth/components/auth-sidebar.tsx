@@ -42,8 +42,8 @@ function AuthSidebar() {
 			<div className="relative flex flex-1 flex-col justify-between p-10 lg:p-12">
 				<Logo
 					variant="compact"
-					invertTextOnDark={false}
-					className="opacity-92 [&_img]:brightness-0 [&_img]:saturate-0"
+					className="opacity-92"
+					textClassName="text-black/90"
 				/>
 
 				<div className="flex flex-1 items-center justify-center py-10">

@@ -3,8 +3,9 @@ import { Suspense } from "react";
 import { QueryProvider } from "@/shared/components/providers/query-provider";
 import { ThemeProvider } from "@/shared/components/providers/theme-provider";
 import { Toaster } from "@/shared/components/ui/sonner";
+import "@fontsource-variable/mona-sans/wght.css";
 import "./globals.css";
-import { bricolage } from "@/public/fonts/font_index";
+import { logoFont } from "@/public/fonts/font_index";
 
 export const metadata: Metadata = {
 	title: {
@@ -24,7 +25,7 @@ export default function RootLayout({
 		<html
 			data-scroll-behavior="smooth"
 			lang="pt-BR"
-			className={`${bricolage.className}`}
+			className={logoFont.variable}
 			suppressHydrationWarning
 		>
 			<head>

@@ -52,7 +52,7 @@ export default async function Page() {
 
 						<h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold">
 							Suas finanças,
-							<span className="text-primary"> do seu jeito</span>
+							<span className="text-gradient-brand"> do seu jeito</span>
 						</h1>
 
 						<p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl px-4 sm:px-0">
@@ -166,7 +166,7 @@ export default async function Page() {
 						<AnimateOnScroll>
 							<div className="grid gap-4 md:gap-4 sm:grid-cols-2 lg:grid-cols-3">
 								{[...mainFeatures, ...extraFeatures].map((feature) => (
-									<Card key={feature.title}>
+									<Card key={feature.title} className="hover-lift">
 										<CardContent>
 											<div className="flex items-center gap-3 mb-3">
 												<div

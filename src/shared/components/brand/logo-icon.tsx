@@ -9,8 +9,15 @@ export function LogoIcon(props: SVGProps<SVGSVGElement>) {
 			aria-label="OpenMonetis"
 			{...props}
 		>
+			<defs>
+				<linearGradient id="mePoupeSunset" x1="0" y1="0" x2="1" y2="1">
+					<stop offset="0%" stopColor="#c1573b" />
+					<stop offset="50%" stopColor="#d9793f" />
+					<stop offset="100%" stopColor="#e8ab66" />
+				</linearGradient>
+			</defs>
 			<path
-				fill="#ff7733"
+				fill="url(#mePoupeSunset)"
 				d="M 77.66,165.64 L 37.77,141.54 L 63.30,108.72 L 27.13,97.44 L 46.81,50.77 L 77.66,63.08 L 81.91,30.26 L 126.40,29.23 L 126.06,33.85 L 122.87,67.69 L 158.51,50.77 L 178.19,90.26 L 140.96,104.62 L 162.23,127.18 L 132.98,162.56 L 103.19,131.79 Z"
 			/>
 		</svg>

@@ -101,7 +101,7 @@ A ideia é simples: ter um lugar onde consigo ver todas as minhas contas, cartõ
 - **PostgreSQL** + **Drizzle ORM**
 - **Better Auth** (email/senha, OAuth, Passkeys/WebAuthn)
 - **shadcn/ui** (Radix UI) + **Tailwind CSS**
-- **Bricolage Grotesque** via `next/font`
+- **Mona Sans** via `next/font` (wordmark em Unbounded)
 - **Docker** (multi-stage build)
 - **Biome** (linting + formatting)
 - **Vercel AI SDK** (Claude, GPT, Gemini, MiniMax, OpenRouter, Ollama)

@@ -1,10 +1,14 @@
-import { Bricolage_Grotesque } from "next/font/google";
+import { Unbounded } from "next/font/google";
 
-export const bricolage = Bricolage_Grotesque({
+/**
+ * Fonte exclusiva do logotipo "me.poupe". Disruptiva e geométrica, usada
+ * apenas no wordmark — nunca na interface. Ver `LogoWordmark`.
+ */
+export const logoFont = Unbounded({
 	subsets: ["latin"],
 	display: "swap",
-	variable: "--font-bricolage",
+	variable: "--font-logo",
 	fallback: ["arial", "ui-sans-serif", "system-ui"],
-	weight: ["500", "600", "700"],
+	weight: ["700", "800"],
 	preload: true,
 });

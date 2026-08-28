@@ -6,6 +6,8 @@
 @theme {
   --spacing-custom-height-card: 30rem;
   --spacing-8xl: 90rem;
+  /* curva de saída suave usada nas micro-interações da marca (hover, press) */
+  --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :root {
@@ -16,8 +18,16 @@
   --popover: oklch(100% 0 0);
   --popover-foreground: var(--foreground);
 
-  --primary: oklch(72.069% 0.18335 44.069);
+  --primary: oklch(69% 0.135 42);
   --primary-foreground: oklch(16% 0.004 60);
+
+  /* pôr do sol: vermelho-terra dessaturado -> laranja da marca -> âmbar dourado */
+  --brand-gradient: linear-gradient(
+    135deg,
+    oklch(60% 0.145 24) 0%,
+    oklch(69% 0.135 42) 50%,
+    oklch(80% 0.11 78) 100%
+  );
 
   --secondary: oklch(96.2% 0.005 70);
   --secondary-foreground: oklch(30% 0.01 45);
@@ -96,8 +106,16 @@
   --popover: oklch(24% 0.004 55);
   --popover-foreground: var(--foreground);
 
-  --primary:  oklch(72.069% 0.18335 44.069);
+  --primary: oklch(71% 0.145 42);
   --primary-foreground: oklch(16% 0.004 60);
+
+  /* mesma direção do claro, um pouco mais luminosa para se destacar no escuro */
+  --brand-gradient: linear-gradient(
+    135deg,
+    oklch(64% 0.155 22) 0%,
+    oklch(72% 0.145 42) 50%,
+    oklch(83% 0.115 78) 100%
+  );
 
   --secondary: oklch(25% 0.004 55);
   --secondary-foreground: var(--foreground);
@@ -170,7 +188,9 @@
 }
 
 @theme inline {
-  --default-font-family: var(--font-bricolage);
+  --default-font-family: "Mona Sans Variable", "Helvetica Neue", Helvetica,
+    Arial, sans-serif;
+  --font-logo: var(--font-logo);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -261,6 +281,30 @@
 @layer components {
   .container {
     @apply mx-auto px-4 lg:px-0;
+  }
+}
+
+@layer utilities {
+  /* gradiente da marca: pôr do sol dessaturado, ver --brand-gradient */
+  .bg-gradient-brand {
+    background-image: var(--brand-gradient);
+  }
+
+  .text-gradient-brand {
+    background-image: var(--brand-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  /* leve elevação com curva de saída suave, usada em cards clicáveis */
+  .hover-lift {
+    transition: transform 300ms var(--ease-brand), box-shadow 300ms var(--ease-brand);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
   }
 }
 
