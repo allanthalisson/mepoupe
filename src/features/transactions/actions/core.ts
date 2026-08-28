@@ -1,19 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { and, eq, inArray, isNull, ne, not, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import {
-	cards,
-	categories,
-	financialAccounts,
-	invoices,
-	payers,
-	transactions,
-} from "@/db/schema";
+import { cards, categories, invoices, payers, transactions } from "@/db/schema";
 import {
 	PAYMENT_METHODS,
 	TRANSACTION_CONDITIONS,
 	TRANSACTION_TYPES,
 } from "@/features/transactions/lib/constants";
+import { fetchAccessibleAccountIds } from "@/shared/lib/accounts/access";
 import {
 	INITIAL_BALANCE_CONDITION,
 	INITIAL_BALANCE_NOTE,
@@ -75,14 +69,12 @@ export async function validateContaOwnership(
 ): Promise<boolean> {
 	if (!accountId) return true;
 
-	const conta = await db.query.financialAccounts.findFirst({
-		where: and(
-			eq(financialAccounts.id, accountId),
-			eq(financialAccounts.userId, userId),
-		),
-	});
-
-	return !!conta;
+	const accessibleIds = await fetchAccessibleAccountIds(
+		userId,
+		[accountId],
+		true,
+	);
+	return accessibleIds.has(accountId);
 }
 
 export async function fetchOwnedAccountIds(
@@ -94,17 +86,7 @@ export async function fetchOwnedAccountIds(
 		return new Set();
 	}
 
-	const rows = await db
-		.select({ id: financialAccounts.id })
-		.from(financialAccounts)
-		.where(
-			and(
-				eq(financialAccounts.userId, userId),
-				inArray(financialAccounts.id, ids),
-			),
-		);
-
-	return new Set(rows.map((row) => row.id));
+	return fetchAccessibleAccountIds(userId, ids, true);
 }
 
 export async function validateCartaoOwnership(

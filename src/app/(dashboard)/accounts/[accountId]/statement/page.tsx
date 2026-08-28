@@ -109,6 +109,7 @@ export default async function Page({ params, searchParams }: PageProps) {
 		filters: searchFilters,
 		slugMaps,
 		accountId: account.id,
+		includeSharedAccountTransactions: true,
 		hideAnticipatedInstallments:
 			userPreferences?.hideAnticipatedInstallments ?? false,
 	});
@@ -168,35 +169,39 @@ export default async function Page({ params, searchParams }: PageProps) {
 				totalExpenses={totalExpenses}
 				logo={account.logo}
 				balanceAdjustment={
-					<>
-						<AddYieldDialog
-							accountId={account.id}
-							defaultDate={defaultYieldDate}
-						/>
-						<AdjustBalanceDialog
-							accountId={account.id}
-							period={selectedPeriod}
-							currentBalance={currentBalance}
-						/>
-					</>
+					account.canWrite ? (
+						<>
+							<AddYieldDialog
+								accountId={account.id}
+								defaultDate={defaultYieldDate}
+							/>
+							<AdjustBalanceDialog
+								accountId={account.id}
+								period={selectedPeriod}
+								currentBalance={currentBalance}
+							/>
+						</>
+					) : undefined
 				}
 				actions={
-					<AccountDialog
-						mode="update"
-						account={accountDialogData}
-						logoOptions={logoOptions}
-						trigger={
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon-sm"
-								className="text-muted-foreground hover:text-foreground"
-								aria-label="Editar conta"
-							>
-								<RiPencilLine className="size-4" />
-							</Button>
-						}
-					/>
+					account.isOwner ? (
+						<AccountDialog
+							mode="update"
+							account={accountDialogData}
+							logoOptions={logoOptions}
+							trigger={
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon-sm"
+									className="text-muted-foreground hover:text-foreground"
+									aria-label="Editar conta"
+								>
+									<RiPencilLine className="size-4" />
+								</Button>
+							}
+						/>
+					) : undefined
 				}
 			/>
 
@@ -228,7 +233,7 @@ export default async function Page({ params, searchParams }: PageProps) {
 						accountId: account.id,
 						settledOnly: true,
 					}}
-					allowCreate
+					allowCreate={account.canWrite}
 					defaultAccountId={account.id}
 					defaultPaymentMethod={resolveDefaultPaymentMethod(
 						account.accountType,

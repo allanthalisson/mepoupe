@@ -398,8 +398,8 @@ export function ImportPage({
 					<div>
 						<CardTitle>Importar extrato</CardTitle>
 						<CardDescription>
-							Importe transações a partir de um arquivo .ofx ou planilha .xlsx
-							exportado pelo seu banco.
+							Importe transações a partir de um arquivo .ofx, .csv ou planilha
+							exportada pelo seu banco.
 						</CardDescription>
 					</div>
 					<ImportSteps current={currentStep} />

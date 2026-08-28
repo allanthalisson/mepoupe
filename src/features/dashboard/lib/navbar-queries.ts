@@ -1,10 +1,17 @@
-import { and, asc, eq, ilike, not, sql } from "drizzle-orm";
+import { and, asc, eq, ilike, not, or, sql } from "drizzle-orm";
 import { cacheLife, cacheTag } from "next/cache";
-import { cards, financialAccounts, payers, transactions } from "@/db/schema";
+import {
+	accountShares,
+	cards,
+	financialAccounts,
+	payers,
+	transactions,
+} from "@/db/schema";
 import { fetchPendingInboxCount } from "@/features/inbox/queries";
 import type { NavbarFinanceLinks } from "@/shared/components/navigation/navbar/nav-items";
 import { INITIAL_BALANCE_NOTE } from "@/shared/lib/accounts/constants";
 import { db } from "@/shared/lib/db";
+import { PAYER_ROLE_ADMIN } from "@/shared/lib/payers/constants";
 import { getAdminPayerId } from "@/shared/lib/payers/get-admin-id";
 import { getBusinessDateString } from "@/shared/utils/date";
 import { safeToNumber } from "@/shared/utils/number";
@@ -82,6 +89,7 @@ async function fetchDashboardNavbarDataInternal(
 					coalesce(
 						sum(
 							case
+								when ${payers.id} is null then 0
 								when ${transactions.note} = ${INITIAL_BALANCE_NOTE} then 0
 								else ${transactions.amount}
 							end
@@ -92,17 +100,32 @@ async function fetchDashboardNavbarDataInternal(
 			})
 			.from(financialAccounts)
 			.leftJoin(
+				accountShares,
+				and(
+					eq(accountShares.accountId, financialAccounts.id),
+					eq(accountShares.sharedWithUserId, userId),
+				),
+			)
+			.leftJoin(
 				transactions,
 				and(
 					eq(transactions.accountId, financialAccounts.id),
-					eq(transactions.userId, userId),
 					eq(transactions.isSettled, true),
-					adminPayerId ? eq(transactions.payerId, adminPayerId) : sql`false`,
+				),
+			)
+			.leftJoin(
+				payers,
+				and(
+					eq(transactions.payerId, payers.id),
+					eq(payers.role, PAYER_ROLE_ADMIN),
 				),
 			)
 			.where(
 				and(
-					eq(financialAccounts.userId, userId),
+					or(
+						eq(financialAccounts.userId, userId),
+						eq(accountShares.sharedWithUserId, userId),
+					),
 					not(ilike(financialAccounts.status, "inativa")),
 				),
 			)
@@ -111,6 +134,7 @@ async function fetchDashboardNavbarDataInternal(
 				financialAccounts.name,
 				financialAccounts.logo,
 				financialAccounts.initialBalance,
+				accountShares.permission,
 			)
 			.orderBy(asc(financialAccounts.name)),
 	]);

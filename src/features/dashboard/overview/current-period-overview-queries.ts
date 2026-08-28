@@ -14,7 +14,10 @@ import type {
 	TopExpensesData,
 } from "@/features/dashboard/expenses/top-expenses-queries";
 import type { TopEstablishmentsData } from "@/features/dashboard/lib/top-establishments-queries";
-import { excludeTransactionsFromExcludedAccounts } from "@/features/dashboard/lib/transaction-filters";
+import {
+	buildDashboardAdminFilters,
+	excludeTransactionsFromExcludedAccounts,
+} from "@/features/dashboard/lib/transaction-filters";
 import type { PaymentConditionsData } from "@/features/dashboard/payments/payment-conditions-queries";
 import type { PaymentMethodsData } from "@/features/dashboard/payments/payment-methods-queries";
 import type { PaymentStatusData } from "@/features/dashboard/payments/payment-status-queries";
@@ -594,9 +597,8 @@ export async function fetchDashboardCurrentPeriodOverview(
 		.leftJoin(categories, eq(transactions.categoryId, categories.id))
 		.where(
 			and(
-				eq(transactions.userId, userId),
+				...buildDashboardAdminFilters({ userId, adminPayerId }),
 				eq(transactions.period, period),
-				eq(transactions.payerId, adminPayerId),
 				excludeTransactionsFromExcludedAccounts(),
 			),
 		)

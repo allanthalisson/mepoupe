@@ -31,7 +31,7 @@ import { getTodayDateString } from "@/shared/utils/date";
 
 interface TransferDialogProps {
 	trigger?: React.ReactNode;
-	accounts: AccountData[];
+	accounts: Pick<AccountData, "id" | "name" | "logo">[];
 	fromAccountId: string;
 	currentPeriod: string;
 	open?: boolean;

@@ -209,6 +209,172 @@ export const financialAccounts = pgTable("contas", {
 		.defaultNow(),
 });
 
+export const accountShares = pgTable(
+	"compartilhamentos_conta",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		accountId: uuid("conta_id")
+			.notNull()
+			.references(() => financialAccounts.id, { onDelete: "cascade" }),
+		sharedWithUserId: text("shared_with_user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		permission: text("permission").notNull().default("read"),
+		createdByUserId: text("created_by_user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at", {
+			mode: "date",
+			withTimezone: true,
+		})
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => ({
+		uniqueAccountShare: uniqueIndex("compartilhamentos_conta_unique").on(
+			table.accountId,
+			table.sharedWithUserId,
+		),
+		sharedWithUserIdIdx: index(
+			"compartilhamentos_conta_shared_with_user_id_idx",
+		).on(table.sharedWithUserId),
+		accountIdIdx: index("compartilhamentos_conta_conta_id_idx").on(
+			table.accountId,
+		),
+	}),
+);
+
+export const financialGoals = pgTable(
+	"metas_financeiras",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		name: text("nome").notNull(),
+		goalType: text("tipo_meta").notNull(),
+		targetAmount: numeric("valor_alvo", { precision: 14, scale: 2 }).notNull(),
+		currentAmount: numeric("valor_atual", { precision: 14, scale: 2 })
+			.notNull()
+			.default("0"),
+		monthlyContribution: numeric("aporte_mensal", {
+			precision: 14,
+			scale: 2,
+		})
+			.notNull()
+			.default("0"),
+		targetDate: date("data_alvo", { mode: "date" }),
+		priority: smallint("prioridade").notNull().default(2),
+		status: text("status").notNull().default("active"),
+		note: text("anotacao"),
+		accountId: uuid("conta_id").references(() => financialAccounts.id, {
+			onDelete: "set null",
+		}),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+			.notNull()
+			.defaultNow(),
+		updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => ({
+		userIdStatusIdx: index("metas_financeiras_user_id_status_idx").on(
+			table.userId,
+			table.status,
+		),
+		accountIdIdx: index("metas_financeiras_conta_id_idx").on(table.accountId),
+	}),
+);
+
+export const debts = pgTable(
+	"dividas",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		name: text("nome").notNull(),
+		creditor: text("credor"),
+		currentBalance: numeric("saldo_devedor", {
+			precision: 14,
+			scale: 2,
+		}).notNull(),
+		annualInterestRate: numeric("taxa_juros_anual", {
+			precision: 8,
+			scale: 4,
+		})
+			.notNull()
+			.default("0"),
+		minimumPayment: numeric("pagamento_minimo", { precision: 14, scale: 2 })
+			.notNull()
+			.default("0"),
+		plannedPayment: numeric("pagamento_planejado", {
+			precision: 14,
+			scale: 2,
+		})
+			.notNull()
+			.default("0"),
+		dueDay: smallint("dia_vencimento"),
+		status: text("status").notNull().default("active"),
+		note: text("anotacao"),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+			.notNull()
+			.defaultNow(),
+		updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => ({
+		userIdStatusIdx: index("dividas_user_id_status_idx").on(
+			table.userId,
+			table.status,
+		),
+	}),
+);
+
+export const investmentAssets = pgTable(
+	"ativos_investimento",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		name: text("nome").notNull(),
+		ticker: text("ticker"),
+		assetClass: text("classe_ativo").notNull(),
+		institution: text("instituicao"),
+		quantity: numeric("quantidade", { precision: 20, scale: 8 })
+			.notNull()
+			.default("0"),
+		averagePrice: numeric("preco_medio", { precision: 16, scale: 4 })
+			.notNull()
+			.default("0"),
+		currentPrice: numeric("preco_atual", { precision: 16, scale: 4 })
+			.notNull()
+			.default("0"),
+		monthlyIncome: numeric("renda_mensal", { precision: 14, scale: 2 })
+			.notNull()
+			.default("0"),
+		targetAllocation: numeric("alocacao_alvo", { precision: 5, scale: 2 })
+			.notNull()
+			.default("0"),
+		note: text("anotacao"),
+		goalId: uuid("meta_id").references(() => financialGoals.id, {
+			onDelete: "set null",
+		}),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+			.notNull()
+			.defaultNow(),
+		updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => ({
+		userIdIdx: index("ativos_investimento_user_id_idx").on(table.userId),
+		goalIdIdx: index("ativos_investimento_meta_id_idx").on(table.goalId),
+	}),
+);
+
 export const categories = pgTable(
 	"categorias",
 	{
@@ -785,6 +951,59 @@ export const financialAccountsRelations = relations(
 		}),
 		cards: many(cards),
 		transactions: many(transactions),
+		shares: many(accountShares),
+		goals: many(financialGoals),
+	}),
+);
+
+export const accountSharesRelations = relations(accountShares, ({ one }) => ({
+	account: one(financialAccounts, {
+		fields: [accountShares.accountId],
+		references: [financialAccounts.id],
+	}),
+	sharedWithUser: one(user, {
+		fields: [accountShares.sharedWithUserId],
+		references: [user.id],
+	}),
+	createdByUser: one(user, {
+		fields: [accountShares.createdByUserId],
+		references: [user.id],
+	}),
+}));
+
+export const financialGoalsRelations = relations(
+	financialGoals,
+	({ one, many }) => ({
+		user: one(user, {
+			fields: [financialGoals.userId],
+			references: [user.id],
+		}),
+		account: one(financialAccounts, {
+			fields: [financialGoals.accountId],
+			references: [financialAccounts.id],
+		}),
+		assets: many(investmentAssets),
+	}),
+);
+
+export const debtsRelations = relations(debts, ({ one }) => ({
+	user: one(user, {
+		fields: [debts.userId],
+		references: [user.id],
+	}),
+}));
+
+export const investmentAssetsRelations = relations(
+	investmentAssets,
+	({ one }) => ({
+		user: one(user, {
+			fields: [investmentAssets.userId],
+			references: [user.id],
+		}),
+		goal: one(financialGoals, {
+			fields: [investmentAssets.goalId],
+			references: [financialGoals.id],
+		}),
 	}),
 );
 

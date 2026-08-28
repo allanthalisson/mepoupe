@@ -9,6 +9,10 @@ export type Account = {
 	balance?: number | null;
 	excludeFromBalance?: boolean;
 	excludeInitialBalanceFromIncome?: boolean;
+	ownerUserId?: string;
+	accessLevel?: "owner" | "read" | "write";
+	canEdit?: boolean;
+	canWrite?: boolean;
 };
 
 export type AccountFormValues = {

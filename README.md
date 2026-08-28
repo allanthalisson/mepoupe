@@ -10,7 +10,7 @@
 
 > **Não há versão online hospedada.** Você precisa clonar o repositório e rodar localmente ou no seu próprio servidor.
 
-[![Version](https://img.shields.io/badge/version-2.7.13-blue?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.8.0-blue?style=flat-square)](CHANGELOG.md)
 [![Next.js](https://img.shields.io/badge/Next.js-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
@@ -59,13 +59,13 @@ A ideia é simples: ter um lugar onde consigo ver todas as minhas contas, cartõ
 
 **1. Não há versão hospedada online** — Este projeto é self-hosted. Você precisa rodar no seu próprio computador ou servidor.
 
-**2. Não há Open Finance** — Não há conexão automática com bancos. Você pode registrar transações manualmente, usar o app companion para capturar notificações bancárias ou importar extratos nos formatos OFX e XLS/XLSX.
+**2. Não há Open Finance** — Não há conexão automática com bancos. Você pode registrar transações manualmente, usar o app companion para capturar notificações bancárias ou importar extratos nos formatos OFX, CSV e XLS/XLSX.
 
 **3. Requer disciplina** — O OpenMonetis funciona melhor para quem tem disciplina de registrar os gastos regularmente, quer controle total sobre seus dados e gosta de entender exatamente onde o dinheiro está indo.
 
 ### Funcionalidades
 
-💰 **Contas e transações** — Contas bancárias, cartões, dinheiro. Receitas, despesas, rendimentos e transferências. Categorização, divisão de lançamentos entre várias pessoas, filtros combináveis com intervalo de datas, extratos detalhados com identificação visual clara da conta e importação de extratos OFX e XLS/XLSX com detecção automática de categoria e deduplicação resiliente a identificadores bancários repetidos.
+💰 **Contas e transações** — Contas bancárias, cartões, dinheiro. Receitas, despesas, rendimentos e transferências. Categorização, divisão de lançamentos entre várias pessoas, filtros combináveis com intervalo de datas, extratos detalhados com identificação visual clara da conta e importação de extratos OFX, CSV e XLS/XLSX com detecção automática de categoria e deduplicação resiliente a identificadores bancários repetidos.
 
 📊 **Dashboard e relatórios** — Widgets personalizáveis com listas consistentes, métricas com atalhos para lançamentos, gráficos de evolução, comparativos por categoria, tendências, uso de cartões, top estabelecimentos e navegação direta entre meses pelo seletor de período. Exportação em PDF e Excel.
 
@@ -73,11 +73,15 @@ A ideia é simples: ter um lugar onde consigo ver todas as minhas contas, cartõ
 
 🎯 **Orçamentos** — Defina limites por categoria e acompanhe o progresso.
 
+🧭 **Planejamento financeiro** — Diagnóstico automático dos últimos seis meses, taxa de poupança, compromissos mensais, gastos que merecem revisão, metas com prazo e aporte mensal e plano de quitação de dívidas.
+
+📈 **Investimentos** — Carteira por ativo e classe, patrimônio, custo versus valor atual, renda passiva mensal/anual, alocação atual versus alvo e vínculo dos ativos às metas financeiras.
+
 💸 **Parcelamentos avançados** — Séries de parcelas, antecipação com cálculo de desconto, análise consolidada.
 
 🤖 **Insights com IA** — Análises geradas por Claude, GPT, Gemini, MiniMax, OpenRouter ou modelos locais via Ollama. Insights personalizados e histórico salvo.
 
-👥 **Gestão colaborativa** — Pagadores com permissões (admin/viewer), notificações automáticas por e-mail, códigos de compartilhamento.
+👥 **Gestão colaborativa** — Contas financeiras conjuntas entre dois ou mais logins, permissões de visualizador/editor, saldo e extrato compartilhados com autoria preservada, divisão por pessoas, notificações automáticas por e-mail e códigos de compartilhamento.
 
 📝 **Anotações e tarefas** — Notas de texto com anexos, listas com checkboxes e sistema de arquivamento.
 
@@ -554,6 +558,8 @@ openmonetis/
 │   │   ├── cards/                 # Cartões de crédito
 │   │   ├── invoices/              # Faturas
 │   │   ├── accounts/              # Contas bancárias
+│   │   ├── planning/              # Diagnóstico, metas e dívidas
+│   │   ├── investments/           # Carteira, alocação e renda passiva
 │   │   ├── categories/            # Categorias e histórico
 │   │   ├── budgets/               # Orçamentos
 │   │   ├── payers/                # Pagadores e compartilhamento
@@ -628,8 +634,8 @@ Antes de começar, leia o [`CLAUDE.md`](CLAUDE.md) — ele documenta a arquitetu
 As validações rodam em pull requests e em cada push na `main`. A publicação só começa quando uma tag SemVer aponta para um commit validado e a versão da tag corresponde ao `package.json` e ao `CHANGELOG.md`.
 
 ```bash
-git tag -a v2.7.13 -m "v2.7.13"
-git push origin v2.7.13
+git tag -a v2.8.0 -m "v2.8.0"
+git push origin v2.8.0
 ```
 
 O workflow da tag valida o código, publica as imagens Docker versionadas e `latest` e, somente depois, cria a GitHub Release com as notas do changelog.

@@ -386,6 +386,7 @@ export const buildTransactionWhere = ({
 	accountId,
 	payerId,
 	hideAnticipatedInstallments = false,
+	includeSharedAccountTransactions = false,
 }: {
 	userId: string;
 	period: string;
@@ -395,8 +396,11 @@ export const buildTransactionWhere = ({
 	accountId?: string;
 	payerId?: string;
 	hideAnticipatedInstallments?: boolean;
+	includeSharedAccountTransactions?: boolean;
 }): SQL[] => {
-	const where: SQL[] = [eq(transactions.userId, userId)];
+	const where: SQL[] = includeSharedAccountTransactions
+		? []
+		: [eq(transactions.userId, userId)];
 
 	if (filters.dateStartFilter || filters.dateEndFilter) {
 		if (filters.dateStartFilter) {

@@ -20,6 +20,7 @@ import {
 import { resolveLogoSrc } from "@/shared/lib/logo";
 import { getCurrentPeriod } from "@/shared/utils/period";
 import { AccountDialog } from "./account-dialog";
+import { ShareAccountDialog } from "./share-account-dialog";
 import { TransferDialog } from "./transfer-dialog";
 import type { Account } from "./types";
 
@@ -43,6 +44,8 @@ export function AccountsPage({
 	const [transferOpen, setTransferOpen] = useState(false);
 	const [transferFromAccount, setTransferFromAccount] =
 		useState<Account | null>(null);
+	const [shareOpen, setShareOpen] = useState(false);
+	const [accountToShare, setAccountToShare] = useState<Account | null>(null);
 
 	const sortAccounts = (list: Account[]) =>
 		[...list].sort((a, b) =>
@@ -104,6 +107,16 @@ export function AccountsPage({
 		}
 	};
 
+	const handleShareRequest = (account: Account) => {
+		setAccountToShare(account);
+		setShareOpen(true);
+	};
+
+	const handleShareOpenChange = (open: boolean) => {
+		setShareOpen(open);
+		if (!open) setAccountToShare(null);
+	};
+
 	const removeTitle = accountToRemove
 		? `Remover conta "${accountToRemove.name}"?`
 		: "Remover conta?";
@@ -131,6 +144,8 @@ export function AccountsPage({
 			<div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
 				{list.map((account) => {
 					const logoSrc = resolveLogoSrc(account.logo) ?? undefined;
+					const canEdit = account.canEdit ?? true;
+					const canWrite = account.canWrite ?? true;
 
 					return (
 						<AccountCard
@@ -139,6 +154,7 @@ export function AccountsPage({
 							accountType={`${account.accountType}`}
 							balance={account.balance ?? account.initialBalance ?? 0}
 							status={account.status}
+							accessLevel={account.accessLevel}
 							excludeFromBalance={account.excludeFromBalance}
 							excludeInitialBalanceFromIncome={
 								account.excludeInitialBalanceFromIncome
@@ -154,9 +170,14 @@ export function AccountsPage({
 									/>
 								) : undefined
 							}
-							onEdit={() => handleEdit(account)}
-							onRemove={() => handleRemoveRequest(account)}
-							onTransfer={() => handleTransferRequest(account)}
+							onEdit={canEdit ? () => handleEdit(account) : undefined}
+							onRemove={
+								canEdit ? () => handleRemoveRequest(account) : undefined
+							}
+							onTransfer={
+								canWrite ? () => handleTransferRequest(account) : undefined
+							}
+							onShare={canEdit ? () => handleShareRequest(account) : undefined}
 							onViewStatement={() =>
 								router.push(`/accounts/${account.id}/statement`)
 							}
@@ -220,17 +241,28 @@ export function AccountsPage({
 
 			{transferFromAccount && (
 				<TransferDialog
-					accounts={accounts.map((a) => ({
-						...a,
-						balance: a.balance ?? a.initialBalance ?? 0,
-						excludeFromBalance: a.excludeFromBalance ?? false,
-						excludeInitialBalanceFromIncome:
-							a.excludeInitialBalanceFromIncome ?? false,
-					}))}
+					accounts={accounts
+						.filter((a) => a.canWrite ?? true)
+						.map((a) => ({
+							...a,
+							balance: a.balance ?? a.initialBalance ?? 0,
+							excludeFromBalance: a.excludeFromBalance ?? false,
+							excludeInitialBalanceFromIncome:
+								a.excludeInitialBalanceFromIncome ?? false,
+						}))}
 					fromAccountId={transferFromAccount.id}
 					currentPeriod={getCurrentPeriod()}
 					open={transferOpen}
 					onOpenChange={handleTransferOpenChange}
+				/>
+			)}
+
+			{accountToShare && (
+				<ShareAccountDialog
+					accountId={accountToShare.id}
+					accountName={accountToShare.name}
+					open={shareOpen}
+					onOpenChange={handleShareOpenChange}
 				/>
 			)}
 		</>

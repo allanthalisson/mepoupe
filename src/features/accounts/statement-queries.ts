@@ -1,15 +1,16 @@
 import { and, eq, lt, type SQL, sql } from "drizzle-orm";
-import { financialAccounts, transactions } from "@/db/schema";
+import { financialAccounts, payers, transactions } from "@/db/schema";
 import {
 	fetchTransactionsPageWithRelations,
 	fetchTransactionsWithRelations,
 } from "@/features/transactions/queries";
+import { getAccountAccess } from "@/shared/lib/accounts/access";
 import {
 	INITIAL_BALANCE_NOTE,
 	REFUND_NOTE_PREFIX,
 } from "@/shared/lib/accounts/constants";
 import { db } from "@/shared/lib/db";
-import { getAdminPayerId } from "@/shared/lib/payers/get-admin-id";
+import { PAYER_ROLE_ADMIN } from "@/shared/lib/payers/constants";
 
 type AccountSummaryData = {
 	openingBalance: number;
@@ -19,6 +20,9 @@ type AccountSummaryData = {
 };
 
 export async function fetchAccountData(userId: string, accountId: string) {
+	const access = await getAccountAccess(userId, accountId);
+	if (!access) return null;
+
 	const account = await db.query.financialAccounts.findFirst({
 		columns: {
 			id: true,
@@ -29,13 +33,10 @@ export async function fetchAccountData(userId: string, accountId: string) {
 			logo: true,
 			note: true,
 		},
-		where: and(
-			eq(financialAccounts.id, accountId),
-			eq(financialAccounts.userId, userId),
-		),
+		where: eq(financialAccounts.id, accountId),
 	});
 
-	return account;
+	return account ? { ...account, ...access } : null;
 }
 
 export async function fetchAccountSummary(
@@ -46,17 +47,6 @@ export async function fetchAccountSummary(
 	const account = await fetchAccountData(userId, accountId);
 	if (!account) {
 		throw new Error("Account not found");
-	}
-
-	const adminPayerId = await getAdminPayerId(userId);
-	if (!adminPayerId) {
-		const initialBalance = Number(account.initialBalance ?? 0);
-		return {
-			openingBalance: initialBalance,
-			currentBalance: initialBalance,
-			totalIncomes: 0,
-			totalExpenses: 0,
-		};
 	}
 
 	const [periodSummary] = await db
@@ -102,13 +92,13 @@ export async function fetchAccountSummary(
       `,
 		})
 		.from(transactions)
+		.innerJoin(payers, eq(transactions.payerId, payers.id))
 		.where(
 			and(
-				eq(transactions.userId, userId),
 				eq(transactions.accountId, accountId),
 				eq(transactions.period, selectedPeriod),
 				eq(transactions.isSettled, true),
-				eq(transactions.payerId, adminPayerId),
+				eq(payers.role, PAYER_ROLE_ADMIN),
 			),
 		);
 
@@ -127,13 +117,13 @@ export async function fetchAccountSummary(
       `,
 		})
 		.from(transactions)
+		.innerJoin(payers, eq(transactions.payerId, payers.id))
 		.where(
 			and(
-				eq(transactions.userId, userId),
 				eq(transactions.accountId, accountId),
 				lt(transactions.period, selectedPeriod),
 				eq(transactions.isSettled, true),
-				eq(transactions.payerId, adminPayerId),
+				eq(payers.role, PAYER_ROLE_ADMIN),
 			),
 		);
 

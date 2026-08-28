@@ -4,6 +4,7 @@ import {
 	RiArrowLeftRightLine,
 	RiDeleteBin5Line,
 	RiFileList2Line,
+	RiGroupLine,
 	RiInformationLine,
 	RiPencilLine,
 } from "@remixicon/react";
@@ -30,6 +31,8 @@ interface AccountCardProps {
 	onEdit?: () => void;
 	onRemove?: () => void;
 	onTransfer?: () => void;
+	onShare?: () => void;
+	accessLevel?: "owner" | "read" | "write";
 	className?: string;
 }
 
@@ -45,6 +48,8 @@ export function AccountCard({
 	onEdit,
 	onRemove,
 	onTransfer,
+	onShare,
+	accessLevel = "owner",
 	className,
 }: AccountCardProps) {
 	const isInactive = isAccountInactive(status);
@@ -57,6 +62,12 @@ export function AccountCard({
 				: "text-foreground";
 
 	const actions = [
+		{
+			label: "compartilhar",
+			icon: <RiGroupLine className="size-4" aria-hidden />,
+			onClick: onShare,
+			variant: "default" as const,
+		},
 		{
 			label: "editar",
 			icon: <RiPencilLine className="size-4" aria-hidden />,
@@ -134,7 +145,12 @@ export function AccountCard({
 							) : null}
 						</div>
 
-						<p className="text-xs text-muted-foreground">{status}</p>
+						<p className="text-xs text-muted-foreground">
+							{status}
+							{accessLevel !== "owner"
+								? ` · compartilhada (${accessLevel === "write" ? "editor" : "visualizador"})`
+								: ""}
+						</p>
 					</div>
 				</div>
 
