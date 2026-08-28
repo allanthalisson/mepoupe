@@ -77,6 +77,11 @@ function getNameFromGoogleProfile(profile: GoogleProfile): string {
 // ============================================================================
 
 export const auth = betterAuth({
+	// Use the Replit-managed session secret when BETTER_AUTH_SECRET is not set.
+	// Keeping this fallback preserves local .env compatibility while avoiding
+	// Better Auth's insecure default secret in hosted environments.
+	secret: process.env.BETTER_AUTH_SECRET || process.env.SESSION_SECRET,
+
 	// Base URL configuration
 	baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
 
