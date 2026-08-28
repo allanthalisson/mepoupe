@@ -11,14 +11,7 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "@/shared/components/ui/sheet";
-
-const navLinks = [
-	{ href: "#funcionalidades", label: "Funcionalidades" },
-	{ href: "#mobile", label: "Mobile" },
-	{ href: "#stack", label: "Stack" },
-	{ href: "#como-usar", label: "Como usar" },
-	{ href: "#para-quem-e", label: "Para quem é?" },
-];
+import { navLinks } from "../constants";
 
 interface MobileNavProps {
 	isPublicDomain: boolean;
@@ -48,7 +41,7 @@ export function MobileNav({
 				<SheetContent side="right" className="w-72">
 					<SheetHeader className="border-b pb-4">
 						<SheetTitle asChild>
-							<Logo variant="compact" />
+							<Logo />
 						</SheetTitle>
 					</SheetHeader>
 

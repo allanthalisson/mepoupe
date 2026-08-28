@@ -1,23 +1,22 @@
 <p align="center">
-  <img src="./public/images/logo_small.svg" alt="OpenMonetis Logo" height="80" />
+  <strong style="font-size: 2rem;">me.poupe</strong>
 </p>
 
 <p align="center">
   Projeto pessoal de gestão financeira. Self-hosted, automatizado e open source.
 </p>
 
-> **⚠️ Nota:** o OpenMonetis não está sendo encerrado, mas o desenvolvimento deve reduzir para quase zero daqui em diante. O app já cobre minhas demandas atuais de gerenciamento financeiro, então novas mudanças tendem a ser pontuais: correções, ajustes necessários e pequenas melhorias quando fizerem bastante sentido para meu uso.
+> **⚠️ Nota:** o me.poupe não está sendo encerrado, mas o desenvolvimento deve reduzir para quase zero daqui em diante. O app já cobre minhas demandas atuais de gerenciamento financeiro, então novas mudanças tendem a ser pontuais: correções, ajustes necessários e pequenas melhorias quando fizerem bastante sentido para meu uso.
 
 > **Não há versão online hospedada.** Você precisa clonar o repositório e rodar localmente ou no seu próprio servidor.
 
-[![Version](https://img.shields.io/badge/version-3.0.0-blue?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-4.0.0-blue?style=flat-square)](CHANGELOG.md)
 [![Next.js](https://img.shields.io/badge/Next.js-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat-square&logo=docker)](https://www.docker.com/)
 [![Android Companion](https://img.shields.io/badge/Companion-Android-3DDC84?style=flat-square&logo=android)](https://github.com/felipegcoutinho/openmonetis-companion)
 [![License](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-orange?style=flat-square&logo=creative-commons)](LICENSE)
-[![Sponsor](https://img.shields.io/badge/Sponsor-❤️-ea4aaa?style=flat-square&logo=github-sponsors)](https://github.com/sponsors/felipegcoutinho)
 
 ---
 
@@ -30,7 +29,7 @@
 ## 📖 Índice
 
 - [Sobre o Projeto](#-sobre-o-projeto)
-- [Como rodar o OpenMonetis](#-como-rodar-o-openmonetis)
+- [Como rodar o me.poupe](#-como-rodar-o-mepoupe)
   - [Perfil 1 — Usar](#perfil-1--usar-self-hosting)
   - [Perfil 2 — Desenvolver](#perfil-2--desenvolver)
 - [Scripts Disponíveis](#-scripts-disponíveis)
@@ -49,7 +48,7 @@
 
 ## 🎯 Sobre o Projeto
 
-**OpenMonetis** é um projeto pessoal de gestão financeira que criei para organizar minhas próprias finanças. Cansei de usar planilhas desorganizadas e aplicativos que não fazem exatamente o que preciso, então decidi construir algo do jeito que funciona pra mim.
+**me.poupe** é um projeto pessoal de gestão financeira que criei para organizar minhas próprias finanças. Cansei de usar planilhas desorganizadas e aplicativos que não fazem exatamente o que preciso, então decidi construir algo do jeito que funciona pra mim.
 
 A ideia é simples: ter um lugar onde consigo ver todas as minhas contas, cartões, gastos e receitas de forma clara. Se isso for útil pra você também, fique à vontade para usar e contribuir.
 
@@ -61,7 +60,7 @@ A ideia é simples: ter um lugar onde consigo ver todas as minhas contas, cartõ
 
 **2. Não há Open Finance** — Não há conexão automática com bancos. Você pode registrar transações manualmente, usar o app companion para capturar notificações bancárias ou importar extratos nos formatos OFX, CSV e XLS/XLSX.
 
-**3. Requer disciplina** — O OpenMonetis funciona melhor para quem tem disciplina de registrar os gastos regularmente, quer controle total sobre seus dados e gosta de entender exatamente onde o dinheiro está indo.
+**3. Requer disciplina** — O me.poupe funciona melhor para quem tem disciplina de registrar os gastos regularmente, quer controle total sobre seus dados e gosta de entender exatamente onde o dinheiro está indo.
 
 ### Funcionalidades
 
@@ -87,10 +86,10 @@ A ideia é simples: ter um lugar onde consigo ver todas as minhas contas, cartõ
 
 📅 **Calendário financeiro** — Visualize todos os lançamentos em um calendário mensal.
 
-📲 **OpenMonetis Companion** — App Android que captura notificações bancárias (Nubank, Itaú, Bradesco, Inter, C6 e outros) e envia automaticamente como pré-lançamentos para revisão — sem digitar nada. [Repositório](https://github.com/felipegcoutinho/openmonetis-companion).
+📲 **me.poupe Companion** — App Android que captura notificações bancárias (Nubank, Itaú, Bradesco, Inter, C6 e outros) e envia automaticamente como pré-lançamentos para revisão — sem digitar nada. [Repositório](https://github.com/felipegcoutinho/openmonetis-companion).
 
 <p align="center">
-  <img src="./public/images/companion-preview-light.webp" alt="OpenMonetis Companion" width="300" height="600" />
+  <img src="./public/images/companion-preview-light.webp" alt="me.poupe Companion" width="300" height="600" />
 </p>
 
 ⚙️ **Personalização** — Tema dark/light, modo privacidade, ordem das colunas, agrupamento por data em lançamentos, exibição de anotações, tamanho máximo de anexos, resumo opcional no modal de lançamento e changelog visual para acompanhar as novidades do app.
@@ -108,7 +107,7 @@ A ideia é simples: ter um lugar onde consigo ver todas as minhas contas, cartõ
 
 ---
 
-## 🚀 Como rodar o OpenMonetis
+## 🚀 Como rodar o me.poupe
 
 Escolha o perfil que corresponde ao seu objetivo:
 
@@ -130,11 +129,11 @@ Escolha o perfil que corresponde ao seu objetivo:
 
 ### Perfil 1 — Usar (self-hosting)
 
-Só quer rodar o OpenMonetis. **Não precisa clonar o repositório nem instalar Node.js** — apenas Docker.
+Só quer rodar o me.poupe. **Não precisa clonar o repositório nem instalar Node.js** — apenas Docker.
 
 ```bash
 # 1. Baixe o compose
-curl -fsSL https://raw.githubusercontent.com/felipegcoutinho/openmonetis/main/docker-compose.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/allanthalisson/mepoupe/main/docker-compose.yml -o docker-compose.yml
 
 # 2. Crie um .env na mesma pasta.
 # .env mínimo recomendado para produção
@@ -161,7 +160,7 @@ docker compose up -d app
 **Não tem Docker instalado?** Em servidores Ubuntu 24.04 limpos, use o script de instalação:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/felipegcoutinho/openmonetis/main/scripts/install-deps.sh -o install-deps.sh
+curl -fsSL https://raw.githubusercontent.com/allanthalisson/mepoupe/main/scripts/install-deps.sh -o install-deps.sh
 sudo sh install-deps.sh
 ```
 
@@ -187,8 +186,8 @@ Quer modificar o código com hot-reload. O banco roda no Docker, o app roda dire
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/felipegcoutinho/openmonetis.git
-cd openmonetis
+git clone https://github.com/allanthalisson/mepoupe.git
+cd mepoupe
 
 # 2. Instale as dependências
 pnpm install
@@ -272,7 +271,7 @@ O `Dockerfile` usa multi-stage build (deps → builder → runner) com imagem fi
 Baixe apenas o `docker-compose.yml` e suba tudo — sem clonar o repositório, sem instalar dependências:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/felipegcoutinho/openmonetis/main/docker-compose.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/allanthalisson/mepoupe/main/docker-compose.yml -o docker-compose.yml
 docker compose up -d
 ```
 
@@ -290,7 +289,7 @@ docker compose up -d app
 
 ```bash
 docker compose exec app sh                                       # Shell da aplicação
-docker compose exec db psql -U openmonetis -d openmonetis_db    # Shell do banco
+docker compose exec db psql -U mepoupe -d mepoupe_db    # Shell do banco
 docker compose ps                                                # Status
 pnpm backup                                                      # Backup (ver seção Backup)
 ```
@@ -318,9 +317,9 @@ Cada execução gera **3 arquivos** em `backup/`:
 
 | Arquivo | Conteúdo | Uso |
 |---|---|---|
-| `openmonetis_YYYY-MM-DD_HH-MM.dump` | Dump custom dos schemas `public` + `drizzle` | Restore completo via `pg_restore` |
-| `openmonetis_YYYY-MM-DD_HH-MM.sql.gz` | Dump SQL compactado dos schemas `public` + `drizzle` | Inspeção manual, portabilidade |
-| `openmonetis_YYYY-MM-DD_HH-MM.data.sql.gz` | Apenas os dados do schema `public` (sem DDL) | Migração parcial, seed de outro ambiente |
+| `mepoupe_YYYY-MM-DD_HH-MM.dump` | Dump custom dos schemas `public` + `drizzle` | Restore completo via `pg_restore` |
+| `mepoupe_YYYY-MM-DD_HH-MM.sql.gz` | Dump SQL compactado dos schemas `public` + `drizzle` | Inspeção manual, portabilidade |
+| `mepoupe_YYYY-MM-DD_HH-MM.data.sql.gz` | Apenas os dados do schema `public` (sem DDL) | Migração parcial, seed de outro ambiente |
 
 ### Modos de conexão
 
@@ -329,11 +328,11 @@ Configure `DB_MODE` no topo de `scripts/backup.sh`:
 | Modo | Quando usar | Fonte de dados |
 |---|---|---|
 | `remote` (padrão) | Banco em Supabase, Neon, Railway, etc. | `DATABASE_URL` do `.env` |
-| `docker` | Banco no container local | Container `openmonetis_postgres` |
+| `docker` | Banco no container local | Container `mepoupe_postgres` |
 
 ### Upload para Google Drive (opcional)
 
-Se o [rclone](https://rclone.org/) estiver instalado e configurado com um remote chamado `gdrive`, os arquivos são enviados automaticamente para `gdrive:BACKUP OPENMONETIS`. Sem o rclone, o backup funciona normalmente e fica apenas local.
+Se o [rclone](https://rclone.org/) estiver instalado e configurado com um remote chamado `gdrive`, os arquivos são enviados automaticamente para `gdrive:BACKUP MEPOUPE`. Sem o rclone, o backup funciona normalmente e fica apenas local.
 
 **Retenção:**
 - Local: 7 dias
@@ -348,24 +347,24 @@ crontab -e
 ```
 
 ```cron
-0 3 * * * cd /caminho/para/openmonetis && pnpm backup >> /var/log/openmonetis-backup.log 2>&1
+0 3 * * * cd /caminho/para/mepoupe && pnpm backup >> /var/log/mepoupe-backup.log 2>&1
 ```
 
 ### Restore
 
 ```bash
 # 1. Zerar o banco
-docker exec <container-db> psql -U openmonetis -d openmonetis_db \
+docker exec <container-db> psql -U mepoupe -d mepoupe_db \
   -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
 # 2. Restaurar schema + dados (um comando)
 docker exec -i <container-db> pg_restore \
-  -U openmonetis -d openmonetis_db \
+  -U mepoupe -d mepoupe_db \
   --clean --if-exists --disable-triggers --no-owner --no-privileges \
-  < backup/openmonetis_YYYY-MM-DD_HH-MM.dump
+  < backup/mepoupe_YYYY-MM-DD_HH-MM.dump
 ```
 
-> `--disable-triggers` é necessário para evitar erros de FK durante o restore (os dados são inseridos fora de ordem). O usuário `openmonetis` tem permissão para isso.
+> `--disable-triggers` é necessário para evitar erros de FK durante o restore (os dados são inseridos fora de ordem). O usuário `mepoupe` tem permissão para isso.
 
 ---
 
@@ -440,7 +439,7 @@ O token **nunca chega ao cliente**. O servidor constrói a URL `https://img.logo
 ```env
 # Perfil 2 (dev): host "localhost" — o banco roda em container, o app no host
 # Perfil 1 (Docker): não precisa definir — o compose usa "db" automaticamente
-DATABASE_URL=postgresql://openmonetis:openmonetis_dev_password@localhost:5432/openmonetis_db
+DATABASE_URL=postgresql://mepoupe:mepoupe_dev_password@localhost:5432/mepoupe_db
 BETTER_AUTH_SECRET=seu-secret-aqui    # openssl rand -base64 32
 BETTER_AUTH_URL=http://localhost:3000
 ```
@@ -449,9 +448,9 @@ BETTER_AUTH_URL=http://localhost:3000
 
 ```env
 # PostgreSQL (Docker local)
-POSTGRES_USER=openmonetis
-POSTGRES_PASSWORD=openmonetis_dev_password
-POSTGRES_DB=openmonetis_db
+POSTGRES_USER=mepoupe
+POSTGRES_PASSWORD=mepoupe_dev_password
+POSTGRES_DB=mepoupe_db
 
 # Autenticação
 DISABLE_SIGNUP=false # true bloqueia novos cadastros
@@ -467,7 +466,7 @@ S3_SECRET_ACCESS_KEY=
 S3_BUCKET=
 
 # Multi-domínio (landing-only no domínio público)
-# PUBLIC_DOMAIN=openmonetis.com
+# PUBLIC_DOMAIN=mepoupe.com
 
 # OAuth
 GOOGLE_CLIENT_ID=
@@ -499,13 +498,13 @@ LOGO_DEV_SECRET_KEY=
 
 ### BETTER_AUTH_TRUSTED_ORIGINS
 
-Use `BETTER_AUTH_TRUSTED_ORIGINS` quando o OpenMonetis for acessado por uma URL diferente de `BETTER_AUTH_URL`, como Cloudflare Tunnel, reverse proxy, domínio local ou subdomínios temporários. Isso evita falhas de login como `Invalid origin` sem precisar alterar a imagem Docker.
+Use `BETTER_AUTH_TRUSTED_ORIGINS` quando o me.poupe for acessado por uma URL diferente de `BETTER_AUTH_URL`, como Cloudflare Tunnel, reverse proxy, domínio local ou subdomínios temporários. Isso evita falhas de login como `Invalid origin` sem precisar alterar a imagem Docker.
 
 Informe apenas origins confiáveis, separadas por vírgula:
 
 ```env
 BETTER_AUTH_URL=http://localhost:3000
-BETTER_AUTH_TRUSTED_ORIGINS=https://*.trycloudflare.com,https://openmonetis.seudominio.com
+BETTER_AUTH_TRUSTED_ORIGINS=https://*.trycloudflare.com,https://mepoupe.seudominio.com
 ```
 
 Para Google OAuth e outros callbacks externos, mantenha `BETTER_AUTH_URL` apontando para a URL pública/canônica configurada no provedor.
@@ -527,13 +526,13 @@ OLLAMA_BASE_URL=http://localhost:11434/v1
 OLLAMA_API_KEY=
 ```
 
-Se o OpenMonetis estiver rodando dentro de um container Docker e o Ollama estiver no host, `localhost` aponta para o próprio container. Nesse caso, use uma URL acessível a partir do container, como `http://host.docker.internal:11434/v1` quando disponível, ou o endereço da rede Docker/host configurado no seu ambiente.
+Se o me.poupe estiver rodando dentro de um container Docker e o Ollama estiver no host, `localhost` aponta para o próprio container. Nesse caso, use uma URL acessível a partir do container, como `http://host.docker.internal:11434/v1` quando disponível, ou o endereço da rede Docker/host configurado no seu ambiente.
 
 ---
 
 ## 🎨 Design System
 
-O OpenMonetis usa uma identidade visual própria com superfícies quentes, laranja
+O me.poupe usa uma identidade visual própria com superfícies quentes, laranja
 como cor de destaque, temas claro e escuro e tipografia Bricolage Grotesque. A
 interface é construída com tokens semânticos em OKLCH, Tailwind CSS 4 e
 componentes compartilhados baseados em shadcn/ui e Radix UI.
@@ -549,7 +548,7 @@ criar telas ou alterar componentes visuais.
 O projeto segue arquitetura **feature-first** dentro de `src/`:
 
 ```
-openmonetis/
+mepoupe/
 ├── src/
 │   ├── app/                       # Next.js App Router (rotas finas)
 │   │   ├── api/                   # API Routes (auth, health, inbox)
@@ -626,13 +625,13 @@ A regra é: `actions.ts` e `queries.ts` são as portas de entrada da feature. Tu
 ## 🤝 Contribuindo
 
 1. **Fork** o projeto
-2. **Clone** seu fork: `git clone https://github.com/seu-usuario/openmonetis.git`
+2. **Clone** seu fork: `git clone https://github.com/seu-usuario/mepoupe.git`
 3. **Crie uma branch:** `git checkout -b feature/minha-feature`
 4. **Commit:** `git commit -m 'feat: adiciona minha feature'`
 5. **Push:** `git push origin feature/minha-feature`
 6. Abra um **Pull Request**
 
-Antes de começar, leia o [`CLAUDE.md`](CLAUDE.md) — ele documenta a arquitetura, convenções de nomenclatura, regras de queries e o checklist para novas features. Use TypeScript, commits semânticos e mantenha o `CHANGELOG.md` atualizado.
+Antes de começar, leia o [`AGENTS.md`](AGENTS.md) — ele documenta a arquitetura, convenções de nomenclatura, regras de queries e o checklist para novas features. Use TypeScript, commits semânticos e mantenha o `CHANGELOG.md` atualizado.
 
 ### Publicando uma versão
 
@@ -649,21 +648,21 @@ O workflow da tag valida o código, publica as imagens Docker versionadas e `lat
 
 ## 💖 Apoie o Projeto
 
-Se o **OpenMonetis** está sendo útil, considere se tornar um sponsor!
+O **me.poupe** é um fork pessoal do [OpenMonetis](https://github.com/felipegcoutinho/openmonetis), criado por **Felipe Coutinho**. Se quiser apoiar o trabalho original, considere se tornar um sponsor dele:
 
 [![Sponsor no GitHub](https://img.shields.io/badge/Sponsor_no_GitHub-❤️-ea4aaa?style=for-the-badge&logo=github-sponsors)](https://github.com/sponsors/felipegcoutinho)
 
-Outras formas de contribuir: ⭐ estrela no repo, reportar bugs, melhorar docs, submeter PRs.
+Para apoiar este fork: ⭐ estrela no repo, reportar bugs, melhorar docs, submeter PRs.
 
 ---
 
 ## ⭐ Star History
 
-<a href="https://www.star-history.com/?repos=felipegcoutinho%2Fopenmonetis&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=allanthalisson%2Fmepoupe&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=felipegcoutinho/openmonetis&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=felipegcoutinho/openmonetis&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=felipegcoutinho/openmonetis&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=allanthalisson/mepoupe&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=allanthalisson/mepoupe&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=allanthalisson/mepoupe&type=date&legend=top-left" />
  </picture>
 </a>
 
@@ -683,12 +682,12 @@ Para o texto legal completo, consulte o arquivo [LICENSE](LICENSE) ou visite [cr
 
 ---
 
-**Desenvolvido por:** Felipe Coutinho — [@felipegcoutinho](https://github.com/felipegcoutinho)
+**Baseado no projeto original de:** Felipe Coutinho — [@felipegcoutinho](https://github.com/felipegcoutinho)
 
 <div align="center">
 
 **⭐ Se este projeto foi útil pra você:**
 
-Dê uma estrela · [Apoie como sponsor](https://github.com/sponsors/felipegcoutinho) · Compartilhe
+Dê uma estrela · Compartilhe
 
 </div>

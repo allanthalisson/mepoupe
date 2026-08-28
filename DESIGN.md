@@ -1,12 +1,12 @@
-# Design System do OpenMonetis
+# Design System do me.poupe
 
-Este documento descreve a identidade visual implementada no OpenMonetis. Ele deve
+Este documento descreve a identidade visual implementada no me.poupe. Ele deve
 ser usado como referência ao criar telas, revisar componentes e manter a
 experiência consistente entre dashboard, relatórios, formulários e landing page.
 
 ## 1. Direção visual
 
-O OpenMonetis busca tornar a gestão financeira clara e acolhedora. A interface
+O me.poupe busca tornar a gestão financeira clara e acolhedora. A interface
 usa superfícies quentes, poucos elementos decorativos e um laranja de pôr do
 sol — mais dessaturado que um laranja puro — para orientar o olhar sem
 transformar toda ação em urgência. Esse tom também existe como gradiente

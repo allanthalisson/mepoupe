@@ -152,7 +152,7 @@ export function LoginForm({
 				>
 					<FieldGroup className="mx-auto w-full max-w-md gap-5">
 						<AuthHeader
-							title="Entrar no OpenMonetis"
+							title="Entrar no me.poupe"
 							description="Acesse sua conta para acompanhar cartões, lançamentos e metas em um só lugar."
 						/>
 

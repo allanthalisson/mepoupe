@@ -3,11 +3,11 @@ import type { ReactNode } from "react";
 
 const BASE_URL = process.env.PUBLIC_DOMAIN
 	? `https://${process.env.PUBLIC_DOMAIN}`
-	: "https://openmonetis.com";
+	: "https://mepoupe.app";
 
-const TITLE = "OpenMonetis | Finanças pessoais self-hosted e open source";
+const TITLE = "me.poupe | Suas finanças, do seu jeito";
 const DESCRIPTION =
-	"Aplicativo self-hosted de finanças pessoais. Controle lançamentos, cartões, orçamentos e categorias com total privacidade. Open source e gratuito.";
+	"Controle lançamentos, cartões, orçamentos e categorias em um só lugar, com total privacidade.";
 
 export const metadata: Metadata = {
 	metadataBase: new URL(BASE_URL),
@@ -18,8 +18,6 @@ export const metadata: Metadata = {
 	keywords: [
 		"finanças pessoais",
 		"controle financeiro",
-		"self-hosted",
-		"open source",
 		"gestão financeira",
 		"orçamento pessoal",
 		"lançamentos financeiros",
@@ -33,7 +31,7 @@ export const metadata: Metadata = {
 		type: "website",
 		locale: "pt_BR",
 		url: "/",
-		siteName: "OpenMonetis",
+		siteName: "me.poupe",
 		title: TITLE,
 		description: DESCRIPTION,
 		images: [
@@ -41,7 +39,7 @@ export const metadata: Metadata = {
 				url: "/images/dashboard-preview-light.png",
 				width: 1920,
 				height: 1080,
-				alt: "OpenMonetis — Dashboard de finanças pessoais",
+				alt: "me.poupe — Dashboard de finanças pessoais",
 			},
 		],
 	},
@@ -67,7 +65,7 @@ export default function LandingLayout({ children }: { children: ReactNode }) {
 	const jsonLd = {
 		"@context": "https://schema.org",
 		"@type": "SoftwareApplication",
-		name: "OpenMonetis",
+		name: "me.poupe",
 		applicationCategory: "FinanceApplication",
 		operatingSystem: "Web",
 		offers: {
@@ -80,7 +78,7 @@ export default function LandingLayout({ children }: { children: ReactNode }) {
 		isAccessibleForFree: true,
 		author: {
 			"@type": "Organization",
-			name: "OpenMonetis",
+			name: "me.poupe",
 			url: BASE_URL,
 		},
 	};

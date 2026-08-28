@@ -39,7 +39,7 @@ const MONTH_NAMES = [
 	"dezembro",
 ] as const;
 
-const OPENMONETIS_TIME_ZONE = "America/Sao_Paulo";
+const APP_TIME_ZONE = "America/Sao_Paulo";
 
 type DateOnlyParts = {
 	year: number;
@@ -212,7 +212,7 @@ function getDateStringInTimeZone(
  * Gets today's date using the app business timezone
  */
 export function getBusinessDateString(date: Date = new Date()): string {
-	return getDateStringInTimeZone(OPENMONETIS_TIME_ZONE, date);
+	return getDateStringInTimeZone(APP_TIME_ZONE, date);
 }
 
 /**
@@ -534,7 +534,7 @@ function getGreetingInTimeZone(
 }
 
 export function getBusinessGreeting(date: Date = new Date()): string {
-	return getGreetingInTimeZone(OPENMONETIS_TIME_ZONE, date);
+	return getGreetingInTimeZone(APP_TIME_ZONE, date);
 }
 
 function formatCurrentDateInTimeZone(
@@ -554,5 +554,5 @@ function formatCurrentDateInTimeZone(
 }
 
 export function formatBusinessCurrentDate(date: Date = new Date()): string {
-	return formatCurrentDateInTimeZone(OPENMONETIS_TIME_ZONE, date);
+	return formatCurrentDateInTimeZone(APP_TIME_ZONE, date);
 }

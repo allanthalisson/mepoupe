@@ -1,31 +1,20 @@
-import { headers } from "next/headers";
 import Link from "next/link";
 import { Suspense } from "react";
+import { getLandingAccessState } from "@/features/landing/queries";
 import { AnimatedThemeToggler } from "@/shared/components/animated-theme-toggler";
 import { NavbarShell } from "@/shared/components/navigation/navbar/navbar-shell";
 import { Button } from "@/shared/components/ui/button";
-import { getOptionalUserSession } from "@/shared/lib/auth/server";
-import { isSignupDisabled } from "@/shared/lib/auth/signup";
 import { navLinks } from "../constants";
 import { MobileNav } from "./mobile-nav";
 
 async function LandingNavbarControls() {
-	const [session, headersList] = await Promise.all([
-		getOptionalUserSession(),
-		headers(),
-	]);
-	const hostname = headersList.get("host")?.replace(/:\d+$/, "");
-	const publicDomain = process.env.PUBLIC_DOMAIN?.replace(
-		/^https?:\/\//,
-		"",
-	).replace(/:\d+$/, "");
-	const isPublicDomain = !!(publicDomain && hostname === publicDomain);
-	const signupDisabled = isSignupDisabled();
+	const { isPublicDomain, isLoggedIn, signupDisabled } =
+		await getLandingAccessState();
 
 	return (
 		<>
 			{!isPublicDomain &&
-				(session?.user ? (
+				(isLoggedIn ? (
 					<Link prefetch href="/dashboard" className="hidden md:block">
 						<Button
 							variant="navbar"
@@ -61,7 +50,7 @@ async function LandingNavbarControls() {
 				))}
 			<MobileNav
 				isPublicDomain={isPublicDomain}
-				isLoggedIn={!!session?.user}
+				isLoggedIn={isLoggedIn}
 				signupDisabled={signupDisabled}
 			/>
 		</>

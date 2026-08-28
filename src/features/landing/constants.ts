@@ -3,15 +3,11 @@ import {
 	RiBarChartBoxLine,
 	RiCalendarLine,
 	RiCheckLine,
-	RiCodeSSlashLine,
-	RiDatabase2Line,
-	RiDeviceLine,
 	RiDownloadCloudLine,
 	RiErrorWarningLine,
 	RiEyeOffLine,
 	RiFileTextLine,
 	RiFlashlightLine,
-	RiGitBranchLine,
 	RiLayoutGridLine,
 	RiLineChartLine,
 	RiLockLine,
@@ -21,7 +17,6 @@ import {
 	RiRobot2Line,
 	RiShieldCheckLine,
 	RiSmartphoneLine,
-	RiStarLine,
 	RiTeamLine,
 	RiTimeLine,
 	RiWalletLine,
@@ -38,8 +33,6 @@ type FeatureItem = {
 export const navLinks = [
 	{ href: "#funcionalidades", label: "Funcionalidades" },
 	{ href: "#mobile", label: "Mobile" },
-	{ href: "#stack", label: "Stack" },
-	{ href: "#como-usar", label: "Como usar" },
 	{ href: "#para-quem-e", label: "Para quem é" },
 ] as const;
 
@@ -174,40 +167,8 @@ export const companionSteps: FeatureItem[] = [
 	},
 	{
 		icon: RiCheckLine,
-		title: "Revise e confirme no OpenMonetis",
+		title: "Revise e confirme no me.poupe",
 		description: "Pré-lançamentos ficam na inbox para sua aprovação",
-		colorVar: "var(--data-5)",
-	},
-];
-
-export const stackItems = [
-	{
-		icon: RiCodeSSlashLine,
-		title: "Frontend",
-		subtitle: "Next.js, TypeScript, Tailwind CSS, shadcn/ui",
-		description: "Interface moderna e responsiva com React 19 e App Router",
-		colorVar: "var(--data-3)",
-	},
-	{
-		icon: RiDatabase2Line,
-		title: "Backend",
-		subtitle: "PostgreSQL, Drizzle ORM, Better Auth",
-		description: "Banco relacional robusto com type-safe ORM",
-		colorVar: "var(--data-5)",
-	},
-	{
-		icon: RiShieldCheckLine,
-		title: "Segurança",
-		subtitle: "Better Auth com OAuth (Google) e autenticação por email",
-		description: "Sessões seguras e proteção de rotas por middleware",
-		colorVar: "var(--data-1)",
-	},
-	{
-		icon: RiDeviceLine,
-		title: "Deploy",
-		subtitle:
-			"Docker com multi-stage build, health checks e volumes persistentes",
-		description: "Fácil de rodar localmente ou em qualquer servidor",
 		colorVar: "var(--data-5)",
 	},
 ];
@@ -256,32 +217,3 @@ export const whoIsItForItems: FeatureItem[] = [
 		colorVar: "var(--data-5)",
 	},
 ];
-
-export function getMetricsItems(stars: number, forks: number) {
-	return [
-		{
-			icon: RiLayoutGridLine,
-			value: "20+",
-			label: "Widgets no dashboard",
-			colorVar: "var(--data-5)",
-		},
-		{
-			icon: RiShieldCheckLine,
-			value: "100%",
-			label: "Self-hosted",
-			colorVar: "var(--data-1)",
-		},
-		{
-			icon: RiStarLine,
-			value: `${stars}`,
-			label: "Stars no GitHub",
-			colorVar: "var(--data-4)",
-		},
-		{
-			icon: RiGitBranchLine,
-			value: `${forks}`,
-			label: "Forks no GitHub",
-			colorVar: "var(--data-3)",
-		},
-	];
-}

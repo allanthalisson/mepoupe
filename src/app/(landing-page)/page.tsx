@@ -1,40 +1,33 @@
 import {
 	RiAndroidLine,
-	RiGithubFill,
 	RiShieldCheckLine,
 	RiSmartphoneLine,
 } from "@remixicon/react";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { AnimateOnScroll } from "@/features/landing/components/animate-on-scroll";
+import {
+	LandingAuthCta,
+	LandingAuthCtaFallback,
+} from "@/features/landing/components/landing-auth-cta";
 import { LandingNavbar } from "@/features/landing/components/landing-navbar";
-import { SetupTabs } from "@/features/landing/components/setup-tabs";
 import {
 	companionBanks,
 	companionSteps,
 	extraFeatures,
-	getMetricsItems,
 	mainFeatures,
 	pwaHighlights,
-	stackItems,
 	whoIsItForItems,
 } from "@/features/landing/constants";
 import { landingImages } from "@/features/landing/images";
-import {
-	fetchGitHubStats,
-	getLandingCopyrightYear,
-} from "@/features/landing/queries";
+import { getLandingCopyrightYear } from "@/features/landing/queries";
 import { Logo } from "@/shared/components/brand/logo";
 import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 
 export default async function Page() {
-	const [githubStats, copyrightYear] = await Promise.all([
-		fetchGitHubStats(),
-		getLandingCopyrightYear(),
-	]);
-	const metricsItems = getMetricsItems(githubStats.stars, githubStats.forks);
+	const copyrightYear = await getLandingCopyrightYear();
 
 	return (
 		<div className="flex min-h-screen flex-col">
@@ -45,10 +38,7 @@ export default async function Page() {
 			<section className="relative overflow-hidden pt-14 md:pt-20 lg:pt-24 pb-0">
 				<div className="max-w-8xl mx-auto px-4 relative">
 					<div className="mx-auto flex max-w-4xl flex-col items-center text-center gap-5 md:gap-6 pb-10 md:pb-14">
-						<Badge variant="outline">
-							<RiGithubFill className="size-4 mr-1" />
-							Projeto Open Source
-						</Badge>
+						<Badge variant="outline">Gestão financeira pessoal</Badge>
 
 						<h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold">
 							Suas finanças,
@@ -56,39 +46,20 @@ export default async function Page() {
 						</h1>
 
 						<p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl px-4 sm:px-0">
-							Gestão financeira self-hosted e open source. Lance manualmente ou
-							capture notificações bancárias direto pelo{" "}
+							Lance manualmente ou capture notificações bancárias direto pelo{" "}
 							<span className="text-foreground font-medium">
 								Companion para Android
 							</span>
-							. Seus dados, seu servidor.
+							. Simples de usar, com seus dados sempre sob seu controle.
 						</p>
 
-						<div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto px-4 sm:px-0">
-							<Link
-								href="https://github.com/felipegcoutinho/openmonetis"
-								target="_blank"
-								className="w-full sm:w-auto"
-							>
-								<Button size="lg" className="gap-2 w-full sm:w-auto">
-									<RiGithubFill className="size-5" />
-									Baixar no GitHub
-								</Button>
-							</Link>
-							<Link
-								href="https://github.com/felipegcoutinho/openmonetis#readme"
-								target="_blank"
-								className="w-full sm:w-auto"
-							>
-								<Button
-									size="lg"
-									variant="outline"
-									className="w-full sm:w-auto gap-2"
-								>
-									Ver Documentação
-								</Button>
-							</Link>
-						</div>
+						<Suspense
+							fallback={
+								<LandingAuthCtaFallback className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto px-4 sm:px-0" />
+							}
+						>
+							<LandingAuthCta className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto px-4 sm:px-0" />
+						</Suspense>
 					</div>
 
 					<div className="mx-auto max-w-6xl">
@@ -101,7 +72,7 @@ export default async function Page() {
 							</div>
 							<Image
 								src={landingImages.hero.light}
-								alt="openmonetis Dashboard Preview"
+								alt="me.poupe Dashboard Preview"
 								width={1920}
 								height={1080}
 								className="w-full h-auto dark:hidden"
@@ -109,36 +80,12 @@ export default async function Page() {
 							/>
 							<Image
 								src={landingImages.hero.dark}
-								alt="openmonetis Dashboard Preview"
+								alt="me.poupe Dashboard Preview"
 								width={1920}
 								height={1080}
 								className="w-full h-auto hidden dark:block"
 								priority
 							/>
-						</div>
-					</div>
-				</div>
-			</section>
-
-			{/* Metrics Bar */}
-			<section className="py-8 md:py-12 border-y">
-				<div className="max-w-8xl mx-auto px-4">
-					<div className="mx-auto max-w-4xl">
-						<div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-8">
-							{metricsItems.map(({ icon: Icon, value, label, colorVar }) => (
-								<div
-									key={label}
-									className="flex flex-col items-center text-center gap-1.5"
-								>
-									<Icon className="size-5" style={{ color: colorVar }} />
-									<span className="text-2xl md:text-3xl font-semibold">
-										{value}
-									</span>
-									<span className="text-xs md:text-sm text-muted-foreground">
-										{label}
-									</span>
-								</div>
-							))}
 						</div>
 					</div>
 				</div>
@@ -208,7 +155,7 @@ export default async function Page() {
 									Mobile
 								</Badge>
 								<h2 className="text-2xl sm:text-3xl md:text-4xl mb-3 md:mb-4 font-semibold">
-									Use o OpenMonetis no celular sem perder o fluxo
+									Use o me.poupe no celular sem perder o fluxo
 								</h2>
 								<p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4 sm:px-0">
 									Instale como PWA para acesso rápido no dia a dia. No Android,
@@ -246,7 +193,7 @@ export default async function Page() {
 										PWA instalável
 									</Badge>
 									<h3 className="text-2xl md:text-3xl font-medium tracking-tight mb-3">
-										Leve o OpenMonetis para a tela inicial
+										Leve o me.poupe para a tela inicial
 									</h3>
 									<p className="text-muted-foreground mb-6 leading-relaxed">
 										Adicione à tela inicial e abra direto, como um app. Sem
@@ -353,8 +300,8 @@ export default async function Page() {
 											target="_blank"
 											className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
 										>
-											<RiGithubFill className="size-3.5" />
-											Ver no GitHub
+											<RiAndroidLine className="size-3.5" />
+											Baixar para Android
 										</Link>
 									</div>
 								</div>
@@ -383,94 +330,6 @@ export default async function Page() {
 				</div>
 			</section>
 
-			{/* Tech Stack Section */}
-			<section id="stack" className="py-12 md:py-24">
-				<div className="max-w-8xl mx-auto px-4">
-					<div className="mx-auto max-w-6xl">
-						<AnimateOnScroll>
-							<div className="text-center mb-8 md:mb-12">
-								<Badge variant="outline" className="mb-4">
-									Stack técnica
-								</Badge>
-								<h2 className="text-2xl sm:text-3xl md:text-4xl mb-3 md:mb-4 font-semibold">
-									O que roda por baixo
-								</h2>
-								<p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4 sm:px-0">
-									Self-hosted, open source, type-safe do banco ao frontend
-								</p>
-							</div>
-						</AnimateOnScroll>
-
-						<AnimateOnScroll>
-							<div className="grid gap-4 md:gap-6 sm:grid-cols-2">
-								{stackItems.map((item) => (
-									<Card key={item.title}>
-										<CardContent>
-											<div className="flex items-start gap-4">
-												<div
-													className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-													style={{
-														backgroundColor: `color-mix(in oklch, ${item.colorVar} 20%, transparent)`,
-													}}
-												>
-													<item.icon
-														className="size-6"
-														style={{ color: "var(--foreground)" }}
-													/>
-												</div>
-												<div>
-													<h3 className="font-semibold text-base md:text-lg mb-1.5 md:mb-2">
-														{item.title}
-													</h3>
-													<p className="text-sm text-muted-foreground mb-2 md:mb-3">
-														{item.subtitle}
-													</p>
-												</div>
-											</div>
-										</CardContent>
-									</Card>
-								))}
-							</div>
-						</AnimateOnScroll>
-					</div>
-				</div>
-			</section>
-
-			{/* How to run Section */}
-			<section id="como-usar" className="py-12 md:py-24">
-				<div className="max-w-8xl mx-auto px-4">
-					<div className="mx-auto max-w-4xl">
-						<AnimateOnScroll>
-							<div className="text-center mb-8 md:mb-12">
-								<Badge variant="outline" className="mb-4">
-									Como usar
-								</Badge>
-								<h2 className="text-2xl sm:text-3xl md:text-4xl mb-3 md:mb-4 font-semibold">
-									Rode no seu computador
-								</h2>
-								<p className="text-base md:text-lg text-muted-foreground px-4 sm:px-0">
-									Não há versão hospedada online. Você precisa rodar localmente.
-								</p>
-							</div>
-						</AnimateOnScroll>
-
-						<AnimateOnScroll>
-							<SetupTabs />
-						</AnimateOnScroll>
-
-						<div className="mt-6 md:mt-8 text-center">
-							<Link
-								href="https://github.com/felipegcoutinho/openmonetis#-início-rápido"
-								target="_blank"
-								className="text-sm text-primary hover:underline"
-							>
-								Ver documentação completa →
-							</Link>
-						</div>
-					</div>
-				</div>
-			</section>
-
 			{/* Who is this for Section */}
 			<section id="para-quem-e" className="py-12 md:py-24">
 				<div className="max-w-8xl mx-auto px-4">
@@ -484,7 +343,7 @@ export default async function Page() {
 									Feito para quem gosta de controle
 								</h2>
 								<p className="text-base md:text-lg text-muted-foreground px-4 sm:px-0">
-									O OpenMonetis não é para todo mundo.
+									O me.poupe não é para todo mundo.
 								</p>
 							</div>
 						</AnimateOnScroll>
@@ -531,34 +390,15 @@ export default async function Page() {
 								Pronto para testar?
 							</h2>
 							<p className="text-base md:text-lg text-muted-foreground mb-6 md:mb-8">
-								Clone o repositório, rode localmente e veja se faz sentido pra
-								você. É open source e gratuito.
+								Crie sua conta e comece a organizar suas finanças hoje mesmo.
 							</p>
-							<div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
-								<Link
-									href="https://github.com/felipegcoutinho/openmonetis"
-									target="_blank"
-									className="w-full sm:w-auto"
-								>
-									<Button size="lg" className="gap-2 w-full sm:w-auto">
-										<RiGithubFill className="size-[18px]" />
-										Baixar Projeto
-									</Button>
-								</Link>
-								<Link
-									href="https://github.com/felipegcoutinho/openmonetis#-início-rápido"
-									target="_blank"
-									className="w-full sm:w-auto"
-								>
-									<Button
-										size="lg"
-										variant="outline"
-										className="w-full sm:w-auto gap-2"
-									>
-										Como Instalar
-									</Button>
-								</Link>
-							</div>
+							<Suspense
+								fallback={
+									<LandingAuthCtaFallback className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center" />
+								}
+							>
+								<LandingAuthCta className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center" />
+							</Suspense>
 						</div>
 					</AnimateOnScroll>
 				</div>
@@ -570,43 +410,38 @@ export default async function Page() {
 					<div className="mx-auto max-w-5xl">
 						<div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3">
 							<div className="sm:col-span-2 md:col-span-1">
-								<Logo variant="compact" colorIcon />
+								<Logo />
 								<p className="text-sm text-muted-foreground mt-3 md:mt-4">
-									Projeto pessoal de gestão financeira. Open source e
-									self-hosted.
+									Gestão financeira pessoal, simples e no seu controle.
 								</p>
 							</div>
 
 							<div>
-								<h3 className="font-semibold mb-3 md:mb-4">Projeto</h3>
+								<h3 className="font-semibold mb-3 md:mb-4">Navegação</h3>
 								<ul className="space-y-2.5 md:space-y-3 text-sm text-muted-foreground">
 									<li>
-										<Link
-											href="https://github.com/felipegcoutinho/openmonetis"
-											target="_blank"
-											className="hover:text-foreground transition-colors flex items-center gap-2"
-										>
-											<RiGithubFill className="size-4" />
-											GitHub
-										</Link>
-									</li>
-									<li>
-										<Link
-											href="https://github.com/felipegcoutinho/openmonetis#readme"
-											target="_blank"
+										<a
+											href="#funcionalidades"
 											className="hover:text-foreground transition-colors"
 										>
-											Documentação
-										</Link>
+											Funcionalidades
+										</a>
 									</li>
 									<li>
-										<Link
-											href="https://github.com/felipegcoutinho/openmonetis/issues"
-											target="_blank"
+										<a
+											href="#mobile"
 											className="hover:text-foreground transition-colors"
 										>
-											Reportar Bug
-										</Link>
+											Mobile
+										</a>
+									</li>
+									<li>
+										<a
+											href="#para-quem-e"
+											className="hover:text-foreground transition-colors"
+										>
+											Para quem é
+										</a>
 									</li>
 								</ul>
 							</div>
@@ -620,8 +455,8 @@ export default async function Page() {
 											target="_blank"
 											className="hover:text-foreground transition-colors flex items-center gap-2"
 										>
-											<RiGithubFill className="size-4" />
-											GitHub
+											<RiAndroidLine className="size-4" />
+											Baixar para Android
 										</Link>
 									</li>
 								</ul>
@@ -630,11 +465,12 @@ export default async function Page() {
 
 						<div className="border-t mt-8 md:mt-12 pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4 text-sm text-muted-foreground">
 							<p>
-								© {copyrightYear} openmonetis. Projeto open source sob licença.
+								© {copyrightYear} me.poupe. Baseado no projeto original de
+								Felipe Coutinho.
 							</p>
 							<div className="flex items-center gap-2">
 								<RiShieldCheckLine className="size-4 text-primary" />
-								<span>Seus dados, seu servidor</span>
+								<span>Seus dados, sempre protegidos</span>
 							</div>
 						</div>
 					</div>

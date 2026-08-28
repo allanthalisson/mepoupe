@@ -14,7 +14,7 @@ export default function AuthLayout({
 			</div>
 
 			<div className="relative mb-6 flex md:hidden z-20">
-				<Logo variant="compact" colorIcon />
+				<Logo />
 			</div>
 
 			<div className="relative w-full max-w-sm md:max-w-5xl">{children}</div>

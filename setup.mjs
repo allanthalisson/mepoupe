@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * OpenMonetis Setup Script
+ * me.poupe Setup Script
  * Uso: node setup.mjs
  */
 
@@ -82,38 +82,8 @@ function abort(msg) {
 
 // ─── Header ──────────────────────────────────────────────────────────────────
 
-const logoLines = [
-  ".............................+@@@@@@@@@@=.............................",
-  ".............................@@@@@@@@@@@:.............................",
-  "...................+@@@@@@*-:@@@@@@@@@@%...=@@@@@@-...................",
-  "..................@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%..................",
-  "................=@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+................",
-  "...................-=+%@@@@@@@@@@@@@@@@@@@@@*:........................",
-  ".......................#@@@@@@@@@@@@@@@@@@@@@@@+......................",
-  "....................%@@@@@@@@@@@@@%#@@@@@@@@@@@@*.....................",
-  "....................+@@@@@@@@@@@......*@@@@@@#........................",
-  ".........................:#@@=...........+#...........................",
-];
-
-const nameLines = [
-  "   ___                   __  __                  _   _     ",
-  "  / _ \\ _ __   ___ _ __ |  \\/  | ___  _ __   ___| |_(_)___ ",
-  " | | | | '_ \\ / _ \\ '_ \\| |\\/| |/ _ \\| '_ \\ / _ \\ __| / __|",
-  " | |_| | |_) |  __/ | | | |  | | (_) | | | |  __/ |_| \\__ \\",
-  "  \\___/| .__/ \\___|_| |_|_|  |_|\\___/|_| |_|\\___|\\__|_|___/",
-  "       |_|                                                   ",
-];
-
-const nameStart = Math.floor((logoLines.length - nameLines.length) / 2);
-
-console.log();
-for (let i = 0; i < logoLines.length; i++) {
-  const logoCol = c.orange + logoLines[i].replaceAll(".", " ").substring(14, 56).padEnd(42) + c.reset;
-  const nameIdx = i - nameStart;
-  const nameCol = nameIdx >= 0 && nameIdx < nameLines.length ? nameLines[nameIdx] : "";
-  console.log(logoCol + "  " + nameCol);
-}
-console.log(`\n${" ".repeat(46)}${c.dim}Gestão financeira · self-hosted${c.reset}\n`);
+console.log(`\n  ${c.orange}${c.bold}me${c.reset}${c.dim}.${c.reset}${c.orange}${c.bold}poupe${c.reset}`);
+console.log(`  ${c.dim}Gestão financeira pessoal${c.reset}\n`);
 
 // ─── ETAPA 1: Verificações do sistema ────────────────────────────────────────
 
@@ -182,7 +152,7 @@ if (dockerAvailable) {
   } else {
     useLocalDocker = true;
     databaseUrl =
-      "postgresql://openmonetis:openmonetis_dev_password@localhost:5432/openmonetis_db";
+      "postgresql://mepoupe:mepoupe_dev_password@localhost:5432/mepoupe_db";
     console.log(`${sym.ok} Banco local selecionado`);
   }
 } else {
@@ -221,8 +191,8 @@ let resendApiKey = "";
 let resendFromEmail = "";
 if (await askYesNo("  E-mail via Resend (notificações e convites)?")) {
   resendApiKey = await ask("  RESEND_API_KEY: ");
-  resendFromEmail = await ask(`  RESEND_FROM_EMAIL [OpenMonetis <noreply@seudominio.com>]: `);
-  if (!resendFromEmail.trim()) resendFromEmail = "OpenMonetis <noreply@seudominio.com>";
+  resendFromEmail = await ask(`  RESEND_FROM_EMAIL [me.poupe <noreply@seudominio.com>]: `);
+  if (!resendFromEmail.trim()) resendFromEmail = "me.poupe <noreply@seudominio.com>";
 }
 
 // AI
@@ -249,31 +219,31 @@ if (await askYesNo("  Insights locais com Ollama?")) {
 // Domínio público
 let publicDomain = "";
 if (await askYesNo("  Domínio público separado para a landing page?")) {
-  publicDomain = await ask("  PUBLIC_DOMAIN (ex: openmonetis.com): ");
+  publicDomain = await ask("  PUBLIC_DOMAIN (ex: mepoupe.com): ");
 }
 
 rl.close();
 
 // ─── ETAPA 5: Confirmar e executar ────────────────────────────────────────────
 
-const targetDir = resolve("openmonetis");
+const targetDir = resolve("mepoupe");
 
 section("Instalação");
 console.log(`
-  ${sym.arrow} Clonar repositório em ./openmonetis
+  ${sym.arrow} Clonar repositório em ./mepoupe
   ${sym.arrow} Gerar .env
   ${sym.arrow} pnpm install${useLocalDocker ? `\n  ${sym.arrow} Subir banco PostgreSQL (Docker)\n  ${sym.arrow} Habilitar extensões` : ""}
   ${sym.arrow} pnpm db:push
 `);
 
 if (existsSync(targetDir)) {
-  abort("A pasta ./openmonetis já existe. Remova-a e tente novamente.");
+  abort("A pasta ./mepoupe já existe. Remova-a e tente novamente.");
 }
 
 // Clonar
 let s = spinner("Clonando repositório...");
 try {
-  run("git clone https://github.com/felipegcoutinho/openmonetis.git openmonetis");
+  run("git clone https://github.com/allanthalisson/mepoupe.git mepoupe");
   s.stop("Repositório clonado");
 } catch {
   s.fail("Falha ao clonar repositório");
@@ -302,9 +272,9 @@ const envContent = [
   "DB_PORT=5432",
   "",
   "# === PostgreSQL (Docker local) ===",
-  "POSTGRES_USER=openmonetis",
-  "POSTGRES_PASSWORD=openmonetis_dev_password",
-  "POSTGRES_DB=openmonetis_db",
+  "POSTGRES_USER=mepoupe",
+  "POSTGRES_PASSWORD=mepoupe_dev_password",
+  "POSTGRES_DB=mepoupe_db",
   "",
   "# === Multi-domínio ===",
   opt("PUBLIC_DOMAIN", publicDomain),
@@ -356,7 +326,7 @@ if (useLocalDocker) {
   let ready = false;
   for (let i = 0; i < 20; i++) {
     try {
-      run("docker compose exec -T db pg_isready -U openmonetis", { cwd: targetDir });
+      run("docker compose exec -T db pg_isready -U mepoupe", { cwd: targetDir });
       ready = true;
       break;
     } catch {
@@ -393,10 +363,10 @@ try {
 // ─── Finalização ──────────────────────────────────────────────────────────────
 
 console.log(`
-${c.green}${c.bold}  ✔ OpenMonetis instalado com sucesso!${c.reset}
+${c.green}${c.bold}  ✔ me.poupe instalado com sucesso!${c.reset}
 
   ${c.bold}Para iniciar:${c.reset}
-    cd openmonetis
+    cd mepoupe
     pnpm dev${
       useLocalDocker
         ? `          ${c.dim}→ desenvolvimento${c.reset}\n    pnpm docker:up    ${c.dim}→ produção local (app + banco)${c.reset}`
@@ -404,5 +374,5 @@ ${c.green}${c.bold}  ✔ OpenMonetis instalado com sucesso!${c.reset}
     }
 
   ${c.bold}Acesse:${c.reset}  ${betterAuthUrl}
-  ${c.bold}Docs:${c.reset}    https://github.com/felipegcoutinho/openmonetis
+  ${c.bold}Docs:${c.reset}    https://github.com/allanthalisson/mepoupe
 `);

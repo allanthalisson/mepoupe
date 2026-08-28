@@ -1,11 +1,11 @@
-# AGENTS.md - OpenMonetis
+# AGENTS.md - me.poupe
 
 > Self-hosted personal finance app (Next.js 16, React 19, PostgreSQL, Drizzle ORM, Better Auth, Tailwind 4, shadcn/ui).
 > Portuguese UI, English folders/imports. Linter: Biome 2.x. Package manager: pnpm.
 
 ## Related Projects
 
-- **OpenMonetis Companion** (`~/github/openmonetis-companion`): Android app que captura notificacoes de apps bancarios e envia para o OpenMonetis via API. Os itens chegam na feature `inbox` para revisao.
+- **me.poupe Companion** (`~/github/openmonetis-companion`, projeto de terceiros): Android app que captura notificacoes de apps bancarios e envia para o me.poupe via API. Os itens chegam na feature `inbox` para revisao.
 
 ---
 
@@ -120,7 +120,7 @@ src/
 │   │   ├── ui/                # shadcn/ui primitives
 │   │   ├── navigation/        # navbar, sidebar, breadcrumbs
 │   │   ├── providers/         # React context providers
-│   │   ├── brand/             # logos do app (logo, logo-icon, logo-text)
+│   │   ├── brand/             # marca do app: só logotipo em texto (logo, logo-wordmark)
 │   │   ├── widgets/           # widget-card, widget-empty-state, expandable-widget-card
 │   │   ├── feedback/          # empty-state, status-dot, payment-success
 │   │   ├── month-picker/

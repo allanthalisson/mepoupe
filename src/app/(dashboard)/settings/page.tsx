@@ -69,7 +69,7 @@ export default async function Page() {
 							<div>
 								<h2 className="text-xl font-semibold mb-1">Preferências</h2>
 								<p className="text-sm text-muted-foreground">
-									Personalize sua experiência no OpenMonetis ajustando as
+									Personalize sua experiência no me.poupe ajustando as
 									configurações de acordo com suas necessidades.
 								</p>
 							</div>
@@ -101,9 +101,7 @@ export default async function Page() {
 						<div className="space-y-4">
 							<div>
 								<div className="flex items-center gap-2 mb-1">
-									<h2 className="text-xl font-semibold">
-										OpenMonetis Companion
-									</h2>
+									<h2 className="text-xl font-semibold">me.poupe Companion</h2>
 									<span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success dark:bg-success/10">
 										<RiAndroidLine className="h-3 w-3" />
 										Android
@@ -127,8 +125,8 @@ export default async function Page() {
 							<div>
 								<h2 className="text-xl font-semibold mb-1">Alterar nome</h2>
 								<p className="text-sm text-muted-foreground">
-									Atualize como seu nome aparece no OpenMonetis. Esse nome pode
-									ser exibido em diferentes seções do app e em comunicações.
+									Atualize como seu nome aparece no me.poupe. Esse nome pode ser
+									exibido em diferentes seções do app e em comunicações.
 								</p>
 							</div>
 							<Separator />
@@ -195,8 +193,8 @@ export default async function Page() {
 							<div>
 								<h2 className="text-xl font-semibold mb-1">Ações perigosas</h2>
 								<p className="text-sm text-muted-foreground">
-									Você pode zerar os dados do OpenMonetis e manter seu acesso,
-									ou excluir sua conta inteira de forma irreversível.
+									Você pode zerar os dados do me.poupe e manter seu acesso, ou
+									excluir sua conta inteira de forma irreversível.
 								</p>
 							</div>
 							<DeleteAccountForm />

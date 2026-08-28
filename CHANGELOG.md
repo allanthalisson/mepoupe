@@ -5,6 +5,25 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [4.0.0] - 2026-08-28
+
+Esta versão renomeia o projeto de **OpenMonetis** para **me.poupe** em todo o codebase (~50 arquivos: package.json, manifest, metadados, componentes, server actions, e-mails, Docker, docs e landing page) e reconstrói a identidade visual: tipografia (Mona Sans, com Unbounded reservada para o logotipo), cor de destaque em um laranja de pôr do sol mais suave com um gradiente de marca, e o logotipo passa a ser só texto — sem símbolo. A landing page deixa de se apresentar como projeto open source no GitHub e passa a explicar o produto, com CTAs de criar conta/entrar.
+
+### Alterado
+- Rebrand: "OpenMonetis" renomeado para "me.poupe" em toda a interface, e-mails, metadados (title, manifest, Open Graph), health check, WebAuthn (`rpName`) e documentação (README, AGENTS.md, DESIGN.md).
+- Identidade visual: fonte principal trocada de Bricolage Grotesque para Mona Sans; nova cor primária (laranja de pôr do sol dessaturado) e gradiente de marca (`--brand-gradient`) usado com moderação em CTAs e destaques; microinterações com curva `ease-brand` em botões e cards.
+- Logotipo: o ícone/símbolo da marca foi removido — a marca agora é só o wordmark "me.poupe", em Unbounded.
+- Landing page: removidas as referências ao GitHub, estatísticas de stars/forks e instruções de `git clone`; no lugar, CTAs de "Criar conta"/"Entrar" (ocultos em domínios públicos configurados via `PUBLIC_DOMAIN`) e textos focados no produto.
+- Checagem de atualização e o link de feedback (bug/sugestão) agora apontam para o repositório deste fork em vez do projeto original.
+
+### Removido
+- Seções "Como usar" (setup via clone) e "Stack técnica" da landing page.
+- Métricas de GitHub (stars/forks) e o badge/CTA "Projeto Open Source" da landing page.
+
+### Notas de migração
+- O link de download do Companion Android e a atribuição ao projeto original (Felipe Coutinho, autor do OpenMonetis) foram mantidos — a licença CC BY-NC-SA exige crédito ao autor original.
+- A imagem Docker publicada em `docker-compose.yml` (`felipegcoutinho/openmonetis`) e os identificadores internos do PostgreSQL de instâncias já em produção não foram alterados, para não quebrar deployments existentes. Ver README para publicar uma imagem própria.
+
 ## [3.0.0] - 2026-08-28
 
 Esta versão transforma o painel de investimentos em uma revisão financeira contínua: dados de mercado são atualizados em segundo plano, os filtros das aulas são calculados por ativo e a IA cruza orçamento, dívidas, metas, reserva e carteira numa consultoria mensal viva.

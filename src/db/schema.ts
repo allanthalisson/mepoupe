@@ -706,7 +706,7 @@ export const savedInsights = pgTable(
 	}),
 );
 
-// ===================== OPENMONETIS COMPANION =====================
+// ===================== COMPANION =====================
 
 export const apiTokens = pgTable(
 	"tokens_api",

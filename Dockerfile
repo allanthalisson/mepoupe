@@ -70,7 +70,7 @@ RUN mkdir -p /app/migrate && \
   node -e "\
   const p=JSON.parse(require('fs').readFileSync('/tmp/pkg.json','utf8'));\
   require('fs').writeFileSync('/app/migrate/package.json',JSON.stringify({\
-    name:'openmonetis-migrate',version:p.version,\
+    name:'mepoupe-migrate',version:p.version,\
     dependencies:{\
       'drizzle-orm':p.dependencies['drizzle-orm'],\
       'pg':p.dependencies['pg']\

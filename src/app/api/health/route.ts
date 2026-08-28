@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/shared/lib/db";
 
 /**
- * Health check endpoint para Docker, monitoring e OpenMonetis Companion
+ * Health check endpoint para Docker, monitoring e me.poupe Companion
  * GET /api/health
  *
  * Retorna status 200 se a aplicação está saudável
@@ -18,7 +18,7 @@ export async function GET() {
 		return NextResponse.json(
 			{
 				status: "ok",
-				name: "OpenMonetis",
+				name: "me.poupe",
 				timestamp: new Date().toISOString(),
 			},
 			{ status: 200 },
@@ -30,7 +30,7 @@ export async function GET() {
 		return NextResponse.json(
 			{
 				status: "error",
-				name: "OpenMonetis",
+				name: "me.poupe",
 				timestamp: new Date().toISOString(),
 				message: "Database connection failed",
 			},

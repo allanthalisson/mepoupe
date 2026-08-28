@@ -9,8 +9,8 @@ import { logoFont } from "@/public/fonts/font_index";
 
 export const metadata: Metadata = {
 	title: {
-		default: "OpenMonetis | Suas finanças, do seu jeito",
-		template: "OpenMonetis | %s",
+		default: "me.poupe | Suas finanças, do seu jeito",
+		template: "me.poupe | %s",
 	},
 	description:
 		"Controle suas finanças pessoais de forma simples e transparente.",
@@ -29,7 +29,7 @@ export default function RootLayout({
 			suppressHydrationWarning
 		>
 			<head>
-				<meta name="apple-mobile-web-app-title" content="OpenMonetis" />
+				<meta name="apple-mobile-web-app-title" content="me.poupe" />
 				{process.env.UMAMI_URL && process.env.UMAMI_WEBSITE_ID && (
 					<script
 						defer

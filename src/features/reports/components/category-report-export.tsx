@@ -223,16 +223,10 @@ export function CategoryReportExport({
 			// Create PDF
 			const doc = new jsPDF({ orientation: "landscape" });
 			const primaryColor = getPrimaryPdfColor();
-			const [smallLogoDataUrl, textLogoDataUrl] = await Promise.all([
-				loadExportLogoDataUrl("/images/logo_small.svg"),
-				loadExportLogoDataUrl("/images/logo_text.svg"),
-			]);
+			const textLogoDataUrl = await loadExportLogoDataUrl(
+				"/images/logo_text.svg",
+			);
 			let brandingEndX = 14;
-
-			if (smallLogoDataUrl) {
-				doc.addImage(smallLogoDataUrl, "PNG", brandingEndX, 7.5, 8, 8);
-				brandingEndX += 10;
-			}
 
 			if (textLogoDataUrl) {
 				doc.addImage(textLogoDataUrl, "PNG", brandingEndX, 8, 30, 8);

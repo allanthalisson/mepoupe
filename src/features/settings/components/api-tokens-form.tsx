@@ -142,7 +142,7 @@ export function ApiTokensForm({ tokens }: ApiTokensFormProps) {
 					<h3 className="font-semibold">Dispositivos conectados</h3>
 					<p className="text-sm text-muted-foreground">
 						Gerencie os dispositivos que podem enviar notificações para o
-						OpenMonetis.
+						me.poupe.
 					</p>
 				</div>
 				<Dialog
@@ -164,7 +164,7 @@ export function ApiTokensForm({ tokens }: ApiTokensFormProps) {
 								<DialogHeader>
 									<DialogTitle>Criar Token de API</DialogTitle>
 									<DialogDescription>
-										Crie um token para conectar o OpenMonetis Companion no seu
+										Crie um token para conectar o me.poupe Companion no seu
 										dispositivo Android.
 									</DialogDescription>
 								</DialogHeader>
@@ -205,8 +205,8 @@ export function ApiTokensForm({ tokens }: ApiTokensFormProps) {
 								<DialogHeader>
 									<DialogTitle>Token Criado</DialogTitle>
 									<DialogDescription>
-										Copie o token abaixo e cole no app OpenMonetis Companion.
-										Este token
+										Copie o token abaixo e cole no app me.poupe Companion. Este
+										token
 										<strong> não será exibido novamente</strong>.
 									</DialogDescription>
 								</DialogHeader>
