@@ -1,135 +1,49 @@
-# ============================================
-# OPENMONETIS - .gitignore
-# ============================================
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
-# === Dependencies ===
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# === Next.js ===
-/.next/
-/out/
-next-env.d.ts
-.turbo
-
-# === Build ===
-/build
-/dist
+# compiled output
+dist
+tmp
+out-tsc
 *.tsbuildinfo
-.pnpm-store
+.expo
+.expo-shared
 
-# === Testing ===
-/coverage
-*.lcov
+# dependencies
+node_modules
 
-# === Environment Variables ===
-# Ignora todos os .env exceto .env.example
-.env*
-!.env.example
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
 
-# === Logs ===
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-# === OS Files ===
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-*.swp
-*.swo
-*~
-
-# === IDEs ===
-# VSCode
+# IDE - VSCode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-*.code-workspace
 
-# JetBrains (WebStorm, IntelliJ, etc)
-.idea/
-*.iml
-*.iws
-*.ipr
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
 
-# Sublime Text
-*.sublime-workspace
-*.sublime-project
+# System Files
+.DS_Store
+Thumbs.db
 
-# Vim
-[._]*.s[a-v][a-z]
-[._]*.sw[a-p]
-[._]s[a-rt-v][a-z]
-[._]ss[a-gi-z]
-[._]sw[a-p]
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
 
-# === Certificates ===
-*.pem
-*.key
-*.cert
-*.crt
-
-# === Deploy Platforms ===
-.vercel
-.netlify
-
-# === Database ===
-*.sqlite
-*.sqlite3
-*.db
-
-# === Docker ===
-# Não ignora docker-compose.yml e Dockerfile
-# Ignora apenas dados e logs locais
-docker-compose.override.yml
-*.log
-
-# === AI Assistants (Claude, Gemini, Cursor, etc) ===
-# Arquivos de configuração de assistentes de IA
-.claude/
-.gemini/
-.cursor/
-QWEN.md
-.codex
-# === Backups locais ===
-/backup/
-
-# === Backups e Temporários ===
-*.bak
-*.backup
-*.tmp
-*.temp
-~$*
-
-# === Outros ===
-# Arquivos de lock temporários
-package-lock.json  # Se usa pnpm, não precisa do npm lock
-yarn.lock          # Se usa pnpm, não precisa do yarn lock
-
-# Drizzle Studio local cache
-.drizzle/
-
-# TypeScript cache
-.tsbuildinfo
-
-# Local development files
+# Replit
+.cache/
 .local/
-local/
-scratch/
-playground/
-/docs
