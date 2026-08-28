@@ -10,7 +10,7 @@
 
 > **Não há versão online hospedada.** Você precisa clonar o repositório e rodar localmente ou no seu próprio servidor.
 
-[![Version](https://img.shields.io/badge/version-2.8.0-blue?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.9.0-blue?style=flat-square)](CHANGELOG.md)
 [![Next.js](https://img.shields.io/badge/Next.js-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
@@ -75,7 +75,7 @@ A ideia é simples: ter um lugar onde consigo ver todas as minhas contas, cartõ
 
 🧭 **Planejamento financeiro** — Diagnóstico automático dos últimos seis meses, taxa de poupança, compromissos mensais, gastos que merecem revisão, metas com prazo e aporte mensal e plano de quitação de dívidas.
 
-📈 **Investimentos** — Carteira por ativo e classe, patrimônio, custo versus valor atual, renda passiva mensal/anual, alocação atual versus alvo e vínculo dos ativos às metas financeiras.
+📈 **Investimentos** — Carteira por ativo e classe, patrimônio, renda passiva, vínculo às metas e mapa educacional baseado no prazo do objetivo, com alocação por classe, bandas de rebalanceamento, plano do próximo aporte e alertas de concentração.
 
 💸 **Parcelamentos avançados** — Séries de parcelas, antecipação com cálculo de desconto, análise consolidada.
 
@@ -634,8 +634,8 @@ Antes de começar, leia o [`CLAUDE.md`](CLAUDE.md) — ele documenta a arquitetu
 As validações rodam em pull requests e em cada push na `main`. A publicação só começa quando uma tag SemVer aponta para um commit validado e a versão da tag corresponde ao `package.json` e ao `CHANGELOG.md`.
 
 ```bash
-git tag -a v2.8.0 -m "v2.8.0"
-git push origin v2.8.0
+git tag -a v2.9.0 -m "v2.9.0"
+git push origin v2.9.0
 ```
 
 O workflow da tag valida o código, publica as imagens Docker versionadas e `latest` e, somente depois, cria a GitHub Release com as notas do changelog.

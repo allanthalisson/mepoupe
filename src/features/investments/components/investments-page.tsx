@@ -27,6 +27,12 @@ import { Progress } from "@/shared/components/ui/progress";
 import { formatCurrency } from "@/shared/utils/currency";
 import { cn } from "@/shared/utils/ui";
 
+const COURSE_ACTION_LABELS = {
+	reinforce: "Reforçar com aportes",
+	hold: "Dentro da banda",
+	reduce: "Revisar excedente",
+} as const;
+
 export function InvestmentsPage({ data }: { data: InvestmentsPageData }) {
 	const [isPending, startTransition] = useTransition();
 
@@ -124,6 +130,161 @@ export function InvestmentsPage({ data }: { data: InvestmentsPageData }) {
 					</CardContent>
 				</Card>
 			</div>
+
+			<Card>
+				<CardHeader>
+					<CardTitle>Mapa da carteira das aulas</CardTitle>
+					<CardDescription>
+						Referência educacional baseada no prazo do objetivo e nas bandas de
+						rebalanceamento apresentadas nas quatro transcrições.
+					</CardDescription>
+				</CardHeader>
+				<CardContent className="space-y-5">
+					{data.courseMethod.status === "needs_goal" ? (
+						<div className="space-y-3">
+							<p className="text-sm">
+								Cadastre uma meta ativa de investimento ou renda passiva com
+								data alvo para calcular o mapa.
+							</p>
+							<Button asChild size="sm" variant="outline">
+								<Link href="/planning">Definir objetivo e prazo</Link>
+							</Button>
+						</div>
+					) : (
+						<>
+							<div className="grid gap-3 sm:grid-cols-3">
+								<div className="rounded-lg border p-3">
+									<p className="text-muted-foreground text-xs">
+										Objetivo usado
+									</p>
+									<p className="font-medium text-sm">
+										{data.courseMethod.goalName}
+									</p>
+								</div>
+								<div className="rounded-lg border p-3">
+									<p className="text-muted-foreground text-xs">Fase</p>
+									<p className="font-medium text-sm">
+										{data.courseMethod.horizonLabel}
+									</p>
+								</div>
+								<div className="rounded-lg border p-3">
+									<p className="text-muted-foreground text-xs">
+										Referência de renda fixa
+									</p>
+									<p className="font-semibold text-lg">
+										{data.courseMethod.fixedIncomeTarget}%
+									</p>
+								</div>
+							</div>
+
+							<div className="grid gap-3 md:grid-cols-2">
+								{data.courseMethod.classes.map((item) => (
+									<div key={item.assetClass} className="rounded-lg border p-4">
+										<div className="flex items-start justify-between gap-3">
+											<div>
+												<p className="font-medium text-sm">{item.label}</p>
+												<p className="text-muted-foreground text-xs">
+													{item.currentAllocation.toFixed(1)}% atual ·{" "}
+													{item.targetAllocation.toFixed(1)}% alvo · banda{" "}
+													{item.lowerBand.toFixed(1)}%–
+													{item.upperBand.toFixed(1)}%
+												</p>
+											</div>
+											<span
+												className={cn(
+													"rounded-full px-2 py-1 font-medium text-xs",
+													item.action === "hold" &&
+														"bg-success/10 text-success",
+													item.action === "reinforce" && "bg-info/10 text-info",
+													item.action === "reduce" &&
+														"bg-warning/10 text-warning",
+												)}
+											>
+												{COURSE_ACTION_LABELS[item.action]}
+											</span>
+										</div>
+										<Progress
+											className="mt-3"
+											value={Math.min(item.currentAllocation, 100)}
+										/>
+										{item.contribution > 0 && (
+											<p className="mt-2 text-xs">
+												Próximo aporte sugerido:{" "}
+												{formatCurrency(item.contribution)}
+											</p>
+										)}
+									</div>
+								))}
+							</div>
+
+							{data.courseMethod.monthlyContribution <= 0 && (
+								<p className="text-muted-foreground text-sm">
+									Informe o aporte mensal na meta para receber a distribuição do
+									próximo aporte.
+								</p>
+							)}
+
+							{data.courseMethod.alerts.length > 0 && (
+								<div className="rounded-lg border border-warning/40 bg-warning/5 p-4">
+									<p className="font-medium text-sm">Pontos de atenção</p>
+									<ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+										{data.courseMethod.alerts.map((alert) => (
+											<li key={alert}>{alert}</li>
+										))}
+									</ul>
+								</div>
+							)}
+						</>
+					)}
+
+					<div className="grid gap-3 border-t pt-4 md:grid-cols-2">
+						<div className="rounded-lg border p-4">
+							<p className="font-medium text-sm">Filtro inicial de ações</p>
+							<ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground text-xs">
+								<li>P/L entre 5 e 20 e EV/EBIT entre 4 e 20.</li>
+								<li>
+									Rentabilidade positiva, liquidez saudável e dívida controlada.
+								</li>
+								<li>
+									Crescimento de receita positivo; 5% ao ano é a régua inicial
+									mostrada.
+								</li>
+								<li>
+									Dividend yield é complementar e não deve eliminar sozinho uma
+									empresa que reinveste bem.
+								</li>
+							</ul>
+						</div>
+						<div className="rounded-lg border p-4">
+							<p className="font-medium text-sm">Filtro inicial de FIIs</p>
+							<ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground text-xs">
+								<li>
+									Dividend yield acima de 8% como triagem, não como garantia.
+								</li>
+								<li>
+									P/VP de até 1,01 e, nos fundos de tijolo, baixa vacância.
+								</li>
+								<li>
+									Mais de 10 imóveis ou operações, com diversificação geográfica
+									e liquidez suficiente.
+								</li>
+								<li>
+									Revisar fundamentos e relatórios ao menos a cada três a seis
+									meses.
+								</li>
+							</ul>
+						</div>
+					</div>
+
+					<div>
+						<ul className="space-y-1 text-muted-foreground text-xs">
+							{data.courseMethod.methodNotes.map((note) => (
+								<li key={note}>{note}</li>
+							))}
+						</ul>
+					</div>
+				</CardContent>
+			</Card>
 
 			<div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
 				<Card>

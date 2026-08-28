@@ -23,6 +23,7 @@ const assetSchema = z.object({
 		"fixed_income",
 		"stocks",
 		"reits",
+		"international",
 		"etfs",
 		"crypto",
 		"retirement",
