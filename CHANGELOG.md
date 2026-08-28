@@ -13,6 +13,8 @@ Esta versão amplia o OpenMonetis de um registrador de movimentações para uma 
 - Contas conjuntas: o titular pode compartilhar uma conta com outro usuário por e-mail como visualizador ou editor; saldo, extrato e lançamentos ficam disponíveis aos dois logins, preservando autoria e limites de permissão.
 - Importação: extratos CSV passam pelo mesmo fluxo de revisão já usado pelos outros formatos, com reconhecimento de separadores, cabeçalhos em português/inglês, valores brasileiros ou internacionais, débito/crédito em colunas separadas e modelo para download.
 - Planejamento: nova página com diagnóstico dos últimos seis meses, médias de receita, despesa e sobra, taxa de poupança, compromissos recorrentes/parcelados, oportunidades de revisão e recomendações práticas.
+- Planejamento: oportunidades por categoria e estabelecimento agora estimam de forma conservadora o valor mensal que pode ser revisado, sem classificar automaticamente uma compra como desnecessária.
+- Planejamento: a distribuição recomendada da sobra protege pagamentos mínimos, prioriza dívidas pela maior taxa, reserva de emergência, demais metas e investimentos, indicando déficit ou valor ainda livre.
 - Metas: cadastro de objetivo, valor alvo, valor acumulado, aporte mensal, prioridade, prazo, status e conta vinculada, com projeção de conclusão e indicador de aderência ao prazo.
 - Dívidas: cadastro de saldo, juros, pagamentos mínimo e planejado, vencimento e estimativa simples do tempo de quitação.
 - Investimentos: cadastro de ativos com classe, quantidade, preço médio e atual, renda mensal, instituição, alocação-alvo e meta vinculada.

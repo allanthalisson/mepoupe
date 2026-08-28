@@ -7,6 +7,7 @@ import {
 	financialGoals,
 	transactions,
 } from "@/db/schema";
+import { buildMonthlyAllocationPlan } from "@/features/planning/lib/allocation-plan";
 import { estimateDebtPayoff } from "@/features/planning/lib/debt-payoff";
 import {
 	buildFinancialDiagnosis,
@@ -221,6 +222,11 @@ export async function fetchPlanningPageData(userId: string) {
 		(total, goal) => total + goal.monthlyContribution,
 		0,
 	);
+	const allocationPlan = buildMonthlyAllocationPlan({
+		monthlyCapacity: diagnosis.averageSavings,
+		debts: activeDebts,
+		goals: activeGoals,
+	});
 
 	return {
 		diagnosis,
@@ -236,6 +242,7 @@ export async function fetchPlanningPageData(userId: string) {
 				0,
 			),
 		},
+		allocationPlan,
 	};
 }
 

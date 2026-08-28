@@ -53,6 +53,38 @@ describe("buildFinancialDiagnosis", () => {
 		assert.equal(result.reviewOpportunities[0]?.name, "Delivery");
 		assert.equal(result.reviewOpportunities[0]?.reason, "increase");
 		assert.equal(result.reviewOpportunities[0]?.increasePercentage, 350);
+		assert.equal(result.reviewOpportunities[0]?.potentialSavings, 350);
+		assert.equal(result.categoryOpportunities[0]?.categoryName, "Alimentação");
+		assert.equal(result.categoryOpportunities[0]?.potentialSavings, 350);
+		assert.equal(result.potentialMonthlySavings, 350);
+	});
+
+	it("trata categoria nova de alto impacto como revisão conservadora", () => {
+		const result = buildFinancialDiagnosis(
+			[
+				{
+					name: "Salário",
+					period: "2026-01",
+					amount: 5000,
+					transactionType: "Receita",
+					condition: "À vista",
+					categoryName: "Salário",
+				},
+				{
+					name: "Aluguel",
+					period: "2026-01",
+					amount: -1000,
+					transactionType: "Despesa",
+					condition: "Recorrente",
+					categoryName: "Moradia",
+				},
+			],
+			["2026-01"],
+		);
+
+		assert.equal(result.categoryOpportunities[0]?.reason, "high-share");
+		assert.equal(result.categoryOpportunities[0]?.potentialSavings, 100);
+		assert.equal(result.potentialMonthlySavings, 100);
 	});
 
 	it("classifica fluxo negativo como crítico", () => {

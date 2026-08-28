@@ -22,7 +22,18 @@ export type ReviewOpportunity = {
 	previousAverage: number;
 	increasePercentage: number | null;
 	occurrences: number;
+	potentialSavings: number;
 	reason: "increase" | "frequency" | "high-impact";
+};
+
+export type CategoryOpportunity = {
+	categoryName: string;
+	currentAmount: number;
+	previousAverage: number;
+	increasePercentage: number | null;
+	shareOfCurrentExpenses: number;
+	potentialSavings: number;
+	reason: "increase" | "high-share";
 };
 
 export type FinancialDiagnosis = {
@@ -34,6 +45,8 @@ export type FinancialDiagnosis = {
 	currentSavingsRate: number | null;
 	monthlyCommitments: number;
 	reviewOpportunities: ReviewOpportunity[];
+	categoryOpportunities: CategoryOpportunity[];
+	potentialMonthlySavings: number;
 	suggestions: string[];
 	status: "critical" | "attention" | "building" | "healthy";
 };
@@ -67,6 +80,7 @@ export function buildFinancialDiagnosis(
 			occurrences: number;
 		}
 	>();
+	const expensesByCategory = new Map<string, Map<string, number>>();
 
 	let commitmentsTotal = 0;
 	for (const transaction of transactions) {
@@ -86,6 +100,14 @@ export function buildFinancialDiagnosis(
 		}
 
 		const key = transaction.name.trim().toLocaleLowerCase("pt-BR");
+		const categoryKey = transaction.categoryName?.trim() || "Sem categoria";
+		const categoryPeriods =
+			expensesByCategory.get(categoryKey) ?? new Map<string, number>();
+		categoryPeriods.set(
+			transaction.period,
+			(categoryPeriods.get(transaction.period) ?? 0) + amount,
+		);
+		expensesByCategory.set(categoryKey, categoryPeriods);
 		const merchant = expensesByMerchant.get(key) ?? {
 			name: transaction.name.trim(),
 			categoryName: transaction.categoryName,
@@ -141,6 +163,7 @@ export function buildFinancialDiagnosis(
 						)
 					: null;
 			const isIncrease =
+				previousAverage > 0 &&
 				currentAmount >= previousAverage * 1.5 &&
 				currentAmount - previousAverage >= 50;
 			const isFrequent = merchant.occurrences >= Math.max(periods.length, 3);
@@ -154,6 +177,11 @@ export function buildFinancialDiagnosis(
 				previousAverage: roundMoney(previousAverage),
 				increasePercentage,
 				occurrences: merchant.occurrences,
+				potentialSavings: roundMoney(
+					isIncrease
+						? Math.max(currentAmount - previousAverage, 0)
+						: currentAmount * 0.1,
+				),
 				reason: isIncrease
 					? "increase"
 					: isFrequent
@@ -168,6 +196,58 @@ export function buildFinancialDiagnosis(
 			return impactB - impactA || b.currentAmount - a.currentAmount;
 		})
 		.slice(0, 8);
+
+	const currentExpenses = current?.expenses ?? 0;
+	const categoryOpportunities = Array.from(expensesByCategory.entries())
+		.map(([categoryName, byPeriod]): CategoryOpportunity | null => {
+			const currentAmount = byPeriod.get(currentPeriod) ?? 0;
+			const previousAverage =
+				previousPeriods.length > 0
+					? previousPeriods.reduce(
+							(total, period) => total + (byPeriod.get(period) ?? 0),
+							0,
+						) / previousPeriods.length
+					: 0;
+			const increasePercentage =
+				previousAverage > 0
+					? roundPercentage(
+							((currentAmount - previousAverage) / previousAverage) * 100,
+						)
+					: null;
+			const shareOfCurrentExpenses =
+				currentExpenses > 0
+					? roundPercentage((currentAmount / currentExpenses) * 100)
+					: 0;
+			const isIncrease =
+				previousAverage > 0 &&
+				currentAmount >= previousAverage * 1.2 &&
+				currentAmount - previousAverage >= 50;
+			const isHighShare = shareOfCurrentExpenses >= 15;
+			if (!isIncrease && !isHighShare) return null;
+
+			return {
+				categoryName,
+				currentAmount: roundMoney(currentAmount),
+				previousAverage: roundMoney(previousAverage),
+				increasePercentage,
+				shareOfCurrentExpenses,
+				potentialSavings: roundMoney(
+					isIncrease
+						? Math.max(currentAmount - previousAverage, 0)
+						: currentAmount * 0.1,
+				),
+				reason: isIncrease ? "increase" : "high-share",
+			};
+		})
+		.filter((item): item is CategoryOpportunity => item !== null)
+		.sort((a, b) => b.potentialSavings - a.potentialSavings)
+		.slice(0, 6);
+	const potentialMonthlySavings = roundMoney(
+		(categoryOpportunities.length > 0
+			? categoryOpportunities
+			: reviewOpportunities
+		).reduce((total, item) => total + item.potentialSavings, 0),
+	);
 
 	const monthlyCommitments = roundMoney(commitmentsTotal / divisor);
 	const status = resolveStatus(averageSavingsRate, averageSavings);
@@ -209,6 +289,8 @@ export function buildFinancialDiagnosis(
 		currentSavingsRate: current?.savingsRate ?? null,
 		monthlyCommitments,
 		reviewOpportunities,
+		categoryOpportunities,
+		potentialMonthlySavings,
 		suggestions,
 		status,
 	};
