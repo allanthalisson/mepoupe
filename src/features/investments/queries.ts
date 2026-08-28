@@ -1,8 +1,15 @@
-import { and, asc, eq } from "drizzle-orm";
-import { financialGoals, investmentAssets } from "@/db/schema";
+import { and, asc, desc, eq } from "drizzle-orm";
+import {
+	financialConsultations,
+	financialGoals,
+	investmentAssets,
+	marketAssetSnapshots,
+} from "@/db/schema";
 import { buildCoursePortfolioMap } from "@/features/investments/lib/course-method";
+import { screenFundamentals } from "@/features/investments/lib/fundamental-screening";
 import { buildPortfolioMetrics } from "@/features/investments/lib/portfolio";
 import { db } from "@/shared/lib/db";
+import { FinancialConsultationSchema } from "@/shared/lib/schemas/financial-consultation";
 
 export type InvestmentAsset = {
 	id: string;
@@ -25,45 +32,73 @@ export type InvestmentAsset = {
 };
 
 export async function fetchInvestmentsPageData(userId: string) {
-	const [rows, goalRows] = await Promise.all([
-		db
-			.select({
-				id: investmentAssets.id,
-				name: investmentAssets.name,
-				ticker: investmentAssets.ticker,
-				assetClass: investmentAssets.assetClass,
-				institution: investmentAssets.institution,
-				quantity: investmentAssets.quantity,
-				averagePrice: investmentAssets.averagePrice,
-				currentPrice: investmentAssets.currentPrice,
-				monthlyIncome: investmentAssets.monthlyIncome,
-				targetAllocation: investmentAssets.targetAllocation,
-				note: investmentAssets.note,
-				goalId: investmentAssets.goalId,
-				goalName: financialGoals.name,
-			})
-			.from(investmentAssets)
-			.leftJoin(financialGoals, eq(investmentAssets.goalId, financialGoals.id))
-			.where(eq(investmentAssets.userId, userId))
-			.orderBy(asc(investmentAssets.assetClass), asc(investmentAssets.name)),
-		db
-			.select({
-				id: financialGoals.id,
-				name: financialGoals.name,
-				goalType: financialGoals.goalType,
-				targetAmount: financialGoals.targetAmount,
-				monthlyContribution: financialGoals.monthlyContribution,
-				targetDate: financialGoals.targetDate,
-			})
-			.from(financialGoals)
-			.where(
-				and(
-					eq(financialGoals.userId, userId),
-					eq(financialGoals.status, "active"),
+	const period = `${new Date().getUTCFullYear()}-${String(new Date().getUTCMonth() + 1).padStart(2, "0")}`;
+	const [rows, goalRows, snapshotRows, consultation, consultationHistory] =
+		await Promise.all([
+			db
+				.select({
+					id: investmentAssets.id,
+					name: investmentAssets.name,
+					ticker: investmentAssets.ticker,
+					assetClass: investmentAssets.assetClass,
+					institution: investmentAssets.institution,
+					quantity: investmentAssets.quantity,
+					averagePrice: investmentAssets.averagePrice,
+					currentPrice: investmentAssets.currentPrice,
+					monthlyIncome: investmentAssets.monthlyIncome,
+					targetAllocation: investmentAssets.targetAllocation,
+					note: investmentAssets.note,
+					goalId: investmentAssets.goalId,
+					goalName: financialGoals.name,
+				})
+				.from(investmentAssets)
+				.leftJoin(
+					financialGoals,
+					eq(investmentAssets.goalId, financialGoals.id),
+				)
+				.where(eq(investmentAssets.userId, userId))
+				.orderBy(asc(investmentAssets.assetClass), asc(investmentAssets.name)),
+			db
+				.select({
+					id: financialGoals.id,
+					name: financialGoals.name,
+					goalType: financialGoals.goalType,
+					targetAmount: financialGoals.targetAmount,
+					monthlyContribution: financialGoals.monthlyContribution,
+					targetDate: financialGoals.targetDate,
+				})
+				.from(financialGoals)
+				.where(
+					and(
+						eq(financialGoals.userId, userId),
+						eq(financialGoals.status, "active"),
+					),
+				)
+				.orderBy(asc(financialGoals.priority), asc(financialGoals.name)),
+			db
+				.select()
+				.from(marketAssetSnapshots)
+				.where(eq(marketAssetSnapshots.userId, userId)),
+			db.query.financialConsultations.findFirst({
+				where: and(
+					eq(financialConsultations.userId, userId),
+					eq(financialConsultations.period, period),
 				),
-			)
-			.orderBy(asc(financialGoals.priority), asc(financialGoals.name)),
-	]);
+			}),
+			db
+				.select({
+					period: financialConsultations.period,
+					modelId: financialConsultations.modelId,
+					updatedAt: financialConsultations.updatedAt,
+				})
+				.from(financialConsultations)
+				.where(eq(financialConsultations.userId, userId))
+				.orderBy(desc(financialConsultations.period))
+				.limit(6),
+		]);
+	const snapshots = new Map(
+		snapshotRows.map((snapshot) => [snapshot.assetId, snapshot]),
+	);
 
 	const rawAssets = rows.map((row) => ({
 		...row,
@@ -96,9 +131,55 @@ export async function fetchInvestmentsPageData(userId: string) {
 				}
 			: null,
 	);
-	const assets: InvestmentAsset[] = rawAssets.map((asset) => {
+	const assets = rawAssets.map((asset) => {
 		const currentValue = asset.quantity * asset.currentPrice;
 		const cost = asset.quantity * asset.averagePrice;
+		const snapshot = snapshots.get(asset.id) ?? null;
+		const fundamentalData = snapshot
+			? {
+					priceToEarnings:
+						snapshot.priceToEarnings === null
+							? null
+							: Number(snapshot.priceToEarnings),
+					priceToBook:
+						snapshot.priceToBook === null ? null : Number(snapshot.priceToBook),
+					enterpriseToEbit:
+						snapshot.enterpriseToEbit === null
+							? null
+							: Number(snapshot.enterpriseToEbit),
+					dividendYield:
+						snapshot.dividendYield === null
+							? null
+							: Number(snapshot.dividendYield),
+					returnOnEquity:
+						snapshot.returnOnEquity === null
+							? null
+							: Number(snapshot.returnOnEquity),
+					currentRatio:
+						snapshot.currentRatio === null
+							? null
+							: Number(snapshot.currentRatio),
+					debtToEquity:
+						snapshot.debtToEquity === null
+							? null
+							: Number(snapshot.debtToEquity),
+					revenueGrowth:
+						snapshot.revenueGrowth === null
+							? null
+							: Number(snapshot.revenueGrowth),
+					profitMargin:
+						snapshot.profitMargin === null
+							? null
+							: Number(snapshot.profitMargin),
+					vacancyRate:
+						snapshot.vacancyRate === null ? null : Number(snapshot.vacancyRate),
+					propertyCount: snapshot.propertyCount,
+					dailyLiquidity:
+						snapshot.dailyLiquidity === null
+							? null
+							: Number(snapshot.dailyLiquidity),
+				}
+			: null;
 		return {
 			...asset,
 			currentValue,
@@ -108,6 +189,17 @@ export async function fetchInvestmentsPageData(userId: string) {
 				metrics.totalCurrentValue > 0
 					? (currentValue / metrics.totalCurrentValue) * 100
 					: 0,
+			market: snapshot
+				? {
+						status: snapshot.status,
+						source: snapshot.source,
+						quoteUpdatedAt: snapshot.quoteUpdatedAt?.toISOString() ?? null,
+						fundamentalsUpdatedAt:
+							snapshot.fundamentalsUpdatedAt?.toISOString() ?? null,
+						lastError: snapshot.lastError,
+					}
+				: null,
+			screening: screenFundamentals(asset.assetClass, fundamentalData),
 		};
 	});
 
@@ -115,6 +207,36 @@ export async function fetchInvestmentsPageData(userId: string) {
 		assets,
 		metrics,
 		courseMethod,
+		period,
+		consultation:
+			consultation &&
+			FinancialConsultationSchema.safeParse(consultation.data).success
+				? {
+						data: FinancialConsultationSchema.parse(consultation.data),
+						modelId: consultation.modelId,
+						updatedAt: consultation.updatedAt.toISOString(),
+						marketDataUpdatedAt:
+							consultation.marketDataUpdatedAt?.toISOString() ?? null,
+					}
+				: null,
+		marketFreshness: {
+			configured: Boolean(process.env.BRAPI_TOKEN),
+			tracked: snapshotRows.length,
+			partial: snapshotRows.filter((item) => item.status === "partial").length,
+			failed: snapshotRows.filter((item) => item.status === "error").length,
+			latestQuoteAt: (() => {
+				const latest = snapshotRows
+					.map((item) => item.quoteUpdatedAt?.getTime() ?? 0)
+					.reduce((current, value) => Math.max(current, value), 0);
+				return latest ? new Date(latest).toISOString() : null;
+			})(),
+		},
+		consultantModel: process.env.FINANCIAL_CONSULTANT_MODEL ?? "gpt-5.5",
+		consultationHistory: consultationHistory.map((item) => ({
+			period: item.period,
+			modelId: item.modelId,
+			updatedAt: item.updatedAt.toISOString(),
+		})),
 		goals: goalRows.map(({ id, name }) => ({ id, name })),
 	};
 }

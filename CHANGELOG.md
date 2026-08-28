@@ -5,6 +5,29 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [3.0.0] - 2026-08-28
+
+Esta versão transforma o painel de investimentos em uma revisão financeira contínua: dados de mercado são atualizados em segundo plano, os filtros das aulas são calculados por ativo e a IA cruza orçamento, dívidas, metas, reserva e carteira numa consultoria mensal viva.
+
+### Adicionado
+- Dados de mercado: snapshots persistentes por usuário e ativo com cotação, fundamentos normalizados, fonte, cobertura, data de atualização e erro seguro, sem expor o token ao navegador.
+- Automação: serviço Docker chama um job autenticado a cada seis horas; cotações vencem em seis horas, fundamentos em sete dias e abrir a carteira também agenda uma atualização não bloqueante quando os dados estão vencidos.
+- Triagem de ações: P/L, EV/EBIT, ROE, crescimento, margem, liquidez e dívida são comparados às réguas das aulas, sempre distinguindo aprovação inicial, atenção e dado indisponível.
+- Triagem de FIIs: DY, P/VP, vacância, quantidade de imóveis/operações e liquidez seguem a metodologia, sem transformar filtros em ordem de compra.
+- Consultoria com IA: revisão integrada e estruturada de fluxo de caixa, reserva de seis meses, dívidas, metas, aporte, concentração, rebalanceamento e qualidade dos dados, persistida por usuário e período.
+- Consultoria automática: quando `FINANCIAL_CONSULTANT_MODEL` e a chave do provider estão configurados, a análise é criada ou renovada semanalmente dentro do período mensal.
+- Migração `0037_cooing_wolfpack.sql` com as tabelas `snapshots_mercado` e `consultorias_financeiras`.
+
+### Alterado
+- Investimentos: preços de ativos com ticker passam a ser atualizados pela brapi; a tela mostra a última atualização e permite sincronização imediata como contingência.
+- IA: a resolução de providers foi movida para uma camada compartilhada e continua compatível com OpenAI, Anthropic, Gemini, MiniMax, OpenRouter e Ollama.
+- Versão atualizada para 3.0.0.
+
+### Segurança e precisão
+- O job exige segredo com comparação em tempo constante, toda consulta ao banco permanece limitada por `userId` e chaves de APIs ficam somente no servidor.
+- EV/EBITDA não é apresentado como EV/EBIT; indicadores ausentes reduzem a cobertura da triagem em vez de serem inventados.
+- A consultoria explicita lacunas e mantém caráter educacional, sem promessas de retorno ou ordens automáticas de negociação.
+
 ## [2.9.0] - 2026-08-28
 
 Esta versão transforma as quatro aulas fornecidas pelo mantenedor em um mapa educacional dentro do painel de investimentos, conectando prazo do objetivo, alocação por classe, próximos aportes e controle de concentração.

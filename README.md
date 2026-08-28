@@ -3,14 +3,14 @@
 </p>
 
 <p align="center">
-  Projeto pessoal de gestão financeira. Self-hosted, manual e open source.
+  Projeto pessoal de gestão financeira. Self-hosted, automatizado e open source.
 </p>
 
 > **⚠️ Nota:** o OpenMonetis não está sendo encerrado, mas o desenvolvimento deve reduzir para quase zero daqui em diante. O app já cobre minhas demandas atuais de gerenciamento financeiro, então novas mudanças tendem a ser pontuais: correções, ajustes necessários e pequenas melhorias quando fizerem bastante sentido para meu uso.
 
 > **Não há versão online hospedada.** Você precisa clonar o repositório e rodar localmente ou no seu próprio servidor.
 
-[![Version](https://img.shields.io/badge/version-2.9.0-blue?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.0.0-blue?style=flat-square)](CHANGELOG.md)
 [![Next.js](https://img.shields.io/badge/Next.js-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
@@ -75,7 +75,7 @@ A ideia é simples: ter um lugar onde consigo ver todas as minhas contas, cartõ
 
 🧭 **Planejamento financeiro** — Diagnóstico automático dos últimos seis meses, taxa de poupança, compromissos mensais, gastos que merecem revisão, metas com prazo e aporte mensal e plano de quitação de dívidas.
 
-📈 **Investimentos** — Carteira por ativo e classe, patrimônio, renda passiva, vínculo às metas e mapa educacional baseado no prazo do objetivo, com alocação por classe, bandas de rebalanceamento, plano do próximo aporte e alertas de concentração.
+📈 **Investimentos e consultoria com IA** — Carteira por ativo e classe, cotações automáticas via brapi, triagem fundamentalista de ações e FIIs, mapa educacional pelo prazo, bandas de rebalanceamento, plano do próximo aporte e uma revisão integrada de despesas, dívidas, metas, reserva e investimentos. Cotações são renovadas a cada 6 horas, fundamentos semanalmente e a consultoria com IA semanalmente dentro de cada revisão mensal.
 
 💸 **Parcelamentos avançados** — Séries de parcelas, antecipação com cálculo de desconto, análise consolidada.
 
@@ -485,6 +485,11 @@ MINIMAX_API_KEY=
 OPENROUTER_API_KEY=
 OLLAMA_BASE_URL=http://localhost:11434/v1
 OLLAMA_API_KEY=
+
+# Dados de mercado e consultoria automática
+BRAPI_TOKEN= # token gratuito em https://brapi.dev
+FINANCIAL_CONSULTANT_MODEL=gpt-5.5
+MARKET_SYNC_SECRET= # segredo do job interno; se vazio, usa BETTER_AUTH_SECRET
 
 # Logo.dev (opcional, necessário para logos automáticos de estabelecimentos)
 # Ambas as variáveis são runtime — basta definir no host; nenhum build arg necessário.

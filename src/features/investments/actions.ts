@@ -2,7 +2,11 @@
 
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { financialGoals, investmentAssets } from "@/db/schema";
+import {
+	financialConsultations,
+	financialGoals,
+	investmentAssets,
+} from "@/db/schema";
 import {
 	type ActionResult,
 	handleActionError,
@@ -10,7 +14,11 @@ import {
 } from "@/shared/lib/actions/helpers";
 import { getUser } from "@/shared/lib/auth/server";
 import { db } from "@/shared/lib/db";
+import { generateFinancialConsultation } from "@/shared/lib/financial-consultant/service";
+import { syncUserMarketData } from "@/shared/lib/market-data/sync";
 import { noteSchema, uuidSchema } from "@/shared/lib/schemas/common";
+import type { FinancialConsultationData } from "@/shared/lib/schemas/financial-consultation";
+import { FinancialConsultationSchema } from "@/shared/lib/schemas/financial-consultation";
 
 const nonNegativeNumber = z.coerce
 	.number({ message: "Informe um valor válido." })
@@ -159,5 +167,81 @@ export async function deleteInvestmentAssetAction(
 		return { success: true, message: "Investimento removido." };
 	} catch (error) {
 		return handleActionError(error);
+	}
+}
+
+export async function syncInvestmentMarketDataAction(): Promise<
+	ActionResult<{ updated: number; skipped: number; failed: number }>
+> {
+	try {
+		const currentUser = await getUser();
+		const result = await syncUserMarketData(currentUser.id);
+		revalidateForEntity("investments", currentUser.id);
+		return {
+			success: true,
+			data: result,
+			message:
+				result.failed > 0
+					? `Atualização concluída com ${result.failed} ativo(s) indisponível(is).`
+					: "Dados de mercado atualizados.",
+		};
+	} catch (error) {
+		console.error("Market data sync failed:", error);
+		return {
+			success: false,
+			error: "Não foi possível atualizar o mercado agora.",
+		};
+	}
+}
+
+const consultationInputSchema = z.object({
+	period: z.string().regex(/^\d{4}-\d{2}$/),
+	modelId: z.string().trim().min(2).max(160),
+});
+
+export async function generateFinancialConsultationAction(
+	input: z.input<typeof consultationInputSchema>,
+): Promise<ActionResult<FinancialConsultationData>> {
+	try {
+		const currentUser = await getUser();
+		const data = consultationInputSchema.parse(input);
+		const recent = await db.query.financialConsultations.findFirst({
+			where: and(
+				eq(financialConsultations.userId, currentUser.id),
+				eq(financialConsultations.period, data.period),
+			),
+		});
+		const recentData = recent
+			? FinancialConsultationSchema.safeParse(recent.data)
+			: null;
+		if (
+			recent &&
+			recentData?.success &&
+			Date.now() - recent.updatedAt.getTime() < 60 * 60 * 1000
+		) {
+			return {
+				success: true,
+				data: recentData.data,
+				message: "A consultoria já está atualizada.",
+			};
+		}
+		const result = await generateFinancialConsultation({
+			userId: currentUser.id,
+			period: data.period,
+			modelId: data.modelId,
+		});
+		if (!result.success) return result;
+		revalidateForEntity("investments", currentUser.id);
+		return {
+			success: true,
+			data: result.data,
+			message: "Consultoria mensal atualizada.",
+		};
+	} catch (error) {
+		console.error("Error generating financial consultation:", error);
+		return {
+			success: false,
+			error: "Não foi possível gerar a consultoria agora.",
+		};
 	}
 }
