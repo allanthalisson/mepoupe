@@ -7,11 +7,13 @@ import {
 	RiBarChart2Line,
 	RiCalendarEventLine,
 	RiFileChartLine,
+	RiFundsLine,
 	RiGroupLine,
 	RiPriceTag3Line,
 	RiSecurePaymentLine,
 	RiSparklingLine,
 	RiStore2Line,
+	RiTargetLine,
 	RiTodoLine,
 } from "@remixicon/react";
 
@@ -75,6 +77,20 @@ export const NAV_SECTIONS: NavSection[] = [
 	{
 		label: "Finanças",
 		items: [
+			{
+				href: "/planning",
+				label: "Planejamento",
+				description: "Diagnóstico, metas e plano para dívidas",
+				icon: <RiTargetLine className="size-4" />,
+				iconClass: "text-primary",
+			},
+			{
+				href: "/investments",
+				label: "Investimentos",
+				description: "Patrimônio, alocação e renda passiva",
+				icon: <RiFundsLine className="size-4" />,
+				iconClass: "text-primary",
+			},
 			{
 				href: "/cards",
 				label: "Cartões",

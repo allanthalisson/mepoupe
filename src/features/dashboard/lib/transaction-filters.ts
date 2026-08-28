@@ -5,6 +5,7 @@ import {
 	INITIAL_BALANCE_NOTE,
 	REFUND_NOTE_PREFIX,
 } from "@/shared/lib/accounts/constants";
+import { buildFinancialAdminAccessFilter } from "@/shared/lib/accounts/financial-access";
 
 export { excludeTransactionsFromExcludedAccounts } from "@/shared/lib/accounts/query-filters";
 
@@ -17,10 +18,7 @@ export const buildDashboardAdminFilters = ({
 	userId,
 	adminPayerId,
 }: DashboardAdminFiltersParams) =>
-	[
-		eq(transactions.userId, userId),
-		eq(transactions.payerId, adminPayerId),
-	] as const;
+	[buildFinancialAdminAccessFilter({ userId, adminPayerId })] as const;
 
 export const excludeAutoInvoiceEntries = () =>
 	or(

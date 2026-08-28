@@ -1,6 +1,6 @@
 {
 	"name": "openmonetis",
-	"version": "2.7.13",
+	"version": "2.8.0",
 	"private": true,
 	"packageManager": "pnpm@11.1.3",
 	"scripts": {
@@ -16,7 +16,7 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
-		"postinstall": "cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.mjs",
+		"postinstall": "node -e \"require('node:fs').copyFileSync('node_modules/pdfjs-dist/build/pdf.worker.min.mjs', 'public/pdf.worker.min.mjs')\"",
 		"docker:up": "docker compose up -d",
 		"//docker:up": "Sobe app (Docker Hub) + banco PostgreSQL em background",
 		"docker:db": "docker compose up -d db",

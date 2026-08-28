@@ -11,6 +11,7 @@ import {
 	sql,
 } from "drizzle-orm";
 import {
+	accountShares,
 	cards,
 	categories,
 	financialAccounts,
@@ -136,12 +137,38 @@ export async function fetchTransactionFilterSources(userId: string) {
 		db.query.payers.findMany({
 			where: eq(payers.userId, userId),
 		}),
-		db.query.financialAccounts.findMany({
-			where: and(
-				eq(financialAccounts.userId, userId),
-				eq(financialAccounts.status, "Ativa"),
+		db
+			.select({
+				id: financialAccounts.id,
+				name: financialAccounts.name,
+				accountType: financialAccounts.accountType,
+				note: financialAccounts.note,
+				status: financialAccounts.status,
+				logo: financialAccounts.logo,
+				initialBalance: financialAccounts.initialBalance,
+				excludeFromBalance: financialAccounts.excludeFromBalance,
+				excludeInitialBalanceFromIncome:
+					financialAccounts.excludeInitialBalanceFromIncome,
+				userId: financialAccounts.userId,
+				createdAt: financialAccounts.createdAt,
+			})
+			.from(financialAccounts)
+			.leftJoin(
+				accountShares,
+				and(
+					eq(accountShares.accountId, financialAccounts.id),
+					eq(accountShares.sharedWithUserId, userId),
+				),
+			)
+			.where(
+				and(
+					eq(financialAccounts.status, "Ativa"),
+					or(
+						eq(financialAccounts.userId, userId),
+						eq(accountShares.permission, "write"),
+					),
+				),
 			),
-		}),
 		db.query.cards.findMany({
 			where: and(eq(cards.userId, userId), eq(cards.status, "Ativo")),
 		}),

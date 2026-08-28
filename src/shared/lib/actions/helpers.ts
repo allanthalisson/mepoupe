@@ -35,6 +35,8 @@ const revalidateConfig = {
 	transactions: ["/transactions", "/accounts", "/attachments"],
 	inbox: ["/inbox", "/transactions", "/dashboard"],
 	attachments: ["/attachments"],
+	planning: ["/planning", "/investments", "/dashboard"],
+	investments: ["/investments", "/planning", "/dashboard"],
 } as const;
 
 /** Entities whose mutations should invalidate the dashboard cache */
@@ -48,6 +50,8 @@ const DASHBOARD_ENTITIES: ReadonlySet<string> = new Set([
 	"notifications",
 	"inbox",
 	"recurring",
+	"planning",
+	"investments",
 ]);
 
 /**

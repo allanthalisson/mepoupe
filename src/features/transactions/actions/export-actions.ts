@@ -14,6 +14,7 @@ import {
 	fetchTransactionFilterSources,
 	fetchTransactions,
 } from "@/features/transactions/queries";
+import { getAccountAccess } from "@/shared/lib/accounts/access";
 import {
 	type ActionResult,
 	handleActionError,
@@ -61,6 +62,11 @@ export async function exportTransactionsDataAction(
 	try {
 		const userId = await getUserId();
 		const validated = exportTransactionsSchema.parse(input);
+		if (validated.source === "account-statement") {
+			if (!validated.accountId) throw new Error("Conta não informada.");
+			const access = await getAccountAccess(userId, validated.accountId);
+			if (!access) throw new Error("Conta não encontrada.");
+		}
 		const [filterSources, userPreferences] = await Promise.all([
 			fetchTransactionFilterSources(userId),
 			fetchUserPreferences(userId),
@@ -76,6 +82,8 @@ export async function exportTransactionsDataAction(
 			accountId: validated.accountId ?? undefined,
 			cardId: validated.cardId ?? undefined,
 			payerId: validated.payerId ?? undefined,
+			includeSharedAccountTransactions:
+				validated.source === "account-statement",
 			hideAnticipatedInstallments:
 				userPreferences?.hideAnticipatedInstallments ?? false,
 		});

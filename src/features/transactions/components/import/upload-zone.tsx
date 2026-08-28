@@ -2,6 +2,7 @@
 
 import { RiDownloadLine, RiUploadCloud2Line } from "@remixicon/react";
 import { useRef, useState } from "react";
+import { generateCsvTemplate, parseCsv } from "@/shared/lib/import/csv-parser";
 import { parseOfx } from "@/shared/lib/import/ofx-parser";
 import type { ImportStatement } from "@/shared/lib/import/types";
 import { generateXlsTemplate, parseXls } from "@/shared/lib/import/xls-parser";
@@ -19,9 +20,10 @@ export function UploadZone({ onParsed }: UploadZoneProps) {
 		setError(null);
 		const isOfx = /\.(ofx|qfx)$/i.test(file.name);
 		const isXls = /\.(xlsx|xls)$/i.test(file.name);
+		const isCsv = /\.csv$/i.test(file.name);
 
-		if (!isOfx && !isXls) {
-			setError("Formato não suportado. Use .ofx, .qfx, .xlsx ou .xls.");
+		if (!isOfx && !isXls && !isCsv) {
+			setError("Formato não suportado. Use .ofx, .qfx, .csv, .xlsx ou .xls.");
 			return;
 		}
 
@@ -43,6 +45,21 @@ export function UploadZone({ onParsed }: UploadZoneProps) {
 				}
 			};
 			reader.readAsText(file, "windows-1252");
+		} else if (isCsv) {
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				try {
+					const content = e.target?.result as string;
+					onParsed(parseCsv(content, file.name));
+				} catch (err) {
+					setError(
+						err instanceof Error
+							? err.message
+							: "Não foi possível ler o arquivo CSV.",
+					);
+				}
+			};
+			reader.readAsText(file);
 		} else {
 			const reader = new FileReader();
 			reader.onload = async (e) => {
@@ -60,6 +77,18 @@ export function UploadZone({ onParsed }: UploadZoneProps) {
 			};
 			reader.readAsArrayBuffer(file);
 		}
+	};
+
+	const handleDownloadCsvTemplate = () => {
+		const blob = new Blob(["\uFEFF", generateCsvTemplate()], {
+			type: "text/csv;charset=utf-8",
+		});
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = "modelo-lancamentos.csv";
+		a.click();
+		URL.revokeObjectURL(url);
 	};
 
 	const handleDownloadTemplate = async () => {
@@ -103,7 +132,7 @@ export function UploadZone({ onParsed }: UploadZoneProps) {
 						Arraste um arquivo aqui ou clique para selecionar
 					</p>
 					<p className="mt-1 text-muted-foreground text-xs">
-						.ofx · .qfx · .xlsx · .xls
+						.ofx · .qfx · .csv · .xlsx · .xls
 					</p>
 				</div>
 			</button>
@@ -111,7 +140,7 @@ export function UploadZone({ onParsed }: UploadZoneProps) {
 			<input
 				ref={inputRef}
 				type="file"
-				accept=".ofx,.qfx,.xlsx,.xls"
+				accept=".ofx,.qfx,.csv,.xlsx,.xls,text/csv"
 				className="hidden"
 				onChange={(e) => {
 					const file = e.target.files?.[0];
@@ -120,16 +149,26 @@ export function UploadZone({ onParsed }: UploadZoneProps) {
 				}}
 			/>
 
-			<div className="flex items-center justify-between">
+			<div className="flex flex-wrap items-center justify-between gap-3">
 				{error ? <p className="text-destructive text-sm">{error}</p> : <span />}
-				<button
-					type="button"
-					onClick={handleDownloadTemplate}
-					className="flex items-center gap-1.5 text-muted-foreground text-xs underline-offset-2 hover:text-foreground hover:underline"
-				>
-					<RiDownloadLine className="size-3.5" />
-					Baixar modelo .xlsx
-				</button>
+				<div className="flex items-center gap-4">
+					<button
+						type="button"
+						onClick={handleDownloadCsvTemplate}
+						className="flex items-center gap-1.5 text-muted-foreground text-xs underline-offset-2 hover:text-foreground hover:underline"
+					>
+						<RiDownloadLine className="size-3.5" />
+						Baixar modelo .csv
+					</button>
+					<button
+						type="button"
+						onClick={handleDownloadTemplate}
+						className="flex items-center gap-1.5 text-muted-foreground text-xs underline-offset-2 hover:text-foreground hover:underline"
+					>
+						<RiDownloadLine className="size-3.5" />
+						Baixar modelo .xlsx
+					</button>
+				</div>
 			</div>
 		</div>
 	);

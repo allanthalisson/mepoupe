@@ -3,6 +3,7 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { categories, financialAccounts, transactions } from "@/db/schema";
+import { fetchAccessibleAccountIds } from "@/shared/lib/accounts/access";
 import {
 	ACCOUNT_BALANCE_ADJUSTMENT_NAME,
 	INITIAL_BALANCE_CATEGORY_NAME,
@@ -308,6 +309,17 @@ export async function transferBetweenAccountsAction(
 				error: "A conta de origem e destino devem ser diferentes.",
 			};
 		}
+		const writableAccountIds = await fetchAccessibleAccountIds(
+			user.id,
+			[data.fromAccountId, data.toAccountId],
+			true,
+		);
+		if (!writableAccountIds.has(data.fromAccountId)) {
+			return { success: false, error: "Conta de origem não encontrada." };
+		}
+		if (!writableAccountIds.has(data.toAccountId)) {
+			return { success: false, error: "Conta de destino não encontrada." };
+		}
 
 		// Generate a unique transfer ID to link both transactions
 		const transferId = crypto.randomUUID();
@@ -324,17 +336,11 @@ export async function transferBetweenAccountsAction(
 			const [fromAccount, toAccount] = await Promise.all([
 				tx.query.financialAccounts.findFirst({
 					columns: { id: true, name: true },
-					where: and(
-						eq(financialAccounts.id, data.fromAccountId),
-						eq(financialAccounts.userId, user.id),
-					),
+					where: eq(financialAccounts.id, data.fromAccountId),
 				}),
 				tx.query.financialAccounts.findFirst({
 					columns: { id: true, name: true },
-					where: and(
-						eq(financialAccounts.id, data.toAccountId),
-						eq(financialAccounts.userId, user.id),
-					),
+					where: eq(financialAccounts.id, data.toAccountId),
 				}),
 			]);
 
@@ -438,6 +444,14 @@ export async function addAccountYieldAction(
 	try {
 		const user = await getUser();
 		const data = addAccountYieldSchema.parse(input);
+		const writableAccountIds = await fetchAccessibleAccountIds(
+			user.id,
+			[data.accountId],
+			true,
+		);
+		if (!writableAccountIds.has(data.accountId)) {
+			return { success: false, error: "Conta não encontrada." };
+		}
 		const adminPayerId = await getAdminPayerId(user.id);
 
 		if (!adminPayerId) {
@@ -454,10 +468,7 @@ export async function addAccountYieldAction(
 		await db.transaction(async (tx: typeof db) => {
 			const account = await tx.query.financialAccounts.findFirst({
 				columns: { id: true },
-				where: and(
-					eq(financialAccounts.id, data.accountId),
-					eq(financialAccounts.userId, user.id),
-				),
+				where: eq(financialAccounts.id, data.accountId),
 			});
 
 			if (!account) {
@@ -526,6 +537,14 @@ export async function adjustAccountBalanceAction(
 	try {
 		const user = await getUser();
 		const data = adjustAccountBalanceSchema.parse(input);
+		const writableAccountIds = await fetchAccessibleAccountIds(
+			user.id,
+			[data.accountId],
+			true,
+		);
+		if (!writableAccountIds.has(data.accountId)) {
+			return { success: false, error: "Conta não encontrada." };
+		}
 		const adminPayerId = await getAdminPayerId(user.id);
 
 		if (!adminPayerId) {
@@ -539,10 +558,7 @@ export async function adjustAccountBalanceAction(
 		await db.transaction(async (tx: typeof db) => {
 			const account = await tx.query.financialAccounts.findFirst({
 				columns: { id: true },
-				where: and(
-					eq(financialAccounts.id, data.accountId),
-					eq(financialAccounts.userId, user.id),
-				),
+				where: eq(financialAccounts.id, data.accountId),
 			});
 
 			if (!account) {

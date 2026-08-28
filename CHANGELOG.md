@@ -5,6 +5,25 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [2.8.0] - 2026-08-28
+
+Esta versão amplia o OpenMonetis de um registrador de movimentações para uma ferramenta de decisão financeira. Entram contas compartilhadas entre logins, importação CSV, diagnóstico do histórico, planejamento de metas e dívidas e um painel próprio para acompanhar investimentos e renda passiva.
+
+### Adicionado
+- Contas conjuntas: o titular pode compartilhar uma conta com outro usuário por e-mail como visualizador ou editor; saldo, extrato e lançamentos ficam disponíveis aos dois logins, preservando autoria e limites de permissão.
+- Importação: extratos CSV passam pelo mesmo fluxo de revisão já usado pelos outros formatos, com reconhecimento de separadores, cabeçalhos em português/inglês, valores brasileiros ou internacionais, débito/crédito em colunas separadas e modelo para download.
+- Planejamento: nova página com diagnóstico dos últimos seis meses, médias de receita, despesa e sobra, taxa de poupança, compromissos recorrentes/parcelados, oportunidades de revisão e recomendações práticas.
+- Metas: cadastro de objetivo, valor alvo, valor acumulado, aporte mensal, prioridade, prazo, status e conta vinculada, com projeção de conclusão e indicador de aderência ao prazo.
+- Dívidas: cadastro de saldo, juros, pagamentos mínimo e planejado, vencimento e estimativa simples do tempo de quitação.
+- Investimentos: cadastro de ativos com classe, quantidade, preço médio e atual, renda mensal, instituição, alocação-alvo e meta vinculada.
+- Carteira: painel de patrimônio, resultado acumulado, renda mensal/anual, progresso de renda passiva, concentração e desvios entre alocação atual e desejada.
+
+### Alterado
+- Navegação: Planejamento e Investimentos passam a integrar a seção Finanças.
+- Dashboard e consultas financeiras: contas compartilhadas entram nos saldos e movimentos acessíveis, sempre limitadas ao usuário e às permissões concedidas.
+- Desenvolvimento: o `postinstall` usa Node.js para copiar o worker do PDF e passa a funcionar também no Windows.
+- ATENÇÃO — mudança no banco de dados: aplique as migrações `0035_dry_puma.sql` e `0036_foamy_puck.sql` antes de iniciar a aplicação atualizada (`pnpm run db:migrate` em instalações manuais). A imagem Docker tenta aplicar as migrações automaticamente durante a inicialização.
+
 ## [2.7.13] - 2026-08-09
 
 Esta versão atualiza a base técnica do OpenMonetis com as correções de segurança e desempenho do Next.js 16.3, acelera as verificações de tipos, melhora a recuperação de falhas nas áreas mais complexas do aplicativo e corrige a importação de extratos OFX que reutilizam identificadores bancários.

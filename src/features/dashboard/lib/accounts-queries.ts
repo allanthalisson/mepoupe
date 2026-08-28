@@ -1,11 +1,16 @@
-import { and, eq, sql } from "drizzle-orm";
-import { financialAccounts, transactions } from "@/db/schema";
+import { and, eq, or, sql } from "drizzle-orm";
+import {
+	accountShares,
+	financialAccounts,
+	payers,
+	transactions,
+} from "@/db/schema";
 import {
 	INITIAL_BALANCE_NOTE,
 	isAccountInactive,
 } from "@/shared/lib/accounts/constants";
 import { db } from "@/shared/lib/db";
-import { getAdminPayerId } from "@/shared/lib/payers/get-admin-id";
+import { PAYER_ROLE_ADMIN } from "@/shared/lib/payers/constants";
 import { safeToNumber as toNumber } from "@/shared/utils/number";
 
 type RawDashboardAccount = {
@@ -37,8 +42,6 @@ type DashboardAccountsSnapshot = {
 export async function fetchDashboardAccounts(
 	userId: string,
 ): Promise<DashboardAccountsSnapshot> {
-	const adminPayerId = await getAdminPayerId(userId);
-
 	const rows = await db
 		.select({
 			id: financialAccounts.id,
@@ -51,7 +54,8 @@ export async function fetchDashboardAccounts(
 			balanceMovements: sql<number>`
         coalesce(
           sum(
-            case
+				case
+				  when ${payers.id} is null then 0
               when ${transactions.note} = ${INITIAL_BALANCE_NOTE} then 0
               else ${transactions.amount}
             end
@@ -62,15 +66,32 @@ export async function fetchDashboardAccounts(
 		})
 		.from(financialAccounts)
 		.leftJoin(
+			accountShares,
+			and(
+				eq(accountShares.accountId, financialAccounts.id),
+				eq(accountShares.sharedWithUserId, userId),
+			),
+		)
+		.leftJoin(
 			transactions,
 			and(
 				eq(transactions.accountId, financialAccounts.id),
-				eq(transactions.userId, userId),
 				eq(transactions.isSettled, true),
-				adminPayerId ? eq(transactions.payerId, adminPayerId) : sql`false`,
 			),
 		)
-		.where(eq(financialAccounts.userId, userId))
+		.leftJoin(
+			payers,
+			and(
+				eq(transactions.payerId, payers.id),
+				eq(payers.role, PAYER_ROLE_ADMIN),
+			),
+		)
+		.where(
+			or(
+				eq(financialAccounts.userId, userId),
+				eq(accountShares.sharedWithUserId, userId),
+			),
+		)
 		.groupBy(
 			financialAccounts.id,
 			financialAccounts.name,
@@ -79,6 +100,7 @@ export async function fetchDashboardAccounts(
 			financialAccounts.logo,
 			financialAccounts.initialBalance,
 			financialAccounts.excludeFromBalance,
+			accountShares.permission,
 		);
 
 	const accounts = rows
