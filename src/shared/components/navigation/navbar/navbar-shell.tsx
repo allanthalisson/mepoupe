@@ -21,10 +21,10 @@ export function NavbarShell({
 			<div className="relative z-10 mx-auto flex h-full w-full max-w-8xl items-center gap-4 px-4">
 				{logoHref ? (
 					<Link href={logoHref} className="shrink-0">
-						<Logo />
+						<Logo tone="light" />
 					</Link>
 				) : (
-					<Logo />
+					<Logo tone="light" />
 				)}
 				{children}
 			</div>

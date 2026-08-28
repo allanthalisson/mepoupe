@@ -36,10 +36,10 @@ export const metadata: Metadata = {
 		description: DESCRIPTION,
 		images: [
 			{
-				url: "/images/dashboard-preview-light.png",
-				width: 1920,
-				height: 1080,
-				alt: "me.poupe — Dashboard de finanças pessoais",
+				url: "/brand/banner-light.png",
+				width: 2172,
+				height: 724,
+				alt: "me.poupe — Suas finanças, do seu jeito",
 			},
 		],
 	},
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
 		card: "summary_large_image",
 		title: TITLE,
 		description: DESCRIPTION,
-		images: ["/images/dashboard-preview-light.png"],
+		images: ["/brand/banner-light.png"],
 	},
 	robots: {
 		index: true,

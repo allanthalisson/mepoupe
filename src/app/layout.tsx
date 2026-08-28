@@ -14,6 +14,10 @@ export const metadata: Metadata = {
 	},
 	description:
 		"Controle suas finanças pessoais de forma simples e transparente.",
+	icons: {
+		icon: "/brand/mark-white-on-navy.png",
+		apple: "/brand/mark-white-on-navy.png",
+	},
 };
 
 export default function RootLayout({

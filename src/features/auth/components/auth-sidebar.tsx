@@ -40,7 +40,7 @@ function AuthSidebar() {
 			</div>
 
 			<div className="relative flex flex-1 flex-col justify-between p-10 lg:p-12">
-				<Logo className="opacity-92 text-black/90" />
+				<Logo tone="light" className="opacity-92" />
 
 				<div className="flex flex-1 items-center justify-center py-10">
 					<div className="w-full rotate-[1.5deg]">
