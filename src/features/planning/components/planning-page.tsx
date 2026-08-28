@@ -47,6 +47,19 @@ const opportunityReason = {
 	"high-impact": "Alto impacto no mês",
 } as const;
 
+const categoryReason = {
+	increase: "Aumento acima do histórico",
+	"high-share": "Participação elevada nas despesas",
+} as const;
+
+const allocationKindLabel = {
+	"debt-minimum": "Pagamento mínimo",
+	"debt-extra": "Aceleração de dívida",
+	emergency: "Reserva de emergência",
+	goal: "Meta",
+	investment: "Investimento",
+} as const;
+
 export function PlanningPage({ data }: { data: PlanningPageData }) {
 	const [isPending, startTransition] = useTransition();
 	const status = STATUS_LABELS[data.diagnosis.status];
@@ -138,7 +151,7 @@ export function PlanningPage({ data }: { data: PlanningPageData }) {
 							</span>
 						</div>
 					</CardHeader>
-					<CardContent className="grid gap-4 sm:grid-cols-3">
+					<CardContent className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 						<div>
 							<p className="text-muted-foreground text-xs">
 								Taxa média de poupança
@@ -165,6 +178,14 @@ export function PlanningPage({ data }: { data: PlanningPageData }) {
 								{formatCurrency(data.summary.unallocatedMonthlyAmount)}
 							</p>
 						</div>
+						<div>
+							<p className="text-muted-foreground text-xs">
+								Economia potencial para revisar
+							</p>
+							<p className="font-semibold text-xl text-success">
+								{formatCurrency(data.diagnosis.potentialMonthlySavings)}
+							</p>
+						</div>
 					</CardContent>
 				</Card>
 				<Card>
@@ -186,6 +207,103 @@ export function PlanningPage({ data }: { data: PlanningPageData }) {
 					</CardContent>
 				</Card>
 			</div>
+
+			<section className="flex flex-col gap-3">
+				<div>
+					<h2 className="font-semibold text-lg">
+						Distribuição recomendada da sobra
+					</h2>
+					<p className="text-muted-foreground text-sm">
+						O plano protege pagamentos mínimos, prioriza dívidas caras e só
+						depois direciona recursos para reserva, objetivos e investimentos.
+					</p>
+				</div>
+				<div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+					<Card>
+						<CardHeader>
+							<CardTitle>Plano mensal</CardTitle>
+							<CardDescription>
+								{formatCurrency(data.allocationPlan.allocated)} de{" "}
+								{formatCurrency(data.allocationPlan.monthlyCapacity)}{" "}
+								direcionados
+							</CardDescription>
+						</CardHeader>
+						<CardContent>
+							{data.allocationPlan.items.length === 0 ? (
+								<p className="text-muted-foreground text-sm">
+									Cadastre dívidas e metas com valores mensais para montar a
+									distribuição.
+								</p>
+							) : (
+								<div className="divide-y">
+									{data.allocationPlan.items.map((item) => {
+										const coverage =
+											item.requested > 0
+												? (item.funded / item.requested) * 100
+												: 100;
+										return (
+											<div key={item.id} className="space-y-2 py-3">
+												<div className="flex items-center justify-between gap-3 text-sm">
+													<div>
+														<p className="font-medium">{item.name}</p>
+														<p className="text-muted-foreground text-xs">
+															{allocationKindLabel[item.kind]}
+														</p>
+													</div>
+													<div className="text-right">
+														<p className="font-medium">
+															{formatCurrency(item.funded)}
+														</p>
+														<p className="text-muted-foreground text-xs">
+															de {formatCurrency(item.requested)}
+														</p>
+													</div>
+												</div>
+												<Progress value={Math.min(coverage, 100)} />
+												{item.shortfall > 0 && (
+													<p className="text-warning text-xs">
+														Faltam {formatCurrency(item.shortfall)} para cobrir
+														o valor planejado.
+													</p>
+												)}
+											</div>
+										);
+									})}
+								</div>
+							)}
+						</CardContent>
+					</Card>
+					<Card>
+						<CardHeader>
+							<CardTitle>Próximo melhor uso</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							<p className="text-sm">{data.allocationPlan.nextBestUse}</p>
+							<div className="grid grid-cols-2 gap-3 text-sm">
+								<div>
+									<p className="text-muted-foreground text-xs">Ainda livre</p>
+									<p className="font-semibold text-success">
+										{formatCurrency(data.allocationPlan.unallocated)}
+									</p>
+								</div>
+								<div>
+									<p className="text-muted-foreground text-xs">
+										Déficit do plano
+									</p>
+									<p
+										className={cn(
+											"font-semibold",
+											data.allocationPlan.totalShortfall > 0 && "text-warning",
+										)}
+									>
+										{formatCurrency(data.allocationPlan.totalShortfall)}
+									</p>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+			</section>
 
 			<section className="flex flex-col gap-3">
 				<div className="flex items-center gap-2">
@@ -365,31 +483,40 @@ export function PlanningPage({ data }: { data: PlanningPageData }) {
 			</section>
 
 			<section className="flex flex-col gap-3">
-				<h2 className="font-semibold text-lg">Gastos para revisar</h2>
+				<div>
+					<h2 className="font-semibold text-lg">Oportunidades de economia</h2>
+					<p className="text-muted-foreground text-sm">
+						São candidatos à revisão baseados no seu histórico; a decisão sobre
+						o que é necessário continua sendo sua.
+					</p>
+				</div>
 				<Card>
 					<CardContent className="pt-6">
-						{data.diagnosis.reviewOpportunities.length === 0 ? (
+						{data.diagnosis.categoryOpportunities.length === 0 ? (
 							<p className="text-muted-foreground text-sm">
-								Ainda não há histórico suficiente para identificar desvios
-								relevantes.
+								Ainda não há histórico suficiente para estimar economia por
+								categoria.
 							</p>
 						) : (
 							<div className="divide-y">
-								{data.diagnosis.reviewOpportunities.map((item) => (
+								{data.diagnosis.categoryOpportunities.map((item) => (
 									<div
-										key={`${item.name}-${item.reason}`}
+										key={item.categoryName}
 										className="flex flex-col justify-between gap-2 py-3 sm:flex-row sm:items-center"
 									>
 										<div>
-											<p className="font-medium text-sm">{item.name}</p>
+											<p className="font-medium text-sm">{item.categoryName}</p>
 											<p className="text-muted-foreground text-xs">
-												{item.categoryName || "Sem categoria"} ·{" "}
-												{opportunityReason[item.reason]}
+												{categoryReason[item.reason]} ·{" "}
+												{item.shareOfCurrentExpenses}% das despesas do mês
 											</p>
 										</div>
 										<div className="text-right">
 											<p className="font-medium">
-												{formatCurrency(item.currentAmount)}
+												Até {formatCurrency(item.potentialSavings)}
+											</p>
+											<p className="text-muted-foreground text-xs">
+												para revisar neste mês
 											</p>
 											{item.increasePercentage !== null && (
 												<p className="text-warning text-xs">
@@ -404,6 +531,40 @@ export function PlanningPage({ data }: { data: PlanningPageData }) {
 						)}
 					</CardContent>
 				</Card>
+				{data.diagnosis.reviewOpportunities.length > 0 && (
+					<Card>
+						<CardHeader>
+							<CardTitle>Estabelecimentos para conferir</CardTitle>
+							<CardDescription>
+								Aumentos, frequência e compras de alto impacto.
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="divide-y">
+							{data.diagnosis.reviewOpportunities.map((item) => (
+								<div
+									key={`${item.name}-${item.reason}`}
+									className="flex items-center justify-between gap-3 py-3 text-sm"
+								>
+									<div>
+										<p className="font-medium">{item.name}</p>
+										<p className="text-muted-foreground text-xs">
+											{item.categoryName || "Sem categoria"} ·{" "}
+											{opportunityReason[item.reason]}
+										</p>
+									</div>
+									<div className="text-right">
+										<p className="font-medium">
+											{formatCurrency(item.currentAmount)}
+										</p>
+										<p className="text-success text-xs">
+											Revisão estimada: {formatCurrency(item.potentialSavings)}
+										</p>
+									</div>
+								</div>
+							))}
+						</CardContent>
+					</Card>
+				)}
 			</section>
 		</main>
 	);
