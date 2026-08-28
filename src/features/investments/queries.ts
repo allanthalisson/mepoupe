@@ -1,5 +1,6 @@
 import { and, asc, eq } from "drizzle-orm";
 import { financialGoals, investmentAssets } from "@/db/schema";
+import { buildCoursePortfolioMap } from "@/features/investments/lib/course-method";
 import { buildPortfolioMetrics } from "@/features/investments/lib/portfolio";
 import { db } from "@/shared/lib/db";
 
@@ -51,6 +52,8 @@ export async function fetchInvestmentsPageData(userId: string) {
 				name: financialGoals.name,
 				goalType: financialGoals.goalType,
 				targetAmount: financialGoals.targetAmount,
+				monthlyContribution: financialGoals.monthlyContribution,
+				targetDate: financialGoals.targetDate,
 			})
 			.from(financialGoals)
 			.where(
@@ -74,6 +77,25 @@ export async function fetchInvestmentsPageData(userId: string) {
 		.filter((goal) => goal.goalType === "passive_income")
 		.reduce((total, goal) => total + Number(goal.targetAmount), 0);
 	const metrics = buildPortfolioMetrics(rawAssets, targetMonthlyIncome);
+	const methodGoal = goalRows.find(
+		(goal) =>
+			["investment", "passive_income"].includes(goal.goalType) &&
+			goal.targetDate,
+	);
+	const courseMethod = buildCoursePortfolioMap(
+		rawAssets.map((asset) => ({
+			name: asset.name,
+			assetClass: asset.assetClass,
+			currentValue: asset.quantity * asset.currentPrice,
+		})),
+		methodGoal?.targetDate
+			? {
+					name: methodGoal.name,
+					targetDate: methodGoal.targetDate,
+					monthlyContribution: Number(methodGoal.monthlyContribution),
+				}
+			: null,
+	);
 	const assets: InvestmentAsset[] = rawAssets.map((asset) => {
 		const currentValue = asset.quantity * asset.currentPrice;
 		const cost = asset.quantity * asset.averagePrice;
@@ -92,6 +114,7 @@ export async function fetchInvestmentsPageData(userId: string) {
 	return {
 		assets,
 		metrics,
+		courseMethod,
 		goals: goalRows.map(({ id, name }) => ({ id, name })),
 	};
 }

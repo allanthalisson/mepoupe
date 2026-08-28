@@ -2,6 +2,7 @@ export const ASSET_CLASS_LABELS: Record<string, string> = {
 	fixed_income: "Renda fixa",
 	stocks: "Ações",
 	reits: "Fundos imobiliários",
+	international: "Exterior (ações ou ETFs)",
 	etfs: "ETFs",
 	crypto: "Criptoativos",
 	retirement: "Previdência",

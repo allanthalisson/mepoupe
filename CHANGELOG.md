@@ -5,6 +5,22 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [2.9.0] - 2026-08-28
+
+Esta versão transforma as quatro aulas fornecidas pelo mantenedor em um mapa educacional dentro do painel de investimentos, conectando prazo do objetivo, alocação por classe, próximos aportes e controle de concentração.
+
+### Adicionado
+- Mapa da carteira: define a referência de renda fixa pelo horizonte do objetivo (20%, 30%, 45% ou 60%) e divide o restante igualmente entre fundos imobiliários, ações brasileiras e exposição internacional.
+- Rebalanceamento: banda de tolerância de ±5 pontos percentuais por classe, com indicação de reforçar, manter ou revisar excedentes e preferência por corrigir desvios usando os próximos aportes.
+- Próximo aporte: distribuição automática do aporte mensal entre as classes abaixo do alvo, proporcionalmente ao desvio atual.
+- Alertas educacionais: concentração por ativo, quantidade de ações e FIIs, exposição a criptoativos e posições ainda não classificadas nas quatro classes centrais.
+- Seleção de ativos: checklists visíveis com os filtros fundamentalistas iniciais apresentados nas aulas para ações e fundos imobiliários, sem converter a triagem em recomendação automática.
+- Classe “Exterior (ações ou ETFs)” para separar a exposição internacional de ETFs genéricos.
+
+### Alterado
+- Investimentos: o mapa usa a meta ativa de investimento ou renda passiva com prazo, preservando a alocação-alvo manual já existente.
+- Documentação: versão atualizada para 2.9.0 e descrição do painel ampliada.
+
 ## [2.8.0] - 2026-08-28
 
 Esta versão amplia o OpenMonetis de um registrador de movimentações para uma ferramenta de decisão financeira. Entram contas compartilhadas entre logins, importação CSV, diagnóstico do histórico, planejamento de metas e dívidas e um painel próprio para acompanhar investimentos e renda passiva.
