@@ -429,6 +429,55 @@ O token **nunca chega ao cliente**. O servidor constrói a URL `https://img.logo
 
 ---
 
+## 📈 Consultoria Financeira com IA e Dados de Mercado (opcional)
+
+O painel de Investimentos pode manter os preços de ações e FIIs atualizados com dados de mercado reais e gerar, uma vez por mês, uma consultoria financeira com IA que cruza orçamento, dívidas, metas, reserva e carteira. Ambos os recursos são opcionais e dependem de 4 variáveis — sem elas, o app continua funcionando normalmente, só sem essa automação.
+
+### Variáveis
+
+```env
+BRAPI_TOKEN=                          # cotações e fundamentos de ativos via brapi.dev
+OPENAI_API_KEY=                       # (ou outro provider já configurado) gera a consultoria
+FINANCIAL_CONSULTANT_MODEL=gpt-5.5    # modelo usado na consultoria — não é um segredo
+MARKET_SYNC_SECRET=                   # protege o job interno de sincronização
+```
+
+### Como obter cada chave
+
+**1. `BRAPI_TOKEN` — dados de mercado**
+1. Acesse [brapi.dev](https://brapi.dev) e crie uma conta gratuita.
+2. No painel da conta, copie o token gerado automaticamente (o plano gratuito já cobre cotações básicas).
+3. Cole o valor em `BRAPI_TOKEN` no seu `.env` (ou nas variáveis de ambiente do host).
+
+> Sem essa chave, o app ainda tenta a faixa pública da API, mas fica sujeito a limites de uso mais baixos.
+
+**2. `OPENAI_API_KEY` — ou outro provider de IA**
+1. Acesse [platform.openai.com/api-keys](https://platform.openai.com/api-keys) (ou o console do provider de sua escolha — veja a lista completa na seção [Opcionais](#opcionais): Anthropic, Google, MiniMax, OpenRouter ou Ollama local).
+2. Clique em **"Create new secret key"**, dê um nome (ex: `openmonetis-consultoria`) e copie o valor exibido — ele **só aparece uma vez**.
+3. Cole o valor na variável correspondente (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.).
+
+> Qualquer provider já suportado pelos insights de IA funciona aqui — a consultoria usa o mesmo mecanismo de resolução de modelo.
+
+**3. `FINANCIAL_CONSULTANT_MODEL`**
+
+Não é uma chave secreta, apenas o identificador do modelo que vai gerar a consultoria (ex: `gpt-5.5`, `claude-...`, `gemini-...`). Mantenha o padrão `gpt-5.5` se estiver usando `OPENAI_API_KEY`, ou troque pelo modelo do provider escolhido.
+
+**4. `MARKET_SYNC_SECRET`**
+
+Protege o endpoint interno que sincroniza os dados de mercado a cada 6 horas. Gere um valor aleatório com:
+
+```bash
+openssl rand -base64 32
+```
+
+Se deixar em branco, o app reaproveita automaticamente o `BETTER_AUTH_SECRET` — funciona, mas um segredo dedicado é mais seguro.
+
+### Depois de configurar
+
+Reinicie o container (ou `pnpm dev`, em desenvolvimento). A consultoria é criada e renovada automaticamente uma vez por mês; uma análise manual também pode ser gerada a qualquer momento na tela de Investimentos.
+
+---
+
 ## 🔐 Variáveis de Ambiente
 
 **Perfil 2 (dev):** copie `.env.example` para `.env` — o `DATABASE_URL` já vem com `localhost`, pronto para uso com `pnpm dev`.
