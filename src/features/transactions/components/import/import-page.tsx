@@ -7,6 +7,7 @@ import {
 	fetchCategoryMappings,
 	saveCategoryMappings,
 } from "@/features/transactions/actions/category-memory-action";
+import { resolveImportCategoriesAction } from "@/features/transactions/actions/category-suggestion-action";
 import {
 	checkDuplicateOfxTransactions,
 	deleteImportedTransaction,
@@ -124,40 +125,67 @@ export function ImportPage({
 					toast.error(duplicateResult.error);
 				}
 
-				setRows(
-					stmt.transactions.map((t, index) => {
-						let mappedCategoryId =
-							categoryMappings[normalizeDescriptionKey(t.description)] ?? null;
-						const existingTransactionId = duplicateResult.success
-							? (duplicateResult.rows[index]?.existingTransactionId ?? null)
-							: null;
+				const initialRows: ReviewRow[] = stmt.transactions.map((t, index) => {
+					let mappedCategoryId =
+						categoryMappings[normalizeDescriptionKey(t.description)] ?? null;
+					const existingTransactionId = duplicateResult.success
+						? (duplicateResult.rows[index]?.existingTransactionId ?? null)
+						: null;
 
-						if (t.categoryRaw) {
-							const categoryRaw = normalizeCategoryName(t.categoryRaw);
-							const matchedOption = categoryOptions.find(
-								(opt) => normalizeCategoryName(opt.label) === categoryRaw,
-							);
-							if (matchedOption) {
-								mappedCategoryId = matchedOption.value;
-							}
+					if (t.categoryRaw) {
+						const categoryRaw = normalizeCategoryName(t.categoryRaw);
+						const matchedOption = categoryOptions.find(
+							(opt) => normalizeCategoryName(opt.label) === categoryRaw,
+						);
+						if (matchedOption) {
+							mappedCategoryId = matchedOption.value;
 						}
+					}
 
-						return {
-							...t,
-							reviewId: createClientSafeId(),
-							existingTransactionId,
-							isDuplicate: existingTransactionId !== null,
-							selected: existingTransactionId === null,
-							payerId,
-							categoryId: isCategoryCompatible(
-								mappedCategoryId,
-								t.transactionType,
-							)
-								? mappedCategoryId
-								: null,
-						};
-					}),
-				);
+					return {
+						...t,
+						reviewId: createClientSafeId(),
+						existingTransactionId,
+						isDuplicate: existingTransactionId !== null,
+						selected: existingTransactionId === null,
+						payerId,
+						categoryId: isCategoryCompatible(
+							mappedCategoryId,
+							t.transactionType,
+						)
+							? mappedCategoryId
+							: null,
+					};
+				});
+
+				// Pro que sobrou sem categoria (arquivo não trouxe, ou não bateu com
+				// nenhuma existente): tenta pelo histórico da conta e, sem isso, por
+				// sugestão de IA. Nunca bloqueia a importação se falhar.
+				const uncategorized = initialRows.filter((r) => !r.categoryId);
+				let finalRows = initialRows;
+				if (uncategorized.length > 0) {
+					try {
+						const suggestions = await resolveImportCategoriesAction(
+							uncategorized.map((r) => ({
+								description: r.description,
+								transactionType: r.transactionType,
+							})),
+						);
+						if (Object.keys(suggestions).length > 0) {
+							finalRows = initialRows.map((row) => {
+								if (row.categoryId) return row;
+								const suggestion = suggestions[row.description];
+								return suggestion
+									? { ...row, categoryId: suggestion.categoryId }
+									: row;
+							});
+						}
+					} catch (error) {
+						console.error("Erro ao sugerir categorias na importação:", error);
+					}
+				}
+				if (requestId !== duplicateCheckRequestId.current) return;
+				setRows(finalRows);
 			} finally {
 				if (requestId === duplicateCheckRequestId.current) {
 					setIsChecking(false);
