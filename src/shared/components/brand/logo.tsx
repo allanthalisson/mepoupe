@@ -4,12 +4,18 @@ import { cn } from "@/shared/utils/ui";
 interface LogoProps {
 	/** Classes extras aplicadas no wordmark "me.poupe" */
 	className?: string;
+	tone?: "adaptive" | "light" | "dark" | "orange";
 }
 
 /**
- * Marca do produto: só existe como logotipo (texto), sem símbolo/ícone.
- * Ver `LogoWordmark` para a implementação do texto em si.
+ * Marca do produto com suporte aos tons oficiais do wordmark.
+ * O ícone quadrado fica reservado para favicon e PWA.
  */
-export function Logo({ className }: LogoProps) {
-	return <LogoWordmark className={cn("text-lg text-foreground", className)} />;
+export function Logo({ className, tone = "adaptive" }: LogoProps) {
+	return (
+		<LogoWordmark
+			tone={tone}
+			className={cn("text-lg text-foreground", className)}
+		/>
+	);
 }

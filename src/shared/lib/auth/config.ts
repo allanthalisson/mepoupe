@@ -5,6 +5,7 @@ import type { GoogleProfile } from "better-auth/social-providers";
 import { isSignupDisabled } from "@/shared/lib/auth/signup";
 import { seedDefaultCategoriesForUser } from "@/shared/lib/categories/defaults";
 import { db, schema } from "@/shared/lib/db";
+import { sendResendEmail } from "@/shared/lib/email/resend";
 import { ensureDefaultPayerForUser } from "@/shared/lib/payers/defaults";
 import { normalizeNameFromEmail } from "@/shared/lib/payers/utils";
 
@@ -17,18 +18,70 @@ const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const DEFAULT_SESSION_EXPIRES_IN_DAYS = 30;
 const DEFAULT_SESSION_UPDATE_AGE_HOURS = 24;
 
-function parseTrustedOrigins(): string[] {
-	const baseUrl = process.env.BETTER_AUTH_URL;
-	const extra = process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+function toOrigin(
+	value: string | undefined,
+	protocol = "https",
+): string | null {
+	const trimmed = value?.trim();
+	if (!trimmed) return null;
 
-	const origins = new Set<string>();
-	if (baseUrl) origins.add(baseUrl);
-	for (const origin of extra?.split(",") ?? []) {
-		const trimmed = origin.trim();
-		if (trimmed) origins.add(trimmed);
+	try {
+		const url = new URL(
+			/^https?:\/\//i.test(trimmed) ? trimmed : `${protocol}://${trimmed}`,
+		);
+		return url.origin;
+	} catch {
+		return null;
 	}
+}
 
-	return [...origins];
+function toHost(value: string | undefined): string | null {
+	const origin = toOrigin(value);
+	return origin ? new URL(origin).hostname : null;
+}
+
+function parseTrustedOrigins(): string[] {
+	const configuredOrigins = [
+		process.env.BETTER_AUTH_URL,
+		...(process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",") ?? []),
+		...(process.env.REPLIT_DEV_DOMAIN
+			? [`https://${process.env.REPLIT_DEV_DOMAIN}`]
+			: []),
+		...(process.env.REPLIT_DOMAINS?.split(",").map(
+			(domain) => `https://${domain}`,
+		) ?? []),
+	];
+
+	return [
+		"http://localhost:3000",
+		"http://localhost:5000",
+		"http://127.0.0.1:3000",
+		"http://127.0.0.1:5000",
+		...configuredOrigins
+			.map((origin) => toOrigin(origin))
+			.filter((origin): origin is string => Boolean(origin)),
+	].filter((origin, index, origins) => origins.indexOf(origin) === index);
+}
+
+function getBaseUrlConfig() {
+	const configuredBaseUrl = toOrigin(process.env.BETTER_AUTH_URL);
+	if (configuredBaseUrl) return configuredBaseUrl;
+
+	const allowedHosts = [
+		"localhost",
+		"127.0.0.1",
+		process.env.REPLIT_DEV_DOMAIN,
+		...(process.env.REPLIT_DOMAINS?.split(",") ?? []),
+	]
+		.map((host) => toHost(host))
+		.filter((host): host is string => Boolean(host))
+		.filter((host, index, hosts) => hosts.indexOf(host) === index);
+
+	return {
+		allowedHosts,
+		fallback: "http://localhost:5000",
+		protocol: "auto" as const,
+	};
 }
 
 function parsePositiveIntegerEnv(name: string, fallback: number): number {
@@ -72,13 +125,51 @@ function getNameFromGoogleProfile(profile: GoogleProfile): string {
 	return fromEmail ?? "Usuário";
 }
 
+function escapeHtml(value: string): string {
+	return value
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;")
+		.replaceAll('"', "&quot;")
+		.replaceAll("'", "&#039;");
+}
+
+async function sendResetPasswordEmail({
+	user,
+	url,
+}: {
+	user: { email: string };
+	url: string;
+}) {
+	const safeUrl = escapeHtml(url);
+	await sendResendEmail({
+		to: user.email,
+		subject: "Redefina sua senha no me.poupe",
+		text: `Acesse este link para redefinir sua senha: ${url}`,
+		html: `
+			<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #202020;">
+				<h1 style="font-size: 24px;">Redefina sua senha</h1>
+				<p>Recebemos uma solicitação para redefinir a senha da sua conta me.poupe.</p>
+				<p><a href="${safeUrl}">Criar uma nova senha</a></p>
+				<p>Se você não fez esta solicitação, ignore este e-mail.</p>
+				<p style="font-size: 12px; color: #666;">Este link expira em uma hora.</p>
+			</div>
+		`,
+	});
+}
+
 // ============================================================================
 // BETTER AUTH INSTANCE
 // ============================================================================
 
 export const auth = betterAuth({
-	// Base URL configuration
-	baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+	// Use the Replit-managed session secret when BETTER_AUTH_SECRET is not set.
+	// Keeping this fallback preserves local .env compatibility while avoiding
+	// Better Auth's insecure default secret in hosted environments.
+	secret: process.env.BETTER_AUTH_SECRET || process.env.SESSION_SECRET,
+
+	// Resolve the proxied Replit host instead of defaulting to localhost:3000.
+	baseURL: getBaseUrlConfig(),
 
 	// Trust host configuration for production environments
 	trustedOrigins: parseTrustedOrigins(),
@@ -87,6 +178,9 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 		autoSignIn: true,
+		minPasswordLength: 7,
+		maxPasswordLength: 23,
+		sendResetPassword: sendResetPasswordEmail,
 	},
 
 	// Rate limiting

@@ -224,7 +224,7 @@ export function CategoryReportExport({
 			const doc = new jsPDF({ orientation: "landscape" });
 			const primaryColor = getPrimaryPdfColor();
 			const textLogoDataUrl = await loadExportLogoDataUrl(
-				"/images/logo_text.svg",
+				"/brand/wordmark-navy-transparent.png",
 			);
 			let brandingEndX = 14;
 

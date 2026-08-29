@@ -11,3 +11,6 @@ minimumReleaseAge: 0
 
 overrides:
   defu: 6.1.7
+  brace-expansion@1.1.15: 1.1.18
+  brace-expansion@2.1.1: 2.1.4
+  nanoid@3.3.17: 3.3.18

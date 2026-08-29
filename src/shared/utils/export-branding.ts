@@ -68,7 +68,7 @@ export function getPrimaryPdfColor(): [number, number, number] {
 const EXPORT_LOGO_RENDER_SCALE = 4;
 
 export async function loadExportLogoDataUrl(
-	logoPath = "/images/logo_text.svg",
+	logoPath = "/brand/wordmark-navy-transparent.png",
 ): Promise<string | null> {
 	if (typeof window === "undefined" || typeof document === "undefined") {
 		return null;

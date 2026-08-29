@@ -7,5 +7,12 @@ export default function SignupPage() {
 		redirect("/login");
 	}
 
-	return <SignupForm />;
+	return (
+		<SignupForm
+			googleSignInAvailable={Boolean(
+				process.env.GOOGLE_CLIENT_ID?.trim() &&
+					process.env.GOOGLE_CLIENT_SECRET?.trim(),
+			)}
+		/>
+	);
 }

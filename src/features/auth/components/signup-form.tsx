@@ -12,7 +12,7 @@ import {
 	FieldSeparator,
 } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
-import { authClient, googleSignInAvailable } from "@/shared/lib/auth/client";
+import { authClient } from "@/shared/lib/auth/client";
 import { cn } from "@/shared/utils/ui";
 import { AuthCardShell } from "./auth-card-shell";
 import { AuthErrorAlert } from "./auth-error-alert";
@@ -74,12 +74,19 @@ function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
 
 type DivProps = React.ComponentProps<"div">;
 
+interface SignupFormProps extends DivProps {
+	googleSignInAvailable?: boolean;
+}
+
 const authLinkClassName =
 	"font-medium text-foreground/88 underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground/30 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
-export function SignupForm({ className, ...props }: DivProps) {
+export function SignupForm({
+	className,
+	googleSignInAvailable = false,
+	...props
+}: SignupFormProps) {
 	const router = useRouter();
-	const isGoogleAvailable = googleSignInAvailable;
 
 	const [fullname, setFullname] = useState("");
 	const [email, setEmail] = useState("");
@@ -124,7 +131,7 @@ export function SignupForm({ className, ...props }: DivProps) {
 	}
 
 	async function handleGoogle() {
-		if (!isGoogleAvailable) {
+		if (!googleSignInAvailable) {
 			setError("Login com Google não está disponível no momento.");
 			return;
 		}
@@ -257,18 +264,22 @@ export function SignupForm({ className, ...props }: DivProps) {
 							</Button>
 						</Field>
 
-						<FieldSeparator className="my-1.5 *:data-[slot=field-separator-content]:bg-card">
-							Ou continue com
-						</FieldSeparator>
+						{googleSignInAvailable ? (
+							<>
+								<FieldSeparator className="my-1.5 *:data-[slot=field-separator-content]:bg-card">
+									Ou continue com
+								</FieldSeparator>
 
-						<Field>
-							<GoogleAuthButton
-								onClick={handleGoogle}
-								loading={loadingGoogle}
-								disabled={loadingEmail || loadingGoogle || !isGoogleAvailable}
-								text="Continuar com Google"
-							/>
-						</Field>
+								<Field>
+									<GoogleAuthButton
+										onClick={handleGoogle}
+										loading={loadingGoogle}
+										disabled={loadingEmail || loadingGoogle}
+										text="Continuar com Google"
+									/>
+								</Field>
+							</>
+						) : null}
 
 						<FieldDescription className="pt-1 text-center">
 							Já tem uma conta?{" "}
