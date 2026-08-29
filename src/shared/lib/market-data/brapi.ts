@@ -20,8 +20,8 @@ function firstResult(payload: unknown) {
 	return asRecord(results[0]);
 }
 
-async function brapiFetch(path: string) {
-	const token = process.env.BRAPI_TOKEN?.trim();
+async function brapiFetch(path: string, tokenOverride?: string | null) {
+	const token = (tokenOverride || process.env.BRAPI_TOKEN)?.trim();
 	const response = await fetch(`${BRAPI_BASE_URL}${path}`, {
 		headers: token ? { Authorization: `Bearer ${token}` } : undefined,
 		signal: AbortSignal.timeout(12_000),
@@ -52,10 +52,18 @@ export type MarketProviderData = {
 
 export async function fetchBrapiMarketData(
 	ticker: string,
-	options: { includeFundamentals: boolean; includeFiiDetails?: boolean },
+	options: {
+		includeFundamentals: boolean;
+		includeFiiDetails?: boolean;
+		tokenOverride?: string | null;
+	},
 ): Promise<MarketProviderData> {
 	const symbol = encodeURIComponent(ticker.trim().toUpperCase());
-	const quotePayload = await brapiFetch(`/stocks/quote?symbols=${symbol}`);
+	const token = options.tokenOverride;
+	const quotePayload = await brapiFetch(
+		`/stocks/quote?symbols=${symbol}`,
+		token,
+	);
 	const quote = firstResult(quotePayload);
 	const quoteData = asRecord(quote.data);
 	if (asNumber(quoteData.regularMarketPrice) === null) {
@@ -69,8 +77,8 @@ export async function fetchBrapiMarketData(
 
 	if (options.includeFundamentals) {
 		const [statisticsResult, financialResult] = await Promise.allSettled([
-			brapiFetch(`/stocks/statistics?symbols=${symbol}`),
-			brapiFetch(`/stocks/financial-data?symbols=${symbol}`),
+			brapiFetch(`/stocks/statistics?symbols=${symbol}`, token),
+			brapiFetch(`/stocks/financial-data?symbols=${symbol}`, token),
 		]);
 		if (statisticsResult.status === "fulfilled") {
 			statistics = asRecord(firstResult(statisticsResult.value).data);
@@ -81,8 +89,8 @@ export async function fetchBrapiMarketData(
 	}
 	if (options.includeFundamentals && options.includeFiiDetails) {
 		const [indicatorResult, propertiesResult] = await Promise.allSettled([
-			brapiFetch(`/fii/indicators?symbols=${symbol}`),
-			brapiFetch(`/fii/properties?symbols=${symbol}`),
+			brapiFetch(`/fii/indicators?symbols=${symbol}`, token),
+			brapiFetch(`/fii/properties?symbols=${symbol}`, token),
 		]);
 		if (indicatorResult.status === "fulfilled") {
 			fiiIndicators = asRecord(firstResult(indicatorResult.value).data);

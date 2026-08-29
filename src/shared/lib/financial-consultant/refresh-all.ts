@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq } from "drizzle-orm";
 import { financialConsultations, user } from "@/db/schema";
 import { db } from "@/shared/lib/db";
+import { fetchUserIntegrationSecrets } from "@/shared/lib/integrations/user-keys";
 import { syncUserMarketData } from "@/shared/lib/market-data/sync";
 import { generateFinancialConsultation } from "./service";
 
@@ -12,7 +13,7 @@ function currentPeriod() {
 
 export async function refreshAllFinancialData() {
 	const users = await db.select({ id: user.id }).from(user);
-	const modelId = process.env.FINANCIAL_CONSULTANT_MODEL?.trim();
+	const defaultModelId = process.env.FINANCIAL_CONSULTANT_MODEL?.trim();
 	const period = currentPeriod();
 	const summary = {
 		users: users.length,
@@ -26,6 +27,13 @@ export async function refreshAllFinancialData() {
 		const market = await syncUserMarketData(currentUser.id);
 		summary.marketUpdated += market.updated;
 		summary.marketFailed += market.failed;
+
+		// Cada usuário pode escolher seu próprio modelo (Configurações ->
+		// Integrações); sem preferência salva, cai no padrão do host.
+		const { consultantModelId } = await fetchUserIntegrationSecrets(
+			currentUser.id,
+		);
+		const modelId = consultantModelId ?? defaultModelId;
 		if (!modelId) continue;
 		const existing = await db.query.financialConsultations.findFirst({
 			columns: { id: true, updatedAt: true },

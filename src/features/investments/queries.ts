@@ -9,6 +9,7 @@ import { buildCoursePortfolioMap } from "@/features/investments/lib/course-metho
 import { screenFundamentals } from "@/features/investments/lib/fundamental-screening";
 import { buildPortfolioMetrics } from "@/features/investments/lib/portfolio";
 import { db } from "@/shared/lib/db";
+import { fetchUserIntegrationSecrets } from "@/shared/lib/integrations/user-keys";
 import { FinancialConsultationSchema } from "@/shared/lib/schemas/financial-consultation";
 
 export type InvestmentAsset = {
@@ -33,6 +34,7 @@ export type InvestmentAsset = {
 
 export async function fetchInvestmentsPageData(userId: string) {
 	const period = `${new Date().getUTCFullYear()}-${String(new Date().getUTCMonth() + 1).padStart(2, "0")}`;
+	const userIntegrations = await fetchUserIntegrationSecrets(userId);
 	const [rows, goalRows, snapshotRows, consultation, consultationHistory] =
 		await Promise.all([
 			db
@@ -220,7 +222,9 @@ export async function fetchInvestmentsPageData(userId: string) {
 					}
 				: null,
 		marketFreshness: {
-			configured: Boolean(process.env.BRAPI_TOKEN),
+			configured: Boolean(
+				userIntegrations.brapiToken || process.env.BRAPI_TOKEN,
+			),
 			tracked: snapshotRows.length,
 			partial: snapshotRows.filter((item) => item.status === "partial").length,
 			failed: snapshotRows.filter((item) => item.status === "error").length,
@@ -231,7 +235,10 @@ export async function fetchInvestmentsPageData(userId: string) {
 				return latest ? new Date(latest).toISOString() : null;
 			})(),
 		},
-		consultantModel: process.env.FINANCIAL_CONSULTANT_MODEL ?? "gpt-5.5",
+		consultantModel:
+			userIntegrations.consultantModelId ??
+			process.env.FINANCIAL_CONSULTANT_MODEL ??
+			"gpt-5.5",
 		consultationHistory: consultationHistory.map((item) => ({
 			period: item.period,
 			modelId: item.modelId,

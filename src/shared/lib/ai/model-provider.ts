@@ -1,11 +1,11 @@
 import "server-only";
-import { anthropic } from "@ai-sdk/anthropic";
-import { google } from "@ai-sdk/google";
-import { openai } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import type { LanguageModel } from "ai";
-import { minimax } from "vercel-minimax-ai-provider";
+import { createMinimax } from "vercel-minimax-ai-provider";
 
 const MODEL_ID_REGEX = /^[a-zA-Z0-9._:/-]{2,160}$/;
 
@@ -13,13 +13,25 @@ export type ResolveModelResult =
 	| { success: true; model: LanguageModel }
 	| { success: false; error: string };
 
-export function resolveLanguageModel(modelId: string): ResolveModelResult {
+/**
+ * Chaves de API por usuário (descriptografadas), com precedência sobre as
+ * variáveis de ambiente globais do host. `openrouter`/`anthropic`/`google`/
+ * `minimax`/`openai` — mesmas chaves de `UserAiProvider`.
+ */
+export type UserModelApiKeys = Partial<
+	Record<"openai" | "anthropic" | "google" | "minimax" | "openrouter", string>
+>;
+
+export function resolveLanguageModel(
+	modelId: string,
+	userApiKeys?: UserModelApiKeys,
+): ResolveModelResult {
 	const id = modelId.trim();
 	if (!MODEL_ID_REGEX.test(id))
 		return { success: false, error: "Modelo inválido." };
 
 	if (id.startsWith("openrouter:") || (!id.includes(":") && id.includes("/"))) {
-		const apiKey = process.env.OPENROUTER_API_KEY;
+		const apiKey = userApiKeys?.openrouter || process.env.OPENROUTER_API_KEY;
 		if (!apiKey)
 			return { success: false, error: "OPENROUTER_API_KEY não configurada." };
 		const providerId = id.replace(/^openrouter:/, "");
@@ -39,27 +51,32 @@ export function resolveLanguageModel(modelId: string): ResolveModelResult {
 		return { success: true, model: ollama.chatModel(providerId) };
 	}
 	if (id.startsWith("claude-")) {
-		if (!process.env.ANTHROPIC_API_KEY)
+		const apiKey = userApiKeys?.anthropic || process.env.ANTHROPIC_API_KEY;
+		if (!apiKey)
 			return { success: false, error: "ANTHROPIC_API_KEY não configurada." };
-		return { success: true, model: anthropic(id) };
+		return { success: true, model: createAnthropic({ apiKey })(id) };
 	}
 	if (id.startsWith("gemini-")) {
-		if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY)
+		const apiKey =
+			userApiKeys?.google || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+		if (!apiKey)
 			return {
 				success: false,
 				error: "GOOGLE_GENERATIVE_AI_API_KEY não configurada.",
 			};
-		return { success: true, model: google(id) };
+		return { success: true, model: createGoogleGenerativeAI({ apiKey })(id) };
 	}
 	if (id.startsWith("MiniMax-")) {
-		if (!process.env.MINIMAX_API_KEY)
+		const apiKey = userApiKeys?.minimax || process.env.MINIMAX_API_KEY;
+		if (!apiKey)
 			return { success: false, error: "MINIMAX_API_KEY não configurada." };
-		return { success: true, model: minimax(id) };
+		return { success: true, model: createMinimax({ apiKey })(id) };
 	}
 	if (id.startsWith("gpt-")) {
-		if (!process.env.OPENAI_API_KEY)
+		const apiKey = userApiKeys?.openai || process.env.OPENAI_API_KEY;
+		if (!apiKey)
 			return { success: false, error: "OPENAI_API_KEY não configurada." };
-		return { success: true, model: openai(id) };
+		return { success: true, model: createOpenAI({ apiKey })(id) };
 	}
 	return { success: false, error: "Provider de modelo não suportado." };
 }

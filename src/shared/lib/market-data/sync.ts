@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq } from "drizzle-orm";
 import { investmentAssets, marketAssetSnapshots } from "@/db/schema";
 import { db } from "@/shared/lib/db";
+import { fetchUserIntegrationSecrets } from "@/shared/lib/integrations/user-keys";
 import { fetchBrapiMarketData } from "./brapi";
 
 const QUOTE_MAX_AGE_MS = 6 * 60 * 60 * 1000;
@@ -18,6 +19,12 @@ export async function syncUserMarketData(userId: string, force = false) {
 	let updated = 0;
 	let skipped = 0;
 	let failed = 0;
+
+	if (assets.length === 0) {
+		return { assets: 0, updated, skipped, failed };
+	}
+
+	const { brapiToken } = await fetchUserIntegrationSecrets(userId);
 
 	for (const asset of assets) {
 		if (
@@ -51,6 +58,7 @@ export async function syncUserMarketData(userId: string, force = false) {
 			const data = await fetchBrapiMarketData(asset.ticker, {
 				includeFundamentals,
 				includeFiiDetails: asset.assetClass === "reits",
+				tokenOverride: brapiToken,
 			});
 			const values = {
 				userId,

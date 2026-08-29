@@ -3,6 +3,7 @@
 import { generateObject } from "ai";
 import { resolveLanguageModel } from "@/shared/lib/ai/model-provider";
 import { getUser } from "@/shared/lib/auth/server";
+import { fetchUserIntegrationSecrets } from "@/shared/lib/integrations/user-keys";
 import {
 	type InsightsResponse,
 	InsightsResponseSchema,
@@ -37,7 +38,8 @@ export async function generateInsightsAction(
 			};
 		}
 
-		const resolvedModel = resolveLanguageModel(modelId);
+		const { aiApiKeys } = await fetchUserIntegrationSecrets(user.id);
+		const resolvedModel = resolveLanguageModel(modelId, aiApiKeys);
 		if (!resolvedModel.success) {
 			return resolvedModel;
 		}

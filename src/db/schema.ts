@@ -182,6 +182,34 @@ export const userPreferences = pgTable("preferencias_usuario", {
 		.default(sql`now()`),
 });
 
+/**
+ * Chaves de integração por usuário (BRAPI, provedores de IA). Os valores em
+ * `aiApiKeys` e `brapiToken` são armazenados **cifrados** (ver
+ * `src/shared/lib/crypto/secret-box.ts`) — nunca texto puro.
+ */
+export const userIntegrations = pgTable("integracoes_usuario", {
+	id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+	userId: text("user_id")
+		.notNull()
+		.unique()
+		.references(() => user.id, { onDelete: "cascade" }),
+	brapiToken: text("brapi_token"),
+	aiApiKeys: jsonb("ai_api_keys").$type<Record<string, string>>(),
+	consultantModelId: text("consultant_model_id"),
+	createdAt: timestamp("created_at", {
+		mode: "date",
+		withTimezone: true,
+	})
+		.notNull()
+		.default(sql`now()`),
+	updatedAt: timestamp("updated_at", {
+		mode: "date",
+		withTimezone: true,
+	})
+		.notNull()
+		.default(sql`now()`),
+});
+
 // ===================== PUBLIC TABLES =====================
 
 export const financialAccounts = pgTable("contas", {
@@ -706,7 +734,7 @@ export const savedInsights = pgTable(
 	}),
 );
 
-// ===================== COMPANION =====================
+// ===================== TOKENS DE API =====================
 
 export const apiTokens = pgTable(
 	"tokens_api",

@@ -1,6 +1,10 @@
-import { desc, eq } from "drizzle-orm";
-import { apiTokens } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { decryptSecret, maskSecret } from "@/shared/lib/crypto/secret-box";
 import { db, schema } from "@/shared/lib/db";
+import {
+	USER_CONFIGURABLE_AI_PROVIDERS,
+	type UserAiProvider,
+} from "./lib/integrations";
 
 interface UserPreferences {
 	statementNoteAsColumn: boolean;
@@ -9,17 +13,6 @@ interface UserPreferences {
 	showTransactionSummary: boolean;
 	groupTransactionsByDate: boolean;
 	hideAnticipatedInstallments: boolean;
-}
-
-interface ApiToken {
-	id: string;
-	name: string;
-	tokenPrefix: string;
-	lastUsedAt: Date | null;
-	lastUsedIp: string | null;
-	createdAt: Date;
-	expiresAt: Date | null;
-	revokedAt: Date | null;
 }
 
 async function fetchAuthProvider(userId: string): Promise<string> {
@@ -51,33 +44,54 @@ export async function fetchUserPreferences(
 	return result[0];
 }
 
-async function fetchApiTokens(userId: string): Promise<ApiToken[]> {
-	return db
-		.select({
-			id: apiTokens.id,
-			name: apiTokens.name,
-			tokenPrefix: apiTokens.tokenPrefix,
-			lastUsedAt: apiTokens.lastUsedAt,
-			lastUsedIp: apiTokens.lastUsedIp,
-			createdAt: apiTokens.createdAt,
-			expiresAt: apiTokens.expiresAt,
-			revokedAt: apiTokens.revokedAt,
-		})
-		.from(apiTokens)
-		.where(eq(apiTokens.userId, userId))
-		.orderBy(desc(apiTokens.createdAt));
+export type UserIntegrationsSummary = {
+	brapi: { configured: boolean; masked: string | null };
+	aiProviders: Record<
+		UserAiProvider,
+		{ configured: boolean; masked: string | null }
+	>;
+	consultantModelId: string | null;
+};
+
+function maskCipher(cipher: string | null | undefined): string | null {
+	if (!cipher) return null;
+	const plain = decryptSecret(cipher);
+	return plain ? maskSecret(plain) : null;
+}
+
+export async function fetchUserIntegrations(
+	userId: string,
+): Promise<UserIntegrationsSummary> {
+	const row = await db.query.userIntegrations.findFirst({
+		where: eq(schema.userIntegrations.userId, userId),
+	});
+
+	const brapiMasked = maskCipher(row?.brapiToken);
+	const aiApiKeys = row?.aiApiKeys ?? {};
+
+	const aiProviders = {} as UserIntegrationsSummary["aiProviders"];
+	for (const provider of USER_CONFIGURABLE_AI_PROVIDERS) {
+		const masked = maskCipher(aiApiKeys[provider]);
+		aiProviders[provider] = { configured: !!masked, masked };
+	}
+
+	return {
+		brapi: { configured: !!brapiMasked, masked: brapiMasked },
+		aiProviders,
+		consultantModelId: row?.consultantModelId ?? null,
+	};
 }
 
 export async function fetchSettingsPageData(userId: string) {
-	const [authProvider, userPreferences, userApiTokens] = await Promise.all([
+	const [authProvider, userPreferences, userIntegrations] = await Promise.all([
 		fetchAuthProvider(userId),
 		fetchUserPreferences(userId),
-		fetchApiTokens(userId),
+		fetchUserIntegrations(userId),
 	]);
 
 	return {
 		authProvider,
 		userPreferences,
-		userApiTokens,
+		userIntegrations,
 	};
 }

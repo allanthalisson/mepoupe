@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { financialConsultations } from "@/db/schema";
 import { resolveLanguageModel } from "@/shared/lib/ai/model-provider";
 import { db } from "@/shared/lib/db";
+import { fetchUserIntegrationSecrets } from "@/shared/lib/integrations/user-keys";
 import { FinancialConsultationSchema } from "@/shared/lib/schemas/financial-consultation";
 import { buildFinancialConsultantContext } from "./context";
 
@@ -20,7 +21,8 @@ export async function generateFinancialConsultation(options: {
 	modelId: string;
 }) {
 	const period = options.period ?? currentPeriod();
-	const resolved = resolveLanguageModel(options.modelId);
+	const { aiApiKeys } = await fetchUserIntegrationSecrets(options.userId);
+	const resolved = resolveLanguageModel(options.modelId, aiApiKeys);
 	if (!resolved.success) return resolved;
 	const context = await buildFinancialConsultantContext(options.userId, period);
 	const result = await generateObject({

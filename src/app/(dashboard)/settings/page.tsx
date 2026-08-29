@@ -1,10 +1,10 @@
-import { RiAndroidLine, RiArrowRightSLine } from "@remixicon/react";
+import { RiArrowRightSLine } from "@remixicon/react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 
-import { CompanionTab } from "@/features/settings/components/companion-tab";
 import { DeleteAccountForm } from "@/features/settings/components/delete-account-form";
+import { IntegrationsTab } from "@/features/settings/components/integrations-tab";
 import { PasskeysForm } from "@/features/settings/components/passkeys-form";
 import { PreferencesForm } from "@/features/settings/components/preferences-form";
 import { UpdateEmailForm } from "@/features/settings/components/update-email-form";
@@ -34,7 +34,7 @@ export default async function Page() {
 	const userName = session.user.name || "";
 	const userEmail = session.user.email || "";
 
-	const { authProvider, userPreferences, userApiTokens } =
+	const { authProvider, userPreferences, userIntegrations } =
 		await fetchSettingsPageData(session.user.id);
 
 	return (
@@ -45,7 +45,7 @@ export default async function Page() {
 					<div className="overflow-x-auto overflow-y-hidden scroll-smooth md:overflow-visible [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 						<TabsList className="inline-flex w-max flex-nowrap md:w-full">
 							<TabsTrigger value="preferencias">Preferências</TabsTrigger>
-							<TabsTrigger value="companion">Companion</TabsTrigger>
+							<TabsTrigger value="integracoes">Integrações</TabsTrigger>
 							<TabsTrigger value="nome">Alterar nome</TabsTrigger>
 							<TabsTrigger value="senha">Alterar senha</TabsTrigger>
 							<TabsTrigger value="passkeys">Passkeys</TabsTrigger>
@@ -96,25 +96,23 @@ export default async function Page() {
 					</Card>
 				</TabsContent>
 
-				<TabsContent value="companion" className="mt-4">
+				<TabsContent value="integracoes" className="mt-4">
 					<Card className="p-6">
 						<div className="space-y-4">
 							<div>
-								<div className="flex items-center gap-2 mb-1">
-									<h2 className="text-xl font-semibold">me.poupe Companion</h2>
-									<span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success dark:bg-success/10">
-										<RiAndroidLine className="h-3 w-3" />
-										Android
-									</span>
-								</div>
+								<h2 className="text-xl font-semibold mb-1">Integrações</h2>
 								<p className="text-sm text-muted-foreground">
-									Capture notificações de transações dos seus apps de banco
-									(Nubank, Itaú, Bradesco, Inter, C6 e outros) e envie para sua
-									caixa de entrada.
+									Use suas próprias chaves para dados de mercado e IA. Tudo aqui
+									é opcional — sem configurar nada, o app continua funcionando
+									normalmente.
 								</p>
 							</div>
 							<Separator />
-							<CompanionTab tokens={userApiTokens} />
+							<IntegrationsTab
+								brapi={userIntegrations.brapi}
+								aiProviders={userIntegrations.aiProviders}
+								consultantModelId={userIntegrations.consultantModelId}
+							/>
 						</div>
 					</Card>
 				</TabsContent>

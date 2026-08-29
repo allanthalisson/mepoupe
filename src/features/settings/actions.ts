@@ -1,15 +1,16 @@
 "use server";
 
-import { createHash, randomBytes } from "node:crypto";
 import { verifyPassword } from "better-auth/crypto";
-import { and, eq, isNull, ne, or } from "drizzle-orm";
+import { and, eq, ne, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
-import { account, apiTokens, payers } from "@/db/schema";
+import { account, payers } from "@/db/schema";
 import { revalidateForEntity } from "@/shared/lib/actions/helpers";
 import { auth } from "@/shared/lib/auth/config";
+import { getUserId } from "@/shared/lib/auth/server";
 import { DEFAULT_CATEGORIES } from "@/shared/lib/categories/defaults";
+import { encryptSecret } from "@/shared/lib/crypto/secret-box";
 import { db, schema } from "@/shared/lib/db";
 import {
 	DEFAULT_PAYER_AVATAR,
@@ -20,6 +21,7 @@ import { getAdminPayerId } from "@/shared/lib/payers/get-admin-id";
 import { generateShareCode } from "@/shared/lib/payers/share-code";
 import { normalizeNameFromEmail } from "@/shared/lib/payers/utils";
 import { deleteS3Object } from "@/shared/lib/storage/presign";
+import { INTEGRATION_KINDS } from "./lib/integrations";
 
 type ActionResponse<T = void> = {
 	success: boolean;
@@ -627,70 +629,65 @@ export async function updatePreferencesAction(
 	}
 }
 
-// API Token Actions
+// ============================================================================
+// INTEGRAÇÕES (chaves de API por usuário: BRAPI, provedores de IA)
+// ============================================================================
 
-const createApiTokenSchema = z.object({
-	name: z.string().min(1, "Nome do dispositivo é obrigatório").max(100),
+const MODEL_ID_REGEX = /^[a-zA-Z0-9._:/-]{2,160}$/;
+
+const saveIntegrationKeySchema = z.object({
+	kind: z.enum(INTEGRATION_KINDS),
+	value: z
+		.string()
+		.trim()
+		.min(1, "Informe um valor.")
+		.max(500, "Valor muito longo."),
 });
 
-const revokeApiTokenSchema = z.object({
-	tokenId: z.string().uuid("ID do token inválido"),
-});
+async function upsertUserIntegrationsRow(
+	userId: string,
+	values: Partial<{
+		brapiToken: string | null;
+		aiApiKeys: Record<string, string>;
+		consultantModelId: string | null;
+	}>,
+) {
+	const existing = await db.query.userIntegrations.findFirst({
+		where: eq(schema.userIntegrations.userId, userId),
+	});
 
-function generateSecureToken(): string {
-	const prefix = "opm";
-	const randomPart = randomBytes(32).toString("base64url");
-	return `${prefix}_${randomPart}`;
+	if (existing) {
+		await db
+			.update(schema.userIntegrations)
+			.set({ ...values, updatedAt: new Date() })
+			.where(eq(schema.userIntegrations.userId, userId));
+		return;
+	}
+
+	await db.insert(schema.userIntegrations).values({ userId, ...values });
+	return existing;
 }
 
-function hashToken(token: string): string {
-	return createHash("sha256").update(token).digest("hex");
-}
-
-export async function createApiTokenAction(
-	data: z.infer<typeof createApiTokenSchema>,
-): Promise<ActionResponse<{ token: string; tokenId: string }>> {
+export async function saveIntegrationKeyAction(
+	input: z.infer<typeof saveIntegrationKeySchema>,
+): Promise<ActionResponse> {
 	try {
-		const session = await auth.api.getSession({
-			headers: await headers(),
-		});
+		const { kind, value } = saveIntegrationKeySchema.parse(input);
+		const userId = await getUserId();
+		const encrypted = encryptSecret(value);
 
-		if (!session?.user?.id) {
-			return {
-				success: false,
-				error: "Não autenticado",
-			};
+		if (kind === "brapi") {
+			await upsertUserIntegrationsRow(userId, { brapiToken: encrypted });
+		} else {
+			const existing = await db.query.userIntegrations.findFirst({
+				where: eq(schema.userIntegrations.userId, userId),
+			});
+			const nextKeys = { ...(existing?.aiApiKeys ?? {}), [kind]: encrypted };
+			await upsertUserIntegrationsRow(userId, { aiApiKeys: nextKeys });
 		}
 
-		const validated = createApiTokenSchema.parse(data);
-
-		// Generate token
-		const token = generateSecureToken();
-		const tokenHash = hashToken(token);
-		const tokenPrefix = token.substring(0, 10);
-
-		// Save to database
-		const [newToken] = await db
-			.insert(apiTokens)
-			.values({
-				userId: session.user.id,
-				name: validated.name,
-				tokenHash,
-				tokenPrefix,
-				expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 ano
-			})
-			.returning({ id: apiTokens.id });
-
 		revalidatePath("/settings");
-
-		return {
-			success: true,
-			message: "Token criado com sucesso",
-			data: {
-				token,
-				tokenId: newToken.id,
-			},
-		};
+		return { success: true, message: "Chave salva com sucesso." };
 	} catch (error) {
 		if (error instanceof z.ZodError) {
 			return {
@@ -698,71 +695,42 @@ export async function createApiTokenAction(
 				error: error.issues[0]?.message || "Dados inválidos",
 			};
 		}
-
-		console.error("Erro ao criar token:", error);
-		return {
-			success: false,
-			error: "Erro ao criar token. Tente novamente.",
-		};
+		console.error("Erro ao salvar integração:", error);
+		return { success: false, error: "Erro ao salvar. Tente novamente." };
 	}
 }
 
-export async function revokeApiTokenAction(
-	data: z.infer<typeof revokeApiTokenSchema>,
+const removeIntegrationKeySchema = z.object({
+	kind: z.enum(INTEGRATION_KINDS),
+});
+
+export async function removeIntegrationKeyAction(
+	input: z.infer<typeof removeIntegrationKeySchema>,
 ): Promise<ActionResponse> {
 	try {
-		const session = await auth.api.getSession({
-			headers: await headers(),
+		const { kind } = removeIntegrationKeySchema.parse(input);
+		const userId = await getUserId();
+		const existing = await db.query.userIntegrations.findFirst({
+			where: eq(schema.userIntegrations.userId, userId),
 		});
+		if (!existing) return { success: true };
 
-		if (!session?.user?.id) {
-			return {
-				success: false,
-				error: "Não autenticado",
-			};
+		if (kind === "brapi") {
+			await db
+				.update(schema.userIntegrations)
+				.set({ brapiToken: null, updatedAt: new Date() })
+				.where(eq(schema.userIntegrations.userId, userId));
+		} else {
+			const nextKeys = { ...(existing.aiApiKeys ?? {}) };
+			delete nextKeys[kind];
+			await db
+				.update(schema.userIntegrations)
+				.set({ aiApiKeys: nextKeys, updatedAt: new Date() })
+				.where(eq(schema.userIntegrations.userId, userId));
 		}
-
-		const validated = revokeApiTokenSchema.parse(data);
-
-		// Find token and verify ownership
-		const [existingToken] = await db
-			.select()
-			.from(apiTokens)
-			.where(
-				and(
-					eq(apiTokens.id, validated.tokenId),
-					eq(apiTokens.userId, session.user.id),
-					isNull(apiTokens.revokedAt),
-				),
-			)
-			.limit(1);
-
-		if (!existingToken) {
-			return {
-				success: false,
-				error: "Token não encontrado",
-			};
-		}
-
-		// Revoke token
-		await db
-			.update(apiTokens)
-			.set({
-				revokedAt: new Date(),
-			})
-			.where(
-				and(
-					eq(apiTokens.id, validated.tokenId),
-					eq(apiTokens.userId, session.user.id),
-				),
-			);
 
 		revalidatePath("/settings");
-
-		return {
-			success: true,
-			message: "Token revogado com sucesso",
-		};
+		return { success: true, message: "Chave removida." };
 	} catch (error) {
 		if (error instanceof z.ZodError) {
 			return {
@@ -770,11 +738,38 @@ export async function revokeApiTokenAction(
 				error: error.issues[0]?.message || "Dados inválidos",
 			};
 		}
+		console.error("Erro ao remover integração:", error);
+		return { success: false, error: "Erro ao remover. Tente novamente." };
+	}
+}
 
-		console.error("Erro ao revogar token:", error);
-		return {
-			success: false,
-			error: "Erro ao revogar token. Tente novamente.",
-		};
+const saveConsultantModelSchema = z.object({
+	modelId: z
+		.string()
+		.trim()
+		.regex(MODEL_ID_REGEX, "Modelo inválido.")
+		.nullable(),
+});
+
+export async function saveConsultantModelAction(
+	input: z.infer<typeof saveConsultantModelSchema>,
+): Promise<ActionResponse> {
+	try {
+		const { modelId } = saveConsultantModelSchema.parse(input);
+		const userId = await getUserId();
+		await upsertUserIntegrationsRow(userId, { consultantModelId: modelId });
+
+		revalidatePath("/settings");
+		revalidatePath("/investments");
+		return { success: true, message: "Preferência salva." };
+	} catch (error) {
+		if (error instanceof z.ZodError) {
+			return {
+				success: false,
+				error: error.issues[0]?.message || "Dados inválidos",
+			};
+		}
+		console.error("Erro ao salvar modelo de consultoria:", error);
+		return { success: false, error: "Erro ao salvar. Tente novamente." };
 	}
 }
