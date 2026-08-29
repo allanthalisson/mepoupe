@@ -1,6 +1,6 @@
 {
 	"name": "mepoupe",
-	"version": "4.0.0",
+	"version": "4.1.0",
 	"private": true,
 	"packageManager": "pnpm@10.26.1",
 	"scripts": {

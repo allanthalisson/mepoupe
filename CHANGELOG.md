@@ -5,6 +5,24 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [4.1.0] - 2026-08-29
+
+Esta versão traz chaves de API por usuário em Integrações, um onboarding com dados de exemplo para quem está começando, importação de CSV mais tolerante e recuperação de senha por e-mail — além de finalizar a remoção de referências ao Companion (o produto é web/PWA neste primeiro momento).
+
+### Adicionado
+- Integrações: cada usuário pode colar sua própria chave da brapi.dev e de provedores de IA (OpenAI, Anthropic, Google, MiniMax, OpenRouter), além de escolher o modelo usado na consultoria financeira automática — tudo criptografado em repouso (AES-256-GCM) e com fallback para as variáveis de ambiente do host quando o usuário não configura nada.
+- Onboarding: um painel de boas-vindas aparece no dashboard para quem ainda não tem nenhuma conta ou cartão, com dois caminhos — criar a primeira conta de verdade ou ver o app já preenchido com dados de exemplo (contas, cartão e lançamentos fictícios). Um aviso permite zerar os dados de exemplo a qualquer momento.
+- Importação de CSV: reconhece o formato de fatura do Nubank exportada em inglês (`date,title,amount`), cai para um mapeamento posicional (data, descrição, valor) quando nenhum cabeçalho é reconhecido, e ganha um botão "Inverter receita/despesa" para corrigir arquivos com a convenção de sinal trocada.
+- Recuperação de senha por e-mail (esqueci minha senha / redefinir senha), com envio via Resend.
+- Migrações `0038_tricky_mentor.sql` (tabela `integracoes_usuario`) e `0039_broad_inertia.sql` (coluna `is_demo` em contas).
+
+### Alterado
+- `trustedOrigins` do Better Auth passa a considerar domínios de preview além da URL/variável configuradas, reduzindo erros de "Invalid origin" em ambientes hospedados.
+- Identidade visual: o wordmark "me.poupe" passou a usar os assets de marca (navy/branco/laranja) em vez do texto renderizado em fonte, com variantes para fundo claro e escuro; ícone de favicon/PWA atualizado para o novo brand mark.
+
+### Removido
+- Últimas referências ao "Companion" (app Android) no código, comentários, README e `public/llms.txt` — o produto é web/PWA, sem app nativo neste primeiro momento.
+
 ## [4.0.0] - 2026-08-28
 
 Esta versão renomeia o projeto de **OpenMonetis** para **me.poupe** em todo o codebase (~50 arquivos: package.json, manifest, metadados, componentes, server actions, e-mails, Docker, docs e landing page) e reconstrói a identidade visual: tipografia (Mona Sans, com Unbounded reservada para o logotipo), cor de destaque em um laranja de pôr do sol mais suave com um gradiente de marca, e o logotipo passa a ser só texto — sem símbolo. A landing page deixa de se apresentar como projeto open source no GitHub e passa a explicar o produto, com CTAs de criar conta/entrar.
