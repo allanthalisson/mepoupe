@@ -116,6 +116,9 @@ importers:
       '@remixicon/react':
         specifier: 4.9.0
         version: 4.9.0(react@19.2.7)
+      '@replit/connectors-sdk':
+        specifier: 0.4.3
+        version: 0.4.3
       '@tanstack/react-query':
         specifier: ^5.101.1
         version: 5.101.1(react@19.2.7)
@@ -2536,6 +2539,9 @@ packages:
     resolution: {integrity: sha512-5/jLDD4DtKxH2B4QVXTobvV1C2uL8ab9D5yAYNtFt+w80O0Ys1xFOrspqROL3fjrZi+7ElFUWE37hBfaAl6U+Q==}
     peerDependencies:
       react: '>=18.2.0'
+
+  '@replit/connectors-sdk@0.4.3':
+    resolution: {integrity: sha512-7XoaRty/O6JF161UkVBI8UewZ96XCNNN1kRvT9Q41IRH3xr+6ImylvXtirIghydDd2FCQvIkY4HQscOOr45otA==}
 
   '@simplewebauthn/browser@13.3.0':
     resolution: {integrity: sha512-BE/UWv6FOToAdVk0EokzkqQQDOWtNydYlY6+OrmiZ5SCNmb41VehttboTetUM3T/fr6EAFYVXjz4My2wg230rQ==}
@@ -6114,6 +6120,8 @@ snapshots:
   '@remixicon/react@4.9.0(react@19.2.7)':
     dependencies:
       react: 19.2.7
+
+  '@replit/connectors-sdk@0.4.3': {}
 
   '@simplewebauthn/browser@13.3.0': {}
 
