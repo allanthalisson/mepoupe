@@ -9,6 +9,7 @@ import {
 	fetchRecentEstablishments,
 	fetchTransactionFilterSources,
 } from "@/features/transactions/queries";
+import { hasDemoData } from "@/shared/lib/demo-data/seed";
 
 type DashboardQuickActionOptions = {
 	payerOptions: ReturnType<typeof buildOptionSets>["payerOptions"];
@@ -60,15 +61,18 @@ async function fetchDashboardQuickActionOptions(userId: string) {
 }
 
 export async function fetchDashboardPageData(userId: string, period: string) {
-	const [dashboardData, preferences, quickActionOptions] = await Promise.all([
-		fetchDashboardData(userId, period),
-		fetchUserDashboardPreferences(userId),
-		fetchDashboardQuickActionOptions(userId),
-	]);
+	const [dashboardData, preferences, quickActionOptions, isDemoData] =
+		await Promise.all([
+			fetchDashboardData(userId, period),
+			fetchUserDashboardPreferences(userId),
+			fetchDashboardQuickActionOptions(userId),
+			hasDemoData(userId),
+		]);
 
 	return {
 		dashboardData,
 		preferences,
 		quickActionOptions,
+		isDemoData,
 	};
 }

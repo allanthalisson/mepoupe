@@ -1,0 +1,1 @@
+ALTER TABLE "contas" ADD COLUMN "is_demo" boolean DEFAULT false NOT NULL;

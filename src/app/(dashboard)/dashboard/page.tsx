@@ -4,6 +4,8 @@ import { DashboardMetricsCards } from "@/features/dashboard/components/dashboard
 import { DashboardWelcome } from "@/features/dashboard/components/dashboard-welcome";
 import { extractDashboardLogoNames } from "@/features/dashboard/lib/extract-logo-names";
 import { fetchDashboardPageData } from "@/features/dashboard/page-data-queries";
+import { DemoDataBanner } from "@/features/onboarding/components/demo-data-banner";
+import { OnboardingPanel } from "@/features/onboarding/components/onboarding-panel";
 import { getSingleParam } from "@/features/transactions/lib/page-helpers";
 import { LogoPrefetchProvider } from "@/shared/components/entity-avatar";
 import { ContentErrorBoundary } from "@/shared/components/feedback/content-error-boundary";
@@ -36,13 +38,16 @@ async function DashboardContent({ searchParams }: PageProps) {
 	const periodoParam = getSingleParam(resolvedSearchParams, "periodo");
 	const { period: selectedPeriod } = parsePeriodParam(periodoParam);
 
-	const { dashboardData, preferences, quickActionOptions } =
+	const { dashboardData, preferences, quickActionOptions, isDemoData } =
 		await fetchDashboardPageData(user.id, selectedPeriod);
 	const { dashboardWidgets } = preferences;
 	const adminPayerSlug =
 		quickActionOptions.payerOptions.find(
 			(option) => option.value === quickActionOptions.defaultPayerId,
 		)?.slug ?? null;
+	const hasNoFinancialSpace =
+		quickActionOptions.accountOptions.length === 0 &&
+		quickActionOptions.cardOptions.length === 0;
 
 	const logoMappings = await prefetchLogoMappings(
 		user.id,
@@ -52,6 +57,8 @@ async function DashboardContent({ searchParams }: PageProps) {
 	return (
 		<main className="flex flex-col gap-4">
 			<DashboardWelcome name={user.name} />
+			{hasNoFinancialSpace && <OnboardingPanel />}
+			{isDemoData && <DemoDataBanner />}
 			<MonthNavigation />
 			<ContentErrorBoundary
 				title="Não foi possível exibir o resumo"

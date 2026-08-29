@@ -226,6 +226,9 @@ export const financialAccounts = pgTable("contas", {
 	excludeInitialBalanceFromIncome: boolean("excluir_saldo_inicial_receitas")
 		.notNull()
 		.default(false),
+	// Marca contas geradas pelo onboarding para ilustração (dados de exemplo),
+	// permitindo zerá-las de uma vez quando o usuário importar dados reais.
+	isDemo: boolean("is_demo").notNull().default(false),
 	userId: text("user_id")
 		.notNull()
 		.references(() => user.id, { onDelete: "cascade" }),

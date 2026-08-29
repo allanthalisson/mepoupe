@@ -149,6 +149,7 @@ export async function fetchTransactionFilterSources(userId: string) {
 				excludeFromBalance: financialAccounts.excludeFromBalance,
 				excludeInitialBalanceFromIncome:
 					financialAccounts.excludeInitialBalanceFromIncome,
+				isDemo: financialAccounts.isDemo,
 				userId: financialAccounts.userId,
 				createdAt: financialAccounts.createdAt,
 			})
