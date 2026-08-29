@@ -3,13 +3,16 @@ import {
 	financialConsultations,
 	financialGoals,
 	investmentAssets,
+	investmentSuggestionDismissals,
 	marketAssetSnapshots,
 } from "@/db/schema";
 import { buildCoursePortfolioMap } from "@/features/investments/lib/course-method";
 import { screenFundamentals } from "@/features/investments/lib/fundamental-screening";
 import { buildPortfolioMetrics } from "@/features/investments/lib/portfolio";
+import { buildInvestmentSuggestions } from "@/features/investments/lib/suggestions";
 import { db } from "@/shared/lib/db";
 import { fetchUserIntegrationSecrets } from "@/shared/lib/integrations/user-keys";
+import { fetchScreenedCandidates } from "@/shared/lib/market-data/candidates-sync";
 import { FinancialConsultationSchema } from "@/shared/lib/schemas/financial-consultation";
 
 export type InvestmentAsset = {
@@ -35,69 +38,78 @@ export type InvestmentAsset = {
 export async function fetchInvestmentsPageData(userId: string) {
 	const period = `${new Date().getUTCFullYear()}-${String(new Date().getUTCMonth() + 1).padStart(2, "0")}`;
 	const userIntegrations = await fetchUserIntegrationSecrets(userId);
-	const [rows, goalRows, snapshotRows, consultation, consultationHistory] =
-		await Promise.all([
-			db
-				.select({
-					id: investmentAssets.id,
-					name: investmentAssets.name,
-					ticker: investmentAssets.ticker,
-					assetClass: investmentAssets.assetClass,
-					institution: investmentAssets.institution,
-					quantity: investmentAssets.quantity,
-					averagePrice: investmentAssets.averagePrice,
-					currentPrice: investmentAssets.currentPrice,
-					monthlyIncome: investmentAssets.monthlyIncome,
-					targetAllocation: investmentAssets.targetAllocation,
-					note: investmentAssets.note,
-					goalId: investmentAssets.goalId,
-					goalName: financialGoals.name,
-				})
-				.from(investmentAssets)
-				.leftJoin(
-					financialGoals,
-					eq(investmentAssets.goalId, financialGoals.id),
-				)
-				.where(eq(investmentAssets.userId, userId))
-				.orderBy(asc(investmentAssets.assetClass), asc(investmentAssets.name)),
-			db
-				.select({
-					id: financialGoals.id,
-					name: financialGoals.name,
-					goalType: financialGoals.goalType,
-					targetAmount: financialGoals.targetAmount,
-					monthlyContribution: financialGoals.monthlyContribution,
-					targetDate: financialGoals.targetDate,
-				})
-				.from(financialGoals)
-				.where(
-					and(
-						eq(financialGoals.userId, userId),
-						eq(financialGoals.status, "active"),
-					),
-				)
-				.orderBy(asc(financialGoals.priority), asc(financialGoals.name)),
-			db
-				.select()
-				.from(marketAssetSnapshots)
-				.where(eq(marketAssetSnapshots.userId, userId)),
-			db.query.financialConsultations.findFirst({
-				where: and(
-					eq(financialConsultations.userId, userId),
-					eq(financialConsultations.period, period),
+	const [
+		rows,
+		goalRows,
+		snapshotRows,
+		consultation,
+		consultationHistory,
+		candidates,
+		dismissalRows,
+	] = await Promise.all([
+		db
+			.select({
+				id: investmentAssets.id,
+				name: investmentAssets.name,
+				ticker: investmentAssets.ticker,
+				assetClass: investmentAssets.assetClass,
+				institution: investmentAssets.institution,
+				quantity: investmentAssets.quantity,
+				averagePrice: investmentAssets.averagePrice,
+				currentPrice: investmentAssets.currentPrice,
+				monthlyIncome: investmentAssets.monthlyIncome,
+				targetAllocation: investmentAssets.targetAllocation,
+				note: investmentAssets.note,
+				goalId: investmentAssets.goalId,
+				goalName: financialGoals.name,
+			})
+			.from(investmentAssets)
+			.leftJoin(financialGoals, eq(investmentAssets.goalId, financialGoals.id))
+			.where(eq(investmentAssets.userId, userId))
+			.orderBy(asc(investmentAssets.assetClass), asc(investmentAssets.name)),
+		db
+			.select({
+				id: financialGoals.id,
+				name: financialGoals.name,
+				goalType: financialGoals.goalType,
+				targetAmount: financialGoals.targetAmount,
+				monthlyContribution: financialGoals.monthlyContribution,
+				targetDate: financialGoals.targetDate,
+			})
+			.from(financialGoals)
+			.where(
+				and(
+					eq(financialGoals.userId, userId),
+					eq(financialGoals.status, "active"),
 				),
-			}),
-			db
-				.select({
-					period: financialConsultations.period,
-					modelId: financialConsultations.modelId,
-					updatedAt: financialConsultations.updatedAt,
-				})
-				.from(financialConsultations)
-				.where(eq(financialConsultations.userId, userId))
-				.orderBy(desc(financialConsultations.period))
-				.limit(6),
-		]);
+			)
+			.orderBy(asc(financialGoals.priority), asc(financialGoals.name)),
+		db
+			.select()
+			.from(marketAssetSnapshots)
+			.where(eq(marketAssetSnapshots.userId, userId)),
+		db.query.financialConsultations.findFirst({
+			where: and(
+				eq(financialConsultations.userId, userId),
+				eq(financialConsultations.period, period),
+			),
+		}),
+		db
+			.select({
+				period: financialConsultations.period,
+				modelId: financialConsultations.modelId,
+				updatedAt: financialConsultations.updatedAt,
+			})
+			.from(financialConsultations)
+			.where(eq(financialConsultations.userId, userId))
+			.orderBy(desc(financialConsultations.period))
+			.limit(6),
+		fetchScreenedCandidates(),
+		db
+			.select({ ticker: investmentSuggestionDismissals.ticker })
+			.from(investmentSuggestionDismissals)
+			.where(eq(investmentSuggestionDismissals.userId, userId)),
+	]);
 	const snapshots = new Map(
 		snapshotRows.map((snapshot) => [snapshot.assetId, snapshot]),
 	);
@@ -205,10 +217,47 @@ export async function fetchInvestmentsPageData(userId: string) {
 		};
 	});
 
+	const ownedTickers = new Set(
+		assets
+			.filter((asset) => asset.ticker)
+			.map((asset) => (asset.ticker as string).toUpperCase()),
+	);
+	const concentrationByTicker = new Map(
+		assets
+			.filter((asset) => asset.ticker)
+			.map((asset) => [
+				(asset.ticker as string).toUpperCase(),
+				asset.allocation,
+			]),
+	);
+	const dismissedTickers = new Set(
+		dismissalRows.map((row) => row.ticker.toUpperCase()),
+	);
+	const suggestions = buildInvestmentSuggestions(
+		courseMethod,
+		candidates,
+		ownedTickers,
+		concentrationByTicker,
+		dismissedTickers,
+	);
+	const candidatesSyncedAt = candidates.reduce<string | null>(
+		(latest, candidate) =>
+			!latest || candidate.lastSyncedAt > latest
+				? candidate.lastSyncedAt
+				: latest,
+		null,
+	);
+
 	return {
 		assets,
 		metrics,
 		courseMethod,
+		suggestions,
+		suggestionsFreshness: {
+			configured: Boolean(process.env.BRAPI_TOKEN),
+			candidatesTracked: candidates.length,
+			lastSyncedAt: candidatesSyncedAt,
+		},
 		period,
 		consultation:
 			consultation &&

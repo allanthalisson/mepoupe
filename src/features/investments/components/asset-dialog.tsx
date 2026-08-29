@@ -25,31 +25,45 @@ import { Textarea } from "@/shared/components/ui/textarea";
 
 type GoalOption = { id: string; name: string };
 
+type AssetDefaults = {
+	name: string;
+	ticker: string;
+	assetClass: string;
+	currentPrice: number;
+};
+
 interface AssetDialogProps {
 	trigger: React.ReactNode;
 	goals: GoalOption[];
 	asset?: InvestmentAsset;
+	/** Preenche um investimento NOVO (não confundir com `asset`, que edita um existente). */
+	defaults?: AssetDefaults;
 }
 
 const toInputValue = (value: number) => String(value).replace(".", ",");
 const parseNumber = (value: string) =>
 	Number.parseFloat(value.replace(/\./g, "").replace(",", ".")) || 0;
 
-export function AssetDialog({ trigger, goals, asset }: AssetDialogProps) {
+export function AssetDialog({
+	trigger,
+	goals,
+	asset,
+	defaults,
+}: AssetDialogProps) {
 	const [open, setOpen] = useState(false);
 	const [isPending, startTransition] = useTransition();
-	const [name, setName] = useState(asset?.name ?? "");
-	const [ticker, setTicker] = useState(asset?.ticker ?? "");
+	const [name, setName] = useState(asset?.name ?? defaults?.name ?? "");
+	const [ticker, setTicker] = useState(asset?.ticker ?? defaults?.ticker ?? "");
 	const [assetClass, setAssetClass] = useState(
-		asset?.assetClass ?? "fixed_income",
+		asset?.assetClass ?? defaults?.assetClass ?? "fixed_income",
 	);
 	const [institution, setInstitution] = useState(asset?.institution ?? "");
 	const [quantity, setQuantity] = useState(toInputValue(asset?.quantity ?? 0));
 	const [averagePrice, setAveragePrice] = useState(
-		toInputValue(asset?.averagePrice ?? 0),
+		toInputValue(asset?.averagePrice ?? defaults?.currentPrice ?? 0),
 	);
 	const [currentPrice, setCurrentPrice] = useState(
-		toInputValue(asset?.currentPrice ?? 0),
+		toInputValue(asset?.currentPrice ?? defaults?.currentPrice ?? 0),
 	);
 	const [monthlyIncome, setMonthlyIncome] = useState(
 		toInputValue(asset?.monthlyIncome ?? 0),

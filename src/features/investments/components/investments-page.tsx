@@ -20,6 +20,7 @@ import {
 	syncInvestmentMarketDataAction,
 } from "@/features/investments/actions";
 import { AssetDialog } from "@/features/investments/components/asset-dialog";
+import { InvestmentSuggestionsCard } from "@/features/investments/components/investment-suggestions-card";
 import { ASSET_CLASS_LABELS } from "@/features/investments/lib/portfolio";
 import type { InvestmentsPageData } from "@/features/investments/queries";
 import { Button } from "@/shared/components/ui/button";
@@ -451,6 +452,12 @@ export function InvestmentsPage({ data }: { data: InvestmentsPageData }) {
 					</div>
 				</CardContent>
 			</Card>
+
+			<InvestmentSuggestionsCard
+				suggestions={data.suggestions}
+				freshness={data.suggestionsFreshness}
+				goals={data.goals}
+			/>
 
 			<div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
 				<Card>

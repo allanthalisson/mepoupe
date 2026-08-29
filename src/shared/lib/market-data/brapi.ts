@@ -31,6 +31,45 @@ async function brapiFetch(path: string, tokenOverride?: string | null) {
 	return response.json() as Promise<unknown>;
 }
 
+export type BrapiTickerListItem = {
+	ticker: string;
+	name: string;
+	currentPrice: number | null;
+	volume: number | null;
+	sector: string | null;
+};
+
+/**
+ * Lista os tickers mais líquidos de um tipo (ação ou fundo imobiliário),
+ * usada para montar o universo de candidatos das sugestões de investimento.
+ * A brapi não filtra por fundamentos aqui — só cotação/volume — os
+ * fundamentos de cada candidato são buscados depois, um a um.
+ */
+export async function fetchBrapiTickerList(
+	type: "stock" | "fund",
+	limit: number,
+	tokenOverride?: string | null,
+): Promise<BrapiTickerListItem[]> {
+	const payload = await brapiFetch(
+		`/quote/list?type=${type}&sortBy=volume&sortOrder=desc&limit=${limit}`,
+		tokenOverride,
+	);
+	const record = asRecord(payload);
+	const stocks = Array.isArray(record.stocks) ? record.stocks : [];
+	return stocks
+		.map((item) => asRecord(item))
+		.map((item) => ({
+			ticker: String(item.stock ?? "")
+				.trim()
+				.toUpperCase(),
+			name: String(item.name ?? item.stock ?? "").trim(),
+			currentPrice: asNumber(item.close),
+			volume: asNumber(item.volume),
+			sector: typeof item.sector === "string" ? item.sector : null,
+		}))
+		.filter((item) => item.ticker.length > 0);
+}
+
 export type MarketProviderData = {
 	marketPrice: number | null;
 	marketTime: Date | null;

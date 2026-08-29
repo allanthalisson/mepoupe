@@ -1372,6 +1372,76 @@ export const establishmentLogos = pgTable(
 
 export type EstablishmentLogo = typeof establishmentLogos.$inferSelect;
 
+// ===================== SUGESTÕES DE INVESTIMENTO =====================
+// Universo de candidatos (ações/FIIs líquidos da B3) com triagem
+// fundamentalista, compartilhado entre usuários — não depende de nenhum
+// ativo específico ser possuído por alguém. Atualizado por um job em
+// segundo plano (ver shared/lib/market-data/candidates-sync.ts).
+export const investmentCandidates = pgTable(
+	"candidatos_investimento",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		ticker: text("ticker").notNull(),
+		name: text("nome").notNull(),
+		assetClass: text("classe_ativo").notNull(),
+		currentPrice: numeric("preco_atual", { precision: 16, scale: 4 }),
+		priceToEarnings: numeric("pl", { precision: 16, scale: 6 }),
+		priceToBook: numeric("pvp", { precision: 16, scale: 6 }),
+		enterpriseToEbit: numeric("ev_ebit", { precision: 16, scale: 6 }),
+		dividendYield: numeric("dividend_yield", { precision: 16, scale: 6 }),
+		returnOnEquity: numeric("roe", { precision: 16, scale: 6 }),
+		currentRatio: numeric("liquidez_corrente", { precision: 16, scale: 6 }),
+		debtToEquity: numeric("divida_patrimonio", { precision: 16, scale: 6 }),
+		revenueGrowth: numeric("crescimento_receita", { precision: 16, scale: 6 }),
+		profitMargin: numeric("margem_lucro", { precision: 16, scale: 6 }),
+		vacancyRate: numeric("vacancia", { precision: 16, scale: 6 }),
+		propertyCount: integer("quantidade_imoveis"),
+		dailyLiquidity: numeric("liquidez_diaria", { precision: 18, scale: 2 }),
+		lastError: text("ultimo_erro"),
+		lastSyncedAt: timestamp("sincronizado_em", {
+			mode: "date",
+			withTimezone: true,
+		})
+			.notNull()
+			.defaultNow(),
+		createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => ({
+		tickerUniqueIdx: uniqueIndex("candidatos_investimento_ticker_idx").on(
+			table.ticker,
+		),
+		assetClassIdx: index("candidatos_investimento_classe_ativo_idx").on(
+			table.assetClass,
+		),
+	}),
+);
+
+// Candidatos que o usuário dispensou explicitamente — não voltam a ser
+// sugeridos, mesmo que continuem aprovados na triagem.
+export const investmentSuggestionDismissals = pgTable(
+	"sugestoes_dispensadas",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		ticker: text("ticker").notNull(),
+		dismissedAt: timestamp("dispensado_em", {
+			mode: "date",
+			withTimezone: true,
+		})
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => ({
+		userTickerUniqueIdx: uniqueIndex(
+			"sugestoes_dispensadas_user_ticker_idx",
+		).on(table.userId, table.ticker),
+	}),
+);
+
 export type User = typeof user.$inferSelect;
 export type NewUser = typeof user.$inferInsert;
 export type Account = typeof account.$inferSelect;

@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { financialConsultations, user } from "@/db/schema";
 import { db } from "@/shared/lib/db";
 import { fetchUserIntegrationSecrets } from "@/shared/lib/integrations/user-keys";
+import { syncInvestmentCandidates } from "@/shared/lib/market-data/candidates-sync";
 import { syncUserMarketData } from "@/shared/lib/market-data/sync";
 import { generateFinancialConsultation } from "./service";
 
@@ -21,7 +22,18 @@ export async function refreshAllFinancialData() {
 		marketFailed: 0,
 		consultationsGenerated: 0,
 		consultationsFailed: 0,
+		investmentCandidatesSynced: 0,
 	};
+
+	// Universo de candidatos das sugestões de investimento: compartilhado
+	// entre usuários, então roda uma vez por ciclo, não por usuário. A
+	// própria função pula se já sincronizou há menos de 24h.
+	try {
+		const candidateSync = await syncInvestmentCandidates();
+		summary.investmentCandidatesSynced = candidateSync.synced;
+	} catch (error) {
+		console.error("Investment candidates sync failed:", error);
+	}
 
 	for (const currentUser of users) {
 		const market = await syncUserMarketData(currentUser.id);

@@ -6,6 +6,7 @@ import {
 	financialConsultations,
 	financialGoals,
 	investmentAssets,
+	investmentSuggestionDismissals,
 } from "@/db/schema";
 import {
 	type ActionResult,
@@ -15,6 +16,7 @@ import {
 import { getUser } from "@/shared/lib/auth/server";
 import { db } from "@/shared/lib/db";
 import { generateFinancialConsultation } from "@/shared/lib/financial-consultant/service";
+import { syncInvestmentCandidates } from "@/shared/lib/market-data/candidates-sync";
 import { syncUserMarketData } from "@/shared/lib/market-data/sync";
 import { noteSchema, uuidSchema } from "@/shared/lib/schemas/common";
 import type { FinancialConsultationData } from "@/shared/lib/schemas/financial-consultation";
@@ -175,7 +177,16 @@ export async function syncInvestmentMarketDataAction(): Promise<
 > {
 	try {
 		const currentUser = await getUser();
-		const result = await syncUserMarketData(currentUser.id);
+		const [result] = await Promise.all([
+			syncUserMarketData(currentUser.id),
+			// Candidatos das sugestões de investimento são globais (não por
+			// usuário) e o próprio sync pula sozinho se já rodou há menos de
+			// 24h — aproveita o clique do usuário pra popular na primeira vez,
+			// sem depender só do job em segundo plano.
+			syncInvestmentCandidates().catch((error) => {
+				console.error("Investment candidates sync failed:", error);
+			}),
+		]);
 		revalidateForEntity("investments", currentUser.id);
 		return {
 			success: true,
@@ -191,6 +202,27 @@ export async function syncInvestmentMarketDataAction(): Promise<
 			success: false,
 			error: "Não foi possível atualizar o mercado agora.",
 		};
+	}
+}
+
+const dismissSuggestionSchema = z.object({
+	ticker: z.string().trim().min(1).max(24),
+});
+
+export async function dismissInvestmentSuggestionAction(
+	input: z.input<typeof dismissSuggestionSchema>,
+): Promise<ActionResult> {
+	try {
+		const currentUser = await getUser();
+		const { ticker } = dismissSuggestionSchema.parse(input);
+		await db
+			.insert(investmentSuggestionDismissals)
+			.values({ userId: currentUser.id, ticker: ticker.toUpperCase() })
+			.onConflictDoNothing();
+		revalidateForEntity("investments", currentUser.id);
+		return { success: true, message: "Sugestão dispensada." };
+	} catch (error) {
+		return handleActionError(error);
 	}
 }
 
