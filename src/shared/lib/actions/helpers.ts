@@ -24,15 +24,15 @@ export function handleActionError(error: unknown): ActionResult {
  * Configuration for revalidation after mutations
  */
 const revalidateConfig = {
-	cards: ["/cards", "/accounts", "/transactions"],
-	accounts: ["/accounts", "/transactions"],
+	cards: ["/cards", "/accounts", "/transactions", "/dashboard"],
+	accounts: ["/accounts", "/transactions", "/dashboard"],
 	categories: ["/categories"],
 	establishments: ["/reports/establishments", "/transactions"],
-	budgets: ["/budgets"],
-	payers: ["/payers"],
+	budgets: ["/budgets", "/dashboard"],
+	payers: ["/payers", "/dashboard"],
 	notes: ["/notes", "/notes/archived", "/dashboard"],
 	notifications: ["/dashboard"],
-	transactions: ["/transactions", "/accounts", "/attachments"],
+	transactions: ["/transactions", "/accounts", "/attachments", "/dashboard"],
 	inbox: ["/inbox", "/transactions", "/dashboard"],
 	attachments: ["/attachments"],
 	planning: ["/planning", "/investments", "/dashboard"],
