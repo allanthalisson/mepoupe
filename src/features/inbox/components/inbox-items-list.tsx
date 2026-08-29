@@ -6,7 +6,7 @@ import { Card } from "@/shared/components/ui/card";
 import { InboxCard } from "./inbox-card";
 import type { InboxItem } from "./types";
 
-// O Companion envia hora local de Brasília com 'Z' literal (não converte para UTC).
+// Os itens de inbox são gravados com hora local de Brasília com 'Z' literal (não converte para UTC).
 // Por isso, o timestamp armazenado no DB já tem a data correta de Brasília como componente UTC.
 // Basta fatiar o ISO string sem nenhum ajuste para obter a data de Brasília do item.
 function getItemDateKey(date: Date): string {
