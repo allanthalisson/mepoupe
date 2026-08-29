@@ -19,10 +19,13 @@ const IV_LENGTH = 12;
 const VERSION_PREFIX = "v1";
 
 function deriveKey(): Buffer {
-	const secret = process.env.BETTER_AUTH_SECRET;
+	// Mesmo fallback usado pelo Better Auth (src/shared/lib/auth/config.ts):
+	// hosts que só têm SESSION_SECRET configurado (ex.: Replit) também devem
+	// conseguir cifrar segredos de integração.
+	const secret = process.env.BETTER_AUTH_SECRET || process.env.SESSION_SECRET;
 	if (!secret) {
 		throw new Error(
-			"BETTER_AUTH_SECRET não configurado — necessário para cifrar segredos de integração.",
+			"BETTER_AUTH_SECRET (ou SESSION_SECRET) não configurado — necessário para cifrar segredos de integração.",
 		);
 	}
 	return createHash("sha256")
