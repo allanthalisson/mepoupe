@@ -1,5 +1,5 @@
 # ============================================
-# OPENMONETIS - .gitignore
+# ME.POUPE - .gitignore
 # ============================================
 
 # === Dependencies ===
@@ -21,8 +21,12 @@ next-env.d.ts
 # === Build ===
 /build
 /dist
+**/dist/
 *.tsbuildinfo
 .pnpm-store
+
+# === Build artifacts (Replit publish, etc) ===
+/artifacts/
 
 # === Testing ===
 /coverage
