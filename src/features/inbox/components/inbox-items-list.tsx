@@ -93,7 +93,7 @@ export function InboxItemsList({
 				<EmptyState
 					media={<RiAtLine className="size-6 text-primary" />}
 					title={message}
-					description="As notificações capturadas pelo app me.poupe Companion aparecerão aqui. Saiba mais em Ajustes > Companion."
+					description="Lançamentos importados que precisam da sua confirmação aparecerão aqui."
 				/>
 			</Card>
 		);

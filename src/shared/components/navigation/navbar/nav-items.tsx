@@ -60,7 +60,7 @@ export const NAV_SECTIONS: NavSection[] = [
 			{
 				href: "/inbox",
 				label: "Pré-lançamentos",
-				description: "Notificações capturadas pelo Companion",
+				description: "Lançamentos pendentes de revisão",
 				icon: <RiAtLine className="size-4" />,
 				iconClass: "text-primary",
 			},

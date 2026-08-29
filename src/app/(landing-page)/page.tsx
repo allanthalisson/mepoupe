@@ -1,10 +1,5 @@
-import {
-	RiAndroidLine,
-	RiShieldCheckLine,
-	RiSmartphoneLine,
-} from "@remixicon/react";
+import { RiShieldCheckLine, RiSmartphoneLine } from "@remixicon/react";
 import Image from "next/image";
-import Link from "next/link";
 import { Suspense } from "react";
 import { AnimateOnScroll } from "@/features/landing/components/animate-on-scroll";
 import {
@@ -13,8 +8,6 @@ import {
 } from "@/features/landing/components/landing-auth-cta";
 import { LandingNavbar } from "@/features/landing/components/landing-navbar";
 import {
-	companionBanks,
-	companionSteps,
 	extraFeatures,
 	mainFeatures,
 	pwaHighlights,
@@ -46,11 +39,8 @@ export default async function Page() {
 						</h1>
 
 						<p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl px-4 sm:px-0">
-							Lance manualmente ou capture notificações bancárias direto pelo{" "}
-							<span className="text-foreground font-medium">
-								Companion para Android
-							</span>
-							. Simples de usar, com seus dados sempre sob seu controle.
+							Lance suas contas, cartões e gastos em um só lugar. Simples de
+							usar, direto do navegador, com seus dados sempre sob seu controle.
 						</p>
 
 						<Suspense
@@ -158,9 +148,8 @@ export default async function Page() {
 									Use o me.poupe no celular sem perder o fluxo
 								</h2>
 								<p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4 sm:px-0">
-									Instale como PWA para acesso rápido no dia a dia. No Android,
-									use o Companion para capturar notificações bancárias
-									automaticamente.
+									Instale como PWA para acesso rápido no dia a dia, direto da
+									tela inicial do seu celular.
 								</p>
 							</div>
 						</AnimateOnScroll>
@@ -224,105 +213,6 @@ export default async function Page() {
 											</li>
 										))}
 									</ul>
-								</div>
-							</div>
-						</AnimateOnScroll>
-
-						{/* Companion — texto esquerda, imagem direita */}
-						<AnimateOnScroll>
-							<div className="grid gap-10 lg:gap-16 lg:grid-cols-2 items-center border-t pt-16 md:pt-24">
-								<div>
-									<div className="mb-4">
-										<Badge variant="outline">
-											<RiAndroidLine className="size-3.5 mr-1" />
-											Companion Android
-										</Badge>
-									</div>
-									<h3 className="text-2xl md:text-3xl font-medium tracking-tight mb-3">
-										Capture, envie e revise no mesmo fluxo
-									</h3>
-									<p className="text-muted-foreground mb-6 leading-relaxed">
-										O Companion captura notificações de apps bancários e cria
-										pré-lançamentos automaticamente para você revisar na inbox.
-									</p>
-									<ol className="space-y-3 mb-6">
-										{companionSteps.map((step) => (
-											<li key={step.title} className="flex items-start gap-3">
-												<div
-													className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-													style={{
-														backgroundColor: `color-mix(in oklch, ${step.colorVar} 20%, transparent)`,
-													}}
-												>
-													<step.icon
-														className="size-3.5"
-														style={{ color: "var(--foreground)" }}
-													/>
-												</div>
-												<p className="text-sm">
-													<span className="font-medium">{step.title}</span>
-													<span className="text-muted-foreground">
-														{" "}
-														— {step.description}
-													</span>
-												</p>
-											</li>
-										))}
-									</ol>
-									<div>
-										<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-											Bancos testados
-										</p>
-										<div className="flex flex-wrap gap-2">
-											{companionBanks.map((bank) => (
-												<span
-													key={bank.name}
-													className="inline-flex items-center gap-1.5 rounded-full border py-1 pr-3 text-xs font-medium"
-													style={{
-														paddingLeft: bank.logo ? "4px" : "12px",
-													}}
-												>
-													{bank.logo && (
-														<Image
-															src={bank.logo}
-															alt={bank.name}
-															width={18}
-															height={18}
-															className="rounded-full"
-														/>
-													)}
-													{bank.name}
-												</span>
-											))}
-										</div>
-										<Link
-											href="https://github.com/felipegcoutinho/openmonetis-companion"
-											target="_blank"
-											className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-										>
-											<RiAndroidLine className="size-3.5" />
-											Baixar para Android
-										</Link>
-									</div>
-								</div>
-								<div className="flex justify-center order-first lg:order-last">
-									<div className="relative">
-										<div className="absolute inset-0 bg-primary/8 rounded-3xl blur-3xl scale-90" />
-										<Image
-											src={landingImages.companion.light}
-											alt="Preview Companion"
-											width={390}
-											height={844}
-											className="relative h-auto w-56 md:w-64 rounded-3xl shadow-lg dark:hidden"
-										/>
-										<Image
-											src={landingImages.companion.dark}
-											alt="Preview Companion"
-											width={390}
-											height={844}
-											className="relative h-auto w-56 md:w-64 rounded-3xl shadow-lg hidden dark:block"
-										/>
-									</div>
 								</div>
 							</div>
 						</AnimateOnScroll>
@@ -408,8 +298,8 @@ export default async function Page() {
 			<footer className="border-t py-8 md:py-12 mt-auto">
 				<div className="max-w-8xl mx-auto px-4">
 					<div className="mx-auto max-w-5xl">
-						<div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3">
-							<div className="sm:col-span-2 md:col-span-1">
+						<div className="grid gap-8 sm:grid-cols-2">
+							<div>
 								<Logo />
 								<p className="text-sm text-muted-foreground mt-3 md:mt-4">
 									Gestão financeira pessoal, simples e no seu controle.
@@ -442,22 +332,6 @@ export default async function Page() {
 										>
 											Para quem é
 										</a>
-									</li>
-								</ul>
-							</div>
-
-							<div>
-								<h3 className="font-semibold mb-3 md:mb-4">Companion</h3>
-								<ul className="space-y-2.5 md:space-y-3 text-sm text-muted-foreground">
-									<li>
-										<Link
-											href="https://github.com/felipegcoutinho/openmonetis-companion"
-											target="_blank"
-											className="hover:text-foreground transition-colors flex items-center gap-2"
-										>
-											<RiAndroidLine className="size-4" />
-											Baixar para Android
-										</Link>
 									</li>
 								</ul>
 							</div>

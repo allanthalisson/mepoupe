@@ -15,7 +15,6 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat-square&logo=docker)](https://www.docker.com/)
-[![Android Companion](https://img.shields.io/badge/Companion-Android-3DDC84?style=flat-square&logo=android)](https://github.com/felipegcoutinho/openmonetis-companion)
 [![License](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-orange?style=flat-square&logo=creative-commons)](LICENSE)
 
 ---
@@ -58,7 +57,7 @@ A ideia é simples: ter um lugar onde consigo ver todas as minhas contas, cartõ
 
 **1. Não há versão hospedada online** — Este projeto é self-hosted. Você precisa rodar no seu próprio computador ou servidor.
 
-**2. Não há Open Finance** — Não há conexão automática com bancos. Você pode registrar transações manualmente, usar o app companion para capturar notificações bancárias ou importar extratos nos formatos OFX, CSV e XLS/XLSX.
+**2. Não há Open Finance** — Não há conexão automática com bancos. Você pode registrar transações manualmente ou importar extratos nos formatos OFX, CSV e XLS/XLSX.
 
 **3. Requer disciplina** — O me.poupe funciona melhor para quem tem disciplina de registrar os gastos regularmente, quer controle total sobre seus dados e gosta de entender exatamente onde o dinheiro está indo.
 
@@ -85,12 +84,6 @@ A ideia é simples: ter um lugar onde consigo ver todas as minhas contas, cartõ
 📝 **Anotações e tarefas** — Notas de texto com anexos, listas com checkboxes e sistema de arquivamento.
 
 📅 **Calendário financeiro** — Visualize todos os lançamentos em um calendário mensal.
-
-📲 **me.poupe Companion** — App Android que captura notificações bancárias (Nubank, Itaú, Bradesco, Inter, C6 e outros) e envia automaticamente como pré-lançamentos para revisão — sem digitar nada. [Repositório](https://github.com/felipegcoutinho/openmonetis-companion).
-
-<p align="center">
-  <img src="./public/images/companion-preview-light.webp" alt="me.poupe Companion" width="300" height="600" />
-</p>
 
 ⚙️ **Personalização** — Tema dark/light, modo privacidade, ordem das colunas, agrupamento por data em lançamentos, exibição de anotações, tamanho máximo de anexos, resumo opcional no modal de lançamento e changelog visual para acompanhar as novidades do app.
 
@@ -616,7 +609,7 @@ mepoupe/
 │   │   ├── categories/            # Categorias e histórico
 │   │   ├── budgets/               # Orçamentos
 │   │   ├── payers/                # Pagadores e compartilhamento
-│   │   ├── inbox/                 # Pré-lançamentos do Companion
+│   │   ├── inbox/                 # Pré-lançamentos pendentes de revisão
 │   │   ├── insights/              # Análises com IA
 │   │   ├── reports/               # Relatórios e exportações
 │   │   ├── notes/                 # Anotações

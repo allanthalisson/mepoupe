@@ -3,9 +3,12 @@
 > Self-hosted personal finance app (Next.js 16, React 19, PostgreSQL, Drizzle ORM, Better Auth, Tailwind 4, shadcn/ui).
 > Portuguese UI, English folders/imports. Linter: Biome 2.x. Package manager: pnpm.
 
-## Related Projects
+## Escopo do produto
 
-- **me.poupe Companion** (`~/github/openmonetis-companion`, projeto de terceiros): Android app que captura notificacoes de apps bancarios e envia para o me.poupe via API. Os itens chegam na feature `inbox` para revisao.
+Web/PWA neste primeiro momento — sem app nativo nem integração de terceiros
+para captura automática de notificações bancárias. A feature `inbox` existe
+para revisão de lançamentos pendentes; hoje é alimentada manualmente/por
+importação, não por um app externo.
 
 ---
 

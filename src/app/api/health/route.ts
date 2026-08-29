@@ -2,12 +2,11 @@ import { NextResponse } from "next/server";
 import { db } from "@/shared/lib/db";
 
 /**
- * Health check endpoint para Docker, monitoring e me.poupe Companion
+ * Health check endpoint para Docker e monitoring
  * GET /api/health
  *
  * Retorna status 200 se a aplicação está saudável
  * Verifica conexão com banco de dados
- * Usado pelo app Android para validar URL do servidor
  */
 export async function GET() {
 	try {

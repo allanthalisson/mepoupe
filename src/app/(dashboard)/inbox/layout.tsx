@@ -15,7 +15,7 @@ export default function RootLayout({
 			<PageDescription
 				icon={<RiAtLine />}
 				title="Pré-Lançamentos"
-				subtitle="Notificações capturadas pelo Companion"
+				subtitle="Lançamentos pendentes de revisão"
 			/>
 			{children}
 		</section>

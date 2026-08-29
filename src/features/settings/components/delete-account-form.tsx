@@ -95,9 +95,7 @@ export function DeleteAccountForm() {
 							<li>Lançamentos, faturas, antecipações e pré-lançamentos</li>
 							<li>Contas, cartões, orçamentos e anotações</li>
 							<li>Pessoas próprios e compartilhamentos recebidos</li>
-							<li>
-								Preferências do app, insights salvos e tokens do Companion
-							</li>
+							<li>Preferências e insights salvos</li>
 							<li>
 								Categorias padrão e pessoa admin serão recriadas automaticamente
 							</li>

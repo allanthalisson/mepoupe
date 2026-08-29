@@ -7,8 +7,4 @@ export const landingImages = {
 		light: "/images/pwa-preview-light.png",
 		dark: "/images/pwa-preview-dark.png",
 	},
-	companion: {
-		light: "/images/companion-preview-light.webp",
-		dark: "/images/companion-preview-dark.webp",
-	},
 } as const;

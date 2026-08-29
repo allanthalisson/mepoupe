@@ -2,7 +2,6 @@ import {
 	RiBankCard2Line,
 	RiBarChartBoxLine,
 	RiCalendarLine,
-	RiCheckLine,
 	RiDownloadCloudLine,
 	RiErrorWarningLine,
 	RiEyeOffLine,
@@ -11,7 +10,6 @@ import {
 	RiLayoutGridLine,
 	RiLineChartLine,
 	RiLockLine,
-	RiNotification3Line,
 	RiPercentLine,
 	RiPieChartLine,
 	RiRobot2Line,
@@ -124,13 +122,6 @@ export const extraFeatures: FeatureItem[] = [
 	},
 ];
 
-export const companionBanks = [
-	{ name: "Nubank", logo: "/logos/nubank.png" },
-	{ name: "Itaú", logo: "/logos/itau.png" },
-	{ name: "Inter", logo: "/logos/intermedium.png" },
-	{ name: "Mercado Pago", logo: "/logos/mercadopagocartao.png" },
-];
-
 export const pwaHighlights: FeatureItem[] = [
 	{
 		icon: RiSmartphoneLine,
@@ -149,27 +140,6 @@ export const pwaHighlights: FeatureItem[] = [
 		title: "Experiência mobile mais direta",
 		description: "Modo standalone com navegação limpa e fluida.",
 		colorVar: "var(--data-4)",
-	},
-];
-
-export const companionSteps: FeatureItem[] = [
-	{
-		icon: RiNotification3Line,
-		title: "Notificação bancária chega",
-		description: "O Companion intercepta automaticamente",
-		colorVar: "var(--data-1)",
-	},
-	{
-		icon: RiSmartphoneLine,
-		title: "Dados extraídos e enviados",
-		description: "Valor, descrição e banco são identificados",
-		colorVar: "var(--data-4)",
-	},
-	{
-		icon: RiCheckLine,
-		title: "Revise e confirme no me.poupe",
-		description: "Pré-lançamentos ficam na inbox para sua aprovação",
-		colorVar: "var(--data-5)",
 	},
 ];
 
