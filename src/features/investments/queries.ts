@@ -38,77 +38,87 @@ export type InvestmentAsset = {
 export async function fetchInvestmentsPageData(userId: string) {
 	const period = `${new Date().getUTCFullYear()}-${String(new Date().getUTCMonth() + 1).padStart(2, "0")}`;
 	const userIntegrations = await fetchUserIntegrationSecrets(userId);
-	const [
-		rows,
-		goalRows,
-		snapshotRows,
-		consultation,
-		consultationHistory,
-		candidates,
-		dismissalRows,
-	] = await Promise.all([
-		db
-			.select({
-				id: investmentAssets.id,
-				name: investmentAssets.name,
-				ticker: investmentAssets.ticker,
-				assetClass: investmentAssets.assetClass,
-				institution: investmentAssets.institution,
-				quantity: investmentAssets.quantity,
-				averagePrice: investmentAssets.averagePrice,
-				currentPrice: investmentAssets.currentPrice,
-				monthlyIncome: investmentAssets.monthlyIncome,
-				targetAllocation: investmentAssets.targetAllocation,
-				note: investmentAssets.note,
-				goalId: investmentAssets.goalId,
-				goalName: financialGoals.name,
-			})
-			.from(investmentAssets)
-			.leftJoin(financialGoals, eq(investmentAssets.goalId, financialGoals.id))
-			.where(eq(investmentAssets.userId, userId))
-			.orderBy(asc(investmentAssets.assetClass), asc(investmentAssets.name)),
-		db
-			.select({
-				id: financialGoals.id,
-				name: financialGoals.name,
-				goalType: financialGoals.goalType,
-				targetAmount: financialGoals.targetAmount,
-				monthlyContribution: financialGoals.monthlyContribution,
-				targetDate: financialGoals.targetDate,
-			})
-			.from(financialGoals)
-			.where(
-				and(
-					eq(financialGoals.userId, userId),
-					eq(financialGoals.status, "active"),
+	const [rows, goalRows, snapshotRows, consultation, consultationHistory] =
+		await Promise.all([
+			db
+				.select({
+					id: investmentAssets.id,
+					name: investmentAssets.name,
+					ticker: investmentAssets.ticker,
+					assetClass: investmentAssets.assetClass,
+					institution: investmentAssets.institution,
+					quantity: investmentAssets.quantity,
+					averagePrice: investmentAssets.averagePrice,
+					currentPrice: investmentAssets.currentPrice,
+					monthlyIncome: investmentAssets.monthlyIncome,
+					targetAllocation: investmentAssets.targetAllocation,
+					note: investmentAssets.note,
+					goalId: investmentAssets.goalId,
+					goalName: financialGoals.name,
+				})
+				.from(investmentAssets)
+				.leftJoin(
+					financialGoals,
+					eq(investmentAssets.goalId, financialGoals.id),
+				)
+				.where(eq(investmentAssets.userId, userId))
+				.orderBy(asc(investmentAssets.assetClass), asc(investmentAssets.name)),
+			db
+				.select({
+					id: financialGoals.id,
+					name: financialGoals.name,
+					goalType: financialGoals.goalType,
+					targetAmount: financialGoals.targetAmount,
+					monthlyContribution: financialGoals.monthlyContribution,
+					targetDate: financialGoals.targetDate,
+				})
+				.from(financialGoals)
+				.where(
+					and(
+						eq(financialGoals.userId, userId),
+						eq(financialGoals.status, "active"),
+					),
+				)
+				.orderBy(asc(financialGoals.priority), asc(financialGoals.name)),
+			db
+				.select()
+				.from(marketAssetSnapshots)
+				.where(eq(marketAssetSnapshots.userId, userId)),
+			db.query.financialConsultations.findFirst({
+				where: and(
+					eq(financialConsultations.userId, userId),
+					eq(financialConsultations.period, period),
 				),
-			)
-			.orderBy(asc(financialGoals.priority), asc(financialGoals.name)),
-		db
-			.select()
-			.from(marketAssetSnapshots)
-			.where(eq(marketAssetSnapshots.userId, userId)),
-		db.query.financialConsultations.findFirst({
-			where: and(
-				eq(financialConsultations.userId, userId),
-				eq(financialConsultations.period, period),
-			),
+			}),
+			db
+				.select({
+					period: financialConsultations.period,
+					modelId: financialConsultations.modelId,
+					updatedAt: financialConsultations.updatedAt,
+				})
+				.from(financialConsultations)
+				.where(eq(financialConsultations.userId, userId))
+				.orderBy(desc(financialConsultations.period))
+				.limit(6),
+		]);
+
+	// Isolado do Promise.all acima de propósito: se a migração das tabelas
+	// de sugestões (candidatos_investimento/sugestoes_dispensadas) ainda não
+	// rodou nesse banco, isso não pode derrubar a página de Investimentos
+	// inteira — só a seção de sugestões fica indisponível.
+	const [candidates, dismissalRows] = await Promise.all([
+		fetchScreenedCandidates().catch((error) => {
+			console.error("Falha ao buscar candidatos de sugestão:", error);
+			return [];
 		}),
-		db
-			.select({
-				period: financialConsultations.period,
-				modelId: financialConsultations.modelId,
-				updatedAt: financialConsultations.updatedAt,
-			})
-			.from(financialConsultations)
-			.where(eq(financialConsultations.userId, userId))
-			.orderBy(desc(financialConsultations.period))
-			.limit(6),
-		fetchScreenedCandidates(),
 		db
 			.select({ ticker: investmentSuggestionDismissals.ticker })
 			.from(investmentSuggestionDismissals)
-			.where(eq(investmentSuggestionDismissals.userId, userId)),
+			.where(eq(investmentSuggestionDismissals.userId, userId))
+			.catch((error) => {
+				console.error("Falha ao buscar sugestões dispensadas:", error);
+				return [];
+			}),
 	]);
 	const snapshots = new Map(
 		snapshotRows.map((snapshot) => [snapshot.assetId, snapshot]),
@@ -254,7 +264,9 @@ export async function fetchInvestmentsPageData(userId: string) {
 		courseMethod,
 		suggestions,
 		suggestionsFreshness: {
-			configured: Boolean(process.env.BRAPI_TOKEN),
+			configured: Boolean(
+				userIntegrations.brapiToken || process.env.BRAPI_TOKEN,
+			),
 			candidatesTracked: candidates.length,
 			lastSyncedAt: candidatesSyncedAt,
 		},

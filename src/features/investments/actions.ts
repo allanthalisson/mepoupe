@@ -16,6 +16,7 @@ import {
 import { getUser } from "@/shared/lib/auth/server";
 import { db } from "@/shared/lib/db";
 import { generateFinancialConsultation } from "@/shared/lib/financial-consultant/service";
+import { fetchUserIntegrationSecrets } from "@/shared/lib/integrations/user-keys";
 import { syncInvestmentCandidates } from "@/shared/lib/market-data/candidates-sync";
 import { syncUserMarketData } from "@/shared/lib/market-data/sync";
 import { noteSchema, uuidSchema } from "@/shared/lib/schemas/common";
@@ -177,13 +178,15 @@ export async function syncInvestmentMarketDataAction(): Promise<
 > {
 	try {
 		const currentUser = await getUser();
+		const { brapiToken } = await fetchUserIntegrationSecrets(currentUser.id);
 		const [result] = await Promise.all([
 			syncUserMarketData(currentUser.id),
 			// Candidatos das sugestões de investimento são globais (não por
-			// usuário) e o próprio sync pula sozinho se já rodou há menos de
-			// 24h — aproveita o clique do usuário pra popular na primeira vez,
-			// sem depender só do job em segundo plano.
-			syncInvestmentCandidates().catch((error) => {
+			// usuário), mas usa a própria chave de quem clicou como fallback
+			// quando o host não tem BRAPI_TOKEN — comum em apps self-hosted
+			// onde só o usuário configurou a chave em Integrações. O próprio
+			// sync pula sozinho se já rodou há menos de 24h.
+			syncInvestmentCandidates(brapiToken).catch((error) => {
 				console.error("Investment candidates sync failed:", error);
 			}),
 		]);

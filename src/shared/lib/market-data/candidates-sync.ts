@@ -79,12 +79,18 @@ async function syncOne(
 /**
  * Atualiza o universo de candidatos de ações/FIIs para as sugestões de
  * investimento. Compartilhado entre todos os usuários (não depende de
- * nenhuma carteira específica) — roda com o token do host, não do usuário.
- * Não faz nada se BRAPI_TOKEN não estiver configurado, ou se a última
+ * nenhuma carteira específica), mas precisa de UM token da brapi pra
+ * rodar — o do host (BRAPI_TOKEN) ou, na falta dele, o de quem disparou a
+ * sincronização (ex.: clicando em "Atualizar preços"), já que em um app
+ * self-hosted é comum só o usuário ter configurado a própria chave em
+ * Integrações. Não faz nada sem nenhum token, ou se a última
  * sincronização foi há menos de 24h.
  */
-export async function syncInvestmentCandidates(force = false) {
-	const token = process.env.BRAPI_TOKEN;
+export async function syncInvestmentCandidates(
+	tokenOverride?: string | null,
+	force = false,
+) {
+	const token = tokenOverride || process.env.BRAPI_TOKEN;
 	if (!token) return { synced: 0, skipped: true as const };
 
 	if (!force) {
@@ -139,6 +145,10 @@ export async function syncInvestmentCandidates(force = false) {
 			token,
 		);
 		if (ok) synced += 1;
+		// A brapi limita requisições por minuto no plano gratuito; um pequeno
+		// espaçamento entre candidatos evita rajada de 429 que marcaria a
+		// maioria como erro (e some da lista de sugestões).
+		await new Promise((resolve) => setTimeout(resolve, 350));
 	}
 
 	return { synced, skipped: false as const, total: candidates.length };
