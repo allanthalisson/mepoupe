@@ -2,10 +2,10 @@ import { passkey } from "@better-auth/passkey";
 import { APIError, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import type { GoogleProfile } from "better-auth/social-providers";
-import { Resend } from "resend";
 import { isSignupDisabled } from "@/shared/lib/auth/signup";
 import { seedDefaultCategoriesForUser } from "@/shared/lib/categories/defaults";
 import { db, schema } from "@/shared/lib/db";
+import { sendResendEmail } from "@/shared/lib/email/resend";
 import { ensureDefaultPayerForUser } from "@/shared/lib/payers/defaults";
 import { normalizeNameFromEmail } from "@/shared/lib/payers/utils";
 
@@ -15,9 +15,6 @@ import { normalizeNameFromEmail } from "@/shared/lib/payers/utils";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
-const resendApiKey = process.env.RESEND_API_KEY?.trim();
-const resetEmailFrom =
-	process.env.AUTH_EMAIL_FROM?.trim() || "me.poupe <onboarding@resend.dev>";
 const DEFAULT_SESSION_EXPIRES_IN_DAYS = 30;
 const DEFAULT_SESSION_UPDATE_AGE_HOURS = 24;
 
@@ -144,15 +141,9 @@ async function sendResetPasswordEmail({
 	user: { email: string };
 	url: string;
 }) {
-	if (!resendApiKey) {
-		throw new Error("Password reset email provider is not configured");
-	}
-
-	const resend = new Resend(resendApiKey);
 	const safeUrl = escapeHtml(url);
-	const { error } = await resend.emails.send({
-		from: resetEmailFrom,
-		to: [user.email],
+	await sendResendEmail({
+		to: user.email,
 		subject: "Redefina sua senha no me.poupe",
 		text: `Acesse este link para redefinir sua senha: ${url}`,
 		html: `
@@ -165,10 +156,6 @@ async function sendResetPasswordEmail({
 			</div>
 		`,
 	});
-
-	if (error) {
-		throw new Error("Password reset email could not be sent");
-	}
 }
 
 // ============================================================================

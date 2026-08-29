@@ -7,4 +7,3 @@ export const authClient = createAuthClient({
 	...(baseURL ? { baseURL } : {}),
 	plugins: [passkeyClient()],
 });
-
