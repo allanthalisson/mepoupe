@@ -22,8 +22,11 @@ const HEADER_ALIASES = {
 		"lancamento",
 		"memo",
 		"name",
+		"nome",
 		"detalhes",
 		"details",
+		// Fatura do cartão do Nubank exporta em inglês: date,title,amount
+		"title",
 	],
 	amount: [
 		"valor",
@@ -206,12 +209,45 @@ export function parseCsv(content: string, fileName?: string): ImportStatement {
 	const rows = parseRows(cleanContent, detectDelimiter(cleanContent));
 	if (rows.length < 2) throw new Error("CSV vazio ou sem linhas de dados.");
 
-	const columns = resolveColumns(rows[0]);
+	const normalizedHeaders = rows[0].map(normalizeHeader);
+	let columns = resolveColumns(rows[0]);
+	const hasAmountColumn =
+		columns.amount !== undefined ||
+		columns.debit !== undefined ||
+		columns.credit !== undefined;
+
+	// Fallback posicional: quando NENHUMA coluna bate com um apelido conhecido
+	// (comum em exports de apps de banco com nomes de coluna incomuns), mas o
+	// arquivo tem exatamente 3 colunas, assume a ordem mais comum: data,
+	// descrição, valor. Só entra em ação quando nada foi reconhecido — se
+	// pelo menos uma coluna já bateu, é mais seguro pedir pra ajustar o
+	// cabeçalho do que arriscar um mapeamento errado.
+	if (
+		columns.date === undefined &&
+		columns.description === undefined &&
+		!hasAmountColumn &&
+		rows[0].length === 3
+	) {
+		columns = { date: 0, description: 1, amount: 2 };
+	}
+
 	if (columns.date === undefined || columns.description === undefined) {
 		throw new Error(
 			'O CSV precisa ter colunas de "Data" e "Descrição" (ou "Histórico").',
 		);
 	}
+
+	// Faturas de cartão exportadas pelo Nubank (date,title,amount) usam a
+	// coluna "title" — um alias que só aparece nesse formato — e seguem a
+	// convenção de fatura: valor positivo é despesa (o que você gastou),
+	// negativo é estorno/pagamento. Extratos de conta corrente fazem o
+	// oposto (positivo = entrada), daí só invertemos quando não há coluna
+	// explícita de tipo/débito/crédito para desambiguar.
+	const isCardInvoiceFormat =
+		normalizedHeaders[columns.description] === "title" &&
+		columns.type === undefined &&
+		columns.debit === undefined &&
+		columns.credit === undefined;
 	if (
 		columns.amount === undefined &&
 		columns.debit === undefined &&
@@ -244,7 +280,13 @@ export function parseCsv(content: string, fileName?: string): ImportStatement {
 		if (!date || !description || signedAmount === null || signedAmount === 0) {
 			continue;
 		}
-		transactionType ??= signedAmount < 0 ? "expense" : "income";
+		transactionType ??= isCardInvoiceFormat
+			? signedAmount < 0
+				? "income"
+				: "expense"
+			: signedAmount < 0
+				? "expense"
+				: "income";
 
 		transactions.push({
 			externalId: valueAt(row, columns.externalId) || null,
@@ -269,7 +311,7 @@ export function parseCsv(content: string, fileName?: string): ImportStatement {
 		source,
 		accountNumber: null,
 		period: { from: dates[0], to: dates[dates.length - 1] },
-		isCreditCard: false,
+		isCreditCard: isCardInvoiceFormat,
 		transactions,
 	};
 }

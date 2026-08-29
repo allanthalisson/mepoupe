@@ -71,6 +71,7 @@ export function ImportPage({
 	const [payerId, setPayerId] = useState<string | null>(defaultPayerId);
 	const [accountCardValue, setAccountCardValue] = useState<string | null>(null);
 	const [invoicePeriod, setInvoicePeriod] = useState<string | null>(null);
+	const [invertTypes, setInvertTypes] = useState(false);
 
 	const categoryGroupById = useMemo(
 		() =>
@@ -291,6 +292,23 @@ export function ImportPage({
 		);
 	};
 
+	const handleInvertTypes = (value: boolean) => {
+		setInvertTypes(value);
+		setRows((prev) =>
+			prev.map((r) => {
+				const transactionType =
+					r.transactionType === "expense" ? "income" : "expense";
+				return {
+					...r,
+					transactionType,
+					categoryId: isCategoryCompatible(r.categoryId, transactionType)
+						? r.categoryId
+						: null,
+				};
+			}),
+		);
+	};
+
 	const isCard = accountCardValue?.startsWith("card:") ?? false;
 
 	const {
@@ -441,10 +459,12 @@ export function ImportPage({
 								accountCardValue={accountCardValue}
 								payerId={payerId}
 								invoicePeriod={invoicePeriod}
+								invertTypes={invertTypes}
 								onAccountCardChange={handleAccountCardChange}
 								onPayerChange={handleBulkPayerChange}
 								onInvoicePeriodChange={setInvoicePeriod}
 								onBulkCategoryChange={handleBulkCategoryChange}
+								onInvertTypes={handleInvertTypes}
 							/>
 
 							<ReviewTable
@@ -469,6 +489,7 @@ export function ImportPage({
 											setRows([]);
 											setAccountCardValue(null);
 											setInvoicePeriod(null);
+											setInvertTypes(false);
 										}}
 									>
 										Trocar arquivo

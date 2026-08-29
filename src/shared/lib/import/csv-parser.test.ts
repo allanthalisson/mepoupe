@@ -63,4 +63,29 @@ describe("parseCsv", () => {
 	it("explica quais colunas obrigatórias estão ausentes", () => {
 		assert.throws(() => parseCsv("Nome;Preço\nProduto;10"), /Data.*Descrição/);
 	});
+
+	it("lê a fatura do Nubank exportada em inglês (date,title,amount)", () => {
+		const result = parseCsv(
+			[
+				"date,title,amount",
+				"2026-03-10,Uber,32.50",
+				"2026-03-11,Salário,-1500",
+			].join("\n"),
+		);
+
+		assert.equal(result.transactions.length, 2);
+		assert.equal(result.transactions[0]?.description, "Uber");
+		assert.equal(result.transactions[0]?.amount, 32.5);
+		assert.equal(result.transactions[0]?.transactionType, "expense");
+	});
+
+	it("cai para o mapeamento posicional (data, descrição, valor) quando o cabeçalho não é reconhecido", () => {
+		const result = parseCsv(
+			["Quando;O que;Quanto", "10/03/2026;Uber;32,50"].join("\n"),
+		);
+
+		assert.equal(result.transactions.length, 1);
+		assert.equal(result.transactions[0]?.description, "Uber");
+		assert.equal(result.transactions[0]?.amount, 32.5);
+	});
 });

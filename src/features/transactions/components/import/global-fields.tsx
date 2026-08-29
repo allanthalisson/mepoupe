@@ -7,6 +7,7 @@ import {
 } from "@/features/transactions/components/select-items";
 import type { SelectOption } from "@/features/transactions/components/types";
 import { PeriodPicker } from "@/shared/components/period-picker";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Label } from "@/shared/components/ui/label";
 import {
 	Select,
@@ -46,10 +47,12 @@ interface GlobalFieldsProps {
 	accountCardValue: string | null;
 	payerId: string | null;
 	invoicePeriod: string | null;
+	invertTypes: boolean;
 	onAccountCardChange: (value: string | null) => void;
 	onPayerChange: (value: string | null) => void;
 	onInvoicePeriodChange: (value: string | null) => void;
 	onBulkCategoryChange: (categoryId: string) => void;
+	onInvertTypes: (value: boolean) => void;
 }
 
 export function GlobalFields({
@@ -60,10 +63,12 @@ export function GlobalFields({
 	accountCardValue,
 	payerId,
 	invoicePeriod,
+	invertTypes,
 	onAccountCardChange,
 	onPayerChange,
 	onInvoicePeriodChange,
 	onBulkCategoryChange,
+	onInvertTypes,
 }: GlobalFieldsProps) {
 	const isCard = accountCardValue?.startsWith("card:") ?? false;
 	const expenseCategories = categoryOptions.filter(
@@ -195,6 +200,23 @@ export function GlobalFields({
 					</div>
 				)}
 			</div>
+
+			{isCard && (
+				<div className="flex items-center gap-2 pt-1">
+					<Checkbox
+						id="invert-transaction-types"
+						checked={invertTypes}
+						onCheckedChange={(checked) => onInvertTypes(checked === true)}
+					/>
+					<Label
+						htmlFor="invert-transaction-types"
+						className="cursor-pointer font-normal text-muted-foreground text-sm"
+					>
+						Inverter receita/despesa (marque se a fatura importou os valores
+						trocados)
+					</Label>
+				</div>
+			)}
 		</div>
 	);
 }
