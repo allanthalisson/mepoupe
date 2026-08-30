@@ -13,12 +13,22 @@ import { excludeTransactionsFromExcludedAccounts } from "@/shared/lib/accounts/q
 import { db } from "@/shared/lib/db";
 import { getAdminPayerId } from "@/shared/lib/payers/get-admin-id";
 import { safeToNumber } from "@/shared/utils/number";
-import { getPreviousPeriod } from "@/shared/utils/period";
+import { getPreviousPeriod, parsePeriodRangeKey } from "@/shared/utils/period";
 
 const TRANSFERENCIA = "Transferência";
 
-async function aggregateMonthDataInternal(userId: string, period: string) {
-	const previousPeriod = getPreviousPeriod(period);
+/**
+ * `periodKey` é um mês único ("2026-03") ou um intervalo ("2026-01:2026-03")
+ * — ver `parsePeriodRangeKey`. "Atual" passa a ser o total agregado de
+ * todos os meses selecionados; a tendência de 3 meses continua olhando
+ * pra trás a partir do início do intervalo, pra sempre dar contexto de
+ * antes do período analisado.
+ */
+async function aggregateMonthDataInternal(userId: string, periodKey: string) {
+	const periods = parsePeriodRangeKey(periodKey);
+	const earliestPeriod = periods[0];
+	const latestPeriod = periods[periods.length - 1];
+	const previousPeriod = getPreviousPeriod(earliestPeriod);
 	const twoMonthsAgo = getPreviousPeriod(previousPeriod);
 	const threeMonthsAgo = getPreviousPeriod(twoMonthsAgo);
 	const adminPayerId = await getAdminPayerId(userId);
@@ -94,7 +104,7 @@ async function aggregateMonthDataInternal(userId: string, period: string) {
 				financialAccounts,
 				eq(transactions.accountId, financialAccounts.id),
 			)
-			.where(and(...buildAdminTransactionConditions({ period })))
+			.where(and(...buildAdminTransactionConditions({ periods })))
 			.groupBy(transactions.transactionType),
 		db
 			.select({
@@ -150,7 +160,7 @@ async function aggregateMonthDataInternal(userId: string, period: string) {
 			.where(
 				and(
 					...buildAdminTransactionConditions({
-						period,
+						periods,
 						transactionType: "Despesa",
 					}),
 					eq(categories.type, "despesa"),
@@ -171,7 +181,7 @@ async function aggregateMonthDataInternal(userId: string, period: string) {
 				transactions,
 				and(
 					eq(transactions.categoryId, categories.id),
-					eq(transactions.period, period),
+					inArray(transactions.period, periods),
 					eq(transactions.userId, userId),
 					eq(transactions.transactionType, "Despesa"),
 					adminPayerCondition,
@@ -182,7 +192,7 @@ async function aggregateMonthDataInternal(userId: string, period: string) {
 				financialAccounts,
 				eq(transactions.accountId, financialAccounts.id),
 			)
-			.where(and(eq(budgets.userId, userId), eq(budgets.period, period)))
+			.where(and(eq(budgets.userId, userId), inArray(budgets.period, periods)))
 			.groupBy(categories.name, budgets.amount),
 		db
 			.select({
@@ -214,7 +224,7 @@ async function aggregateMonthDataInternal(userId: string, period: string) {
 				financialAccounts,
 				eq(transactions.accountId, financialAccounts.id),
 			)
-			.where(and(...buildAdminTransactionConditions({ period }))),
+			.where(and(...buildAdminTransactionConditions({ periods }))),
 		db
 			.select({
 				purchaseDate: transactions.purchaseDate,
@@ -228,7 +238,7 @@ async function aggregateMonthDataInternal(userId: string, period: string) {
 			.where(
 				and(
 					...buildAdminTransactionConditions({
-						period,
+						periods,
 						transactionType: "Despesa",
 					}),
 				),
@@ -246,7 +256,7 @@ async function aggregateMonthDataInternal(userId: string, period: string) {
 			.where(
 				and(
 					...buildAdminTransactionConditions({
-						period,
+						periods,
 						transactionType: "Despesa",
 					}),
 				),
@@ -271,7 +281,7 @@ async function aggregateMonthDataInternal(userId: string, period: string) {
 			.where(
 				and(
 					...buildAdminTransactionConditions({
-						periods: [period, previousPeriod, twoMonthsAgo],
+						periods: [...periods, previousPeriod, twoMonthsAgo],
 						transactionType: "Despesa",
 					}),
 				),
@@ -351,11 +361,14 @@ async function aggregateMonthDataInternal(userId: string, period: string) {
 					frequency: occurrences.length,
 				});
 
-				const currentMonthOccurrence = occurrences.find(
-					(o) => o.period === period,
+				const currentPeriodOccurrences = occurrences.filter((o) =>
+					periods.includes(o.period),
 				);
-				if (currentMonthOccurrence) {
-					totalRecurring += currentMonthOccurrence.amount;
+				if (currentPeriodOccurrences.length > 0) {
+					totalRecurring += currentPeriodOccurrences.reduce(
+						(sum, o) => sum + o.amount,
+						0,
+					);
 				}
 			}
 		}
@@ -369,7 +382,7 @@ async function aggregateMonthDataInternal(userId: string, period: string) {
 	);
 
 	const installmentData = installmentTransactions
-		.filter((tx) => tx.period === period)
+		.filter((tx) => periods.includes(tx.period))
 		.map((tx) => ({
 			name: tx.name,
 			currentInstallment: tx.currentInstallment ?? 1,
@@ -387,13 +400,22 @@ async function aggregateMonthDataInternal(userId: string, period: string) {
 		return sum + tx.amount * remaining;
 	}, 0);
 
+	const analyzedPeriodLabel =
+		periods.length > 1 ? `${earliestPeriod}..${latestPeriod}` : latestPeriod;
+
 	return {
-		month: period,
+		month: latestPeriod,
+		analyzedPeriods: periods,
 		totalIncome: currentIncome,
 		totalExpense: currentExpense,
 		balance: currentIncome - currentExpense,
 		threeMonthTrend: {
-			periods: [threeMonthsAgo, twoMonthsAgo, previousPeriod, period],
+			periods: [
+				threeMonthsAgo,
+				twoMonthsAgo,
+				previousPeriod,
+				analyzedPeriodLabel,
+			],
 			incomes: [
 				threeMonthsAgoIncome,
 				twoMonthsAgoIncome,
@@ -527,9 +549,9 @@ async function aggregateMonthDataInternal(userId: string, period: string) {
 	};
 }
 
-export async function aggregateMonthData(userId: string, period: string) {
+export async function aggregateMonthData(userId: string, periodKey: string) {
 	"use cache";
 	cacheTag(`dashboard-${userId}`);
 	cacheLife({ revalidate: 3 });
-	return aggregateMonthDataInternal(userId, period);
+	return aggregateMonthDataInternal(userId, periodKey);
 }

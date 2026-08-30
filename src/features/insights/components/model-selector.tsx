@@ -13,7 +13,9 @@ import { ProviderSelectionCard } from "./provider-selection-card";
 interface ModelSelectorProps {
 	value: string;
 	onValueChange: (value: string) => void;
-	period: string;
+	selectedPeriods: string[];
+	onSelectedPeriodsChange: (periods: string[]) => void;
+	availablePeriods: string[];
 	onAnalyze: () => void;
 	userInstructions: string;
 	onUserInstructionsChange: (value: string) => void;
@@ -69,7 +71,9 @@ function getModelLabel(modelId: string) {
 export function ModelSelector({
 	value,
 	onValueChange,
-	period,
+	selectedPeriods,
+	onSelectedPeriodsChange,
+	availablePeriods,
 	onAnalyze,
 	userInstructions,
 	onUserInstructionsChange,
@@ -186,7 +190,9 @@ export function ModelSelector({
 				</div>
 
 				<AnalysisSummaryCard
-					period={period}
+					selectedPeriods={selectedPeriods}
+					onSelectedPeriodsChange={onSelectedPeriodsChange}
+					availablePeriods={availablePeriods}
 					currentProvider={currentProvider}
 					selectedModelLabel={selectedModelLabel}
 					userInstructions={userInstructions}

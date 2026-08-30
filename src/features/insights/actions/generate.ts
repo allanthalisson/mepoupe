@@ -8,13 +8,16 @@ import {
 	type InsightsResponse,
 	InsightsResponseSchema,
 } from "@/shared/lib/schemas/insights";
+import { isValidPeriodKey } from "@/shared/utils/period";
 import { INSIGHTS_SYSTEM_PROMPT } from "../constants";
 import { USER_INSTRUCTIONS_MAX_LENGTH } from "../lib/user-instructions";
 import { aggregateMonthData } from "./aggregate";
 import type { ActionResult } from "./types";
 
-const PERIOD_REGEX = /^\d{4}-\d{2}$/;
-
+/**
+ * `period` aceita um mês ("2026-03") ou um intervalo de meses
+ * ("2026-01:2026-03") — ver `parsePeriodRangeKey`/`buildPeriodRangeKey`.
+ */
 export async function generateInsightsAction(
 	period: string,
 	modelId: string,
@@ -23,10 +26,11 @@ export async function generateInsightsAction(
 	try {
 		const user = await getUser();
 
-		if (!PERIOD_REGEX.test(period)) {
+		if (!isValidPeriodKey(period)) {
 			return {
 				success: false,
-				error: "Período inválido (formato esperado: YYYY-MM)",
+				error:
+					"Período inválido (formato esperado: YYYY-MM ou YYYY-MM:YYYY-MM)",
 			};
 		}
 
@@ -45,12 +49,16 @@ export async function generateInsightsAction(
 		}
 
 		const aggregatedData = await aggregateMonthData(user.id, period);
+		const periodDescription =
+			aggregatedData.analyzedPeriods.length > 1
+				? `os meses de ${aggregatedData.analyzedPeriods.join(", ")} (analisados em conjunto, como um único período consolidado)`
+				: `o período ${period}`;
 
 		const result = await generateObject({
 			model: resolvedModel.model,
 			schema: InsightsResponseSchema,
 			system: INSIGHTS_SYSTEM_PROMPT,
-			prompt: `Analise os seguintes dados financeiros agregados do período ${period}.
+			prompt: `Analise os seguintes dados financeiros agregados de ${periodDescription}.
 
 Dados agregados:
 ${JSON.stringify(aggregatedData, null, 2)}
@@ -58,9 +66,9 @@ ${JSON.stringify(aggregatedData, null, 2)}
 DADOS IMPORTANTES PARA SUA ANÁLISE:
 
 **Tendência de 3 meses:**
-- Os dados incluem tendência dos últimos 3 meses (threeMonthTrend)
+- Os dados incluem tendência dos 3 meses anteriores ao período analisado (threeMonthTrend)
 - Use isso para identificar padrões crescentes, decrescentes ou estáveis
-- Compare o mês atual com a média dos 3 meses
+- Compare o período atual (analyzedPeriods) com a média desses 3 meses anteriores
 
 **Análise de Recorrência:**
 - Gastos recorrentes representam ${aggregatedData.recurringExpenses.percentageOfTotal.toFixed(1)}% das despesas
@@ -68,7 +76,7 @@ DADOS IMPORTANTES PARA SUA ANÁLISE:
 - Use isso para avaliar previsibilidade e oportunidades de otimização
 
 **Gastos Parcelados:**
-- ${aggregatedData.installments.currentMonthInstallments} parcelas ativas no mês
+- ${aggregatedData.installments.currentMonthInstallments} parcelas ativas no período analisado
 - Comprometimento futuro de R$ ${aggregatedData.installments.futureCommitment.toFixed(2)}
 - Use isso para alertas sobre comprometimento de renda futura
 

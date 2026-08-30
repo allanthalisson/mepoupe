@@ -6,10 +6,14 @@ import {
 	type InsightsResponse,
 	InsightsResponseSchema,
 } from "@/shared/lib/schemas/insights";
+import { isValidPeriodKey } from "@/shared/utils/period";
 
 export const savedInsightsPeriodSchema = z
 	.string()
-	.regex(/^\d{4}-\d{2}$/, "Período inválido (formato esperado: YYYY-MM)");
+	.refine(
+		isValidPeriodKey,
+		"Período inválido (formato esperado: YYYY-MM ou YYYY-MM:YYYY-MM)",
+	);
 
 export type SavedInsightsRecord = {
 	insights: InsightsResponse;

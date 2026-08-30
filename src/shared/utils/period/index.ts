@@ -195,6 +195,44 @@ export function buildPeriodWindow(
 }
 
 // ============================================================================
+// PERIOD RANGE KEY (análises de IA que cobrem vários meses)
+// ============================================================================
+
+const PERIOD_REGEX = /^\d{4}-\d{2}$/;
+const PERIOD_RANGE_KEY_REGEX = /^\d{4}-\d{2}:\d{4}-\d{2}$/;
+
+/** Valida uma chave de período: um mês ("2026-03") ou um intervalo ("2026-01:2026-03"). */
+export function isValidPeriodKey(key: string): boolean {
+	return PERIOD_REGEX.test(key) || PERIOD_RANGE_KEY_REGEX.test(key);
+}
+
+/**
+ * Monta a chave de período a partir de uma lista de meses selecionados
+ * (não precisam vir ordenados). Um único mês vira só "2026-03"; mais de um
+ * vira o intervalo entre o menor e o maior ("2026-01:2026-03") — a análise
+ * sempre cobre o intervalo contínuo entre eles, não só os meses marcados.
+ */
+export function buildPeriodRangeKey(periods: string[]): string {
+	if (periods.length === 0) {
+		throw new Error("Informe ao menos um período.");
+	}
+	const sorted = [...periods].sort(comparePeriods);
+	const start = sorted[0];
+	const end = sorted[sorted.length - 1];
+	return start === end ? start : `${start}:${end}`;
+}
+
+/**
+ * Expande uma chave de período (mês único ou intervalo) na lista completa
+ * de meses que ela cobre, em ordem crescente.
+ */
+export function parsePeriodRangeKey(key: string): string[] {
+	if (!key.includes(":")) return [key];
+	const [start, end] = key.split(":");
+	return buildPeriodRange(start, end);
+}
+
+// ============================================================================
 // URL PARAM HANDLING (mes-ano format for Portuguese URLs)
 // ============================================================================
 

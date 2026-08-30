@@ -12,7 +12,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
 	deleteSavedInsightsAction,
@@ -28,8 +28,11 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { InsightsResponse } from "@/shared/lib/schemas/insights";
+import { buildPeriodRangeKey, buildPeriodWindow } from "@/shared/utils/period";
 import { InsightsGrid } from "./insights-grid";
 import { ModelSelector } from "./model-selector";
+
+const SELECTABLE_PERIODS_WINDOW = 12;
 
 interface InsightsPageProps {
 	period: string;
@@ -38,7 +41,16 @@ interface InsightsPageProps {
 
 export function InsightsPage({ period, onAnalyze }: InsightsPageProps) {
 	const queryClient = useQueryClient();
-	const savedInsightsQuery = useSavedInsights(period);
+	const [selectedPeriods, setSelectedPeriods] = useState<string[]>([period]);
+	const periodKey = useMemo(
+		() => buildPeriodRangeKey(selectedPeriods),
+		[selectedPeriods],
+	);
+	const availablePeriods = useMemo(
+		() => buildPeriodWindow(period, SELECTABLE_PERIODS_WINDOW).reverse(),
+		[period],
+	);
+	const savedInsightsQuery = useSavedInsights(periodKey);
 	const [isPending, startTransition] = useTransition();
 	const [isSaving, startSaveTransition] = useTransition();
 	const [draftInsights, setDraftInsights] = useState<InsightsResponse | null>(
@@ -72,7 +84,7 @@ export function InsightsPage({ period, onAnalyze }: InsightsPageProps) {
 	);
 
 	useEffect(() => {
-		void period;
+		setSelectedPeriods([period]);
 		setDraftInsights(null);
 		setSelectedModelOverride(null);
 		setError(null);
@@ -98,7 +110,7 @@ export function InsightsPage({ period, onAnalyze }: InsightsPageProps) {
 		startTransition(async () => {
 			try {
 				const result = await generateInsightsAction(
-					period,
+					periodKey,
 					selectedModel,
 					userInstructions,
 				);
@@ -126,13 +138,13 @@ export function InsightsPage({ period, onAnalyze }: InsightsPageProps) {
 		startSaveTransition(async () => {
 			try {
 				const result = await saveInsightsAction(
-					period,
+					periodKey,
 					selectedModel,
 					insights,
 				);
 
 				if (result.success) {
-					queryClient.setQueryData(savedInsightsQueryKey(period), {
+					queryClient.setQueryData(savedInsightsQueryKey(periodKey), {
 						insights,
 						modelId: selectedModel,
 						createdAt: result.data.createdAt.toISOString(),
@@ -155,10 +167,10 @@ export function InsightsPage({ period, onAnalyze }: InsightsPageProps) {
 
 		startSaveTransition(async () => {
 			try {
-				const result = await deleteSavedInsightsAction(period);
+				const result = await deleteSavedInsightsAction(periodKey);
 
 				if (result.success) {
-					queryClient.setQueryData(savedInsightsQueryKey(period), null);
+					queryClient.setQueryData(savedInsightsQueryKey(periodKey), null);
 					setDraftInsights(insights);
 					setSelectedModelOverride(selectedModel);
 					toast.success("Análise removida com sucesso!");
@@ -177,7 +189,9 @@ export function InsightsPage({ period, onAnalyze }: InsightsPageProps) {
 			<ModelSelector
 				value={selectedModel}
 				onValueChange={setSelectedModelOverride}
-				period={period}
+				selectedPeriods={selectedPeriods}
+				onSelectedPeriodsChange={setSelectedPeriods}
+				availablePeriods={availablePeriods}
 				onAnalyze={handleAnalyze}
 				userInstructions={userInstructions}
 				onUserInstructionsChange={setUserInstructions}

@@ -2,6 +2,7 @@ import {
 	RiCalendarLine,
 	RiDatabase2Line,
 	RiEditLine,
+	RiExpandUpDownLine,
 	RiInformationLine,
 	RiSearchLine,
 	RiShieldCheckLine,
@@ -13,6 +14,7 @@ import { USER_INSTRUCTIONS_MAX_LENGTH } from "@/features/insights/lib/user-instr
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
 	Dialog,
 	DialogClose,
@@ -23,21 +25,48 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/shared/components/ui/dialog";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/shared/components/ui/popover";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { displayPeriod } from "@/shared/utils/period";
+import {
+	comparePeriods,
+	displayPeriod,
+	formatShortPeriodLabel,
+} from "@/shared/utils/period";
 import { cn } from "@/shared/utils/ui";
 import { ProviderIcon } from "./provider-icon";
 
 interface AnalysisSummaryCardProps {
-	period: string;
+	selectedPeriods: string[];
+	onSelectedPeriodsChange: (periods: string[]) => void;
+	availablePeriods: string[];
 	currentProvider: AIProvider;
 	selectedModelLabel: string;
 	userInstructions: string;
 	onUserInstructionsChange: (value: string) => void;
 }
 
+function describeSelectedPeriods(selectedPeriods: string[]): string {
+	if (selectedPeriods.length <= 1) {
+		return selectedPeriods[0]
+			? displayPeriod(selectedPeriods[0])
+			: "Nenhum período selecionado";
+	}
+
+	const sorted = [...selectedPeriods].sort(comparePeriods);
+	const first = sorted[0];
+	const last = sorted[sorted.length - 1];
+
+	return `${formatShortPeriodLabel(first)} – ${formatShortPeriodLabel(last)} (${sorted.length} meses)`;
+}
+
 export function AnalysisSummaryCard({
-	period,
+	selectedPeriods,
+	onSelectedPeriodsChange,
+	availablePeriods,
 	currentProvider,
 	selectedModelLabel,
 	userInstructions,
@@ -47,6 +76,17 @@ export function AnalysisSummaryCard({
 
 	const handleUserInstructionsChange = (value: string) => {
 		onUserInstructionsChange(value.slice(0, USER_INSTRUCTIONS_MAX_LENGTH));
+	};
+
+	const handleTogglePeriod = (period: string, checked: boolean) => {
+		if (checked) {
+			if (selectedPeriods.includes(period)) return;
+			onSelectedPeriodsChange([...selectedPeriods, period]);
+			return;
+		}
+
+		if (selectedPeriods.length <= 1) return;
+		onSelectedPeriodsChange(selectedPeriods.filter((item) => item !== period));
 	};
 
 	return (
@@ -155,11 +195,53 @@ export function AnalysisSummaryCard({
 					</p>
 
 					<div className="grid gap-2">
-						<SummaryRow
-							icon={<RiCalendarLine className="size-4" />}
-							label="Período"
-							value={displayPeriod(period)}
-						/>
+						<div className="flex gap-3">
+							<div className="mt-0.5 text-muted-foreground">
+								<RiCalendarLine className="size-4" />
+							</div>
+							<div className="w-full space-y-1.5">
+								<p className="font-semibold text-xs">Período</p>
+								<Popover>
+									<PopoverTrigger asChild>
+										<Button
+											className="h-auto w-full justify-between px-3 py-1.5 text-left font-normal text-xs"
+											type="button"
+											variant="outline"
+										>
+											<span className="truncate">
+												{describeSelectedPeriods(selectedPeriods)}
+											</span>
+											<RiExpandUpDownLine className="size-3.5 shrink-0 text-muted-foreground" />
+										</Button>
+									</PopoverTrigger>
+									<PopoverContent align="start" className="w-64 p-2">
+										<p className="mb-2 px-1 text-muted-foreground text-xs">
+											Selecione um ou mais meses. Meses não adjacentes incluem
+											os meses entre eles na análise.
+										</p>
+										<div className="max-h-64 space-y-0.5 overflow-y-auto">
+											{availablePeriods.map((option) => {
+												const checked = selectedPeriods.includes(option);
+												return (
+													<label
+														className="flex cursor-pointer items-center gap-2 rounded-md px-1.5 py-1.5 text-xs hover:bg-muted"
+														key={option}
+													>
+														<Checkbox
+															checked={checked}
+															onCheckedChange={(value) =>
+																handleTogglePeriod(option, value === true)
+															}
+														/>
+														{displayPeriod(option)}
+													</label>
+												);
+											})}
+										</div>
+									</PopoverContent>
+								</Popover>
+							</div>
+						</div>
 						<SummaryRow
 							icon={<RiDatabase2Line className="size-4" />}
 							label="Fonte dos dados"
