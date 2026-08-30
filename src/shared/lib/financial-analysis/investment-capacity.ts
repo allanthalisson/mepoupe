@@ -38,9 +38,9 @@ const round2 = (value: number) => Math.round(value * 100) / 100;
  * na provisão (não é 100%: parte desse gasto é justamente o que dá pra
  * cortar, então provisionar tudo subestimaria a capacidade de aporte).
  */
-export const VARIABLE_PROVISION_RATIO = 0.7;
+const VARIABLE_PROVISION_RATIO = 0.7;
 /** Margem de segurança como fração da renda média. */
-export const SAFETY_MARGIN_RATIO = 0.05;
+const SAFETY_MARGIN_RATIO = 0.05;
 
 export function buildInvestmentCapacity(
 	averageIncome: number,
