@@ -36,7 +36,7 @@ const SUGGESTED_QUESTIONS = [
 	"Quanto gastei este mês?",
 	"Onde estou gastando mais que deveria?",
 	"Minha taxa de poupança está melhorando?",
-	"Onde eu conseguiria economizar R$ 500 por mês?",
+	"Quanto consigo investir por mês atualmente?",
 ];
 
 let tempMessageCounter = 0;

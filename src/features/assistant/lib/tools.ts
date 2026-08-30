@@ -10,6 +10,7 @@
 import "server-only";
 import { tool } from "ai";
 import { z } from "zod";
+import { getInvestmentCapacity } from "@/features/assistant/lib/investment-capacity";
 import { fetchSuggestedCategoryBudgets } from "@/features/budgets/queries";
 import { getExpensesByCategory } from "@/shared/lib/financial-analysis/category-breakdown";
 import {
@@ -110,6 +111,13 @@ export function buildAssistantTools(userId: string) {
 			}),
 			execute: async ({ period }) =>
 				fetchSuggestedCategoryBudgets(userId, period ?? getCurrentPeriod()),
+		}),
+
+		getInvestmentCapacity: tool({
+			description:
+				"Quanto o usuário consegue investir por mês sem apertar o orçamento (capacidade conservadora de aporte), com os componentes do cálculo (renda média, despesas essenciais, compromissos recorrentes, provisão de gasto variável, margem de segurança). Use para 'quanto consigo investir', 'quero economizar/investir R$X, onde corto' e similares.",
+			inputSchema: z.object({}),
+			execute: async () => getInvestmentCapacity(userId),
 		}),
 	};
 }
