@@ -93,6 +93,24 @@ export function InvestmentSuggestionsCard({
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-6">
+				{freshness.candidatesTracked > 0 &&
+					freshness.candidatesWithError === freshness.candidatesTracked && (
+						<div className="rounded-lg border border-warning/40 bg-warning/5 p-3 text-xs">
+							<p className="font-medium">
+								Todos os {freshness.candidatesTracked} candidatos falharam ao
+								sincronizar com a brapi.
+							</p>
+							{freshness.sampleError && (
+								<p className="mt-1 font-mono text-muted-foreground">
+									Erro: {freshness.sampleError}
+								</p>
+							)}
+							<p className="mt-1 text-muted-foreground">
+								Confira se a chave da brapi (sua ou do host) ainda é válida e se
+								não passou do limite do plano gratuito.
+							</p>
+						</div>
+					)}
 				{suggestions.length === 0 ? (
 					<p className="text-muted-foreground text-sm">
 						{freshness.candidatesTracked === 0

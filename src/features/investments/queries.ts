@@ -257,6 +257,10 @@ export async function fetchInvestmentsPageData(userId: string) {
 				: latest,
 		null,
 	);
+	const candidatesWithError = candidates.filter((c) => c.hasError).length;
+	// Amostra do erro mais recente, só pra dar um diagnóstico visível na
+	// tela sem precisar ir atrás de log de servidor.
+	const sampleError = candidates.find((c) => c.hasError)?.lastError ?? null;
 
 	return {
 		assets,
@@ -268,6 +272,8 @@ export async function fetchInvestmentsPageData(userId: string) {
 				userIntegrations.brapiToken || process.env.BRAPI_TOKEN,
 			),
 			candidatesTracked: candidates.length,
+			candidatesWithError,
+			sampleError,
 			lastSyncedAt: candidatesSyncedAt,
 		},
 		period,

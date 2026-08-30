@@ -188,6 +188,7 @@ export async function fetchScreenedCandidates() {
 			currentPrice: row.currentPrice === null ? null : Number(row.currentPrice),
 			lastSyncedAt: row.lastSyncedAt.toISOString(),
 			hasError: row.lastError !== null,
+			lastError: row.lastError,
 			screening: screenFundamentals(row.assetClass, fundamentalData),
 		};
 	});
