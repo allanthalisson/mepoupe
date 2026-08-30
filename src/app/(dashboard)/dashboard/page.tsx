@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { DashboardGridEditable } from "@/features/dashboard/components/dashboard-grid-editable";
 import { DashboardMetricsCards } from "@/features/dashboard/components/dashboard-metrics-cards";
 import { DashboardWelcome } from "@/features/dashboard/components/dashboard-welcome";
+import { PriorityInsightsCard } from "@/features/dashboard/components/priority-insights-card";
 import { extractDashboardLogoNames } from "@/features/dashboard/lib/extract-logo-names";
 import { fetchDashboardPageData } from "@/features/dashboard/page-data-queries";
 import { DemoDataBanner } from "@/features/onboarding/components/demo-data-banner";
@@ -69,6 +70,12 @@ async function DashboardContent({ searchParams }: PageProps) {
 					period={selectedPeriod}
 					adminPayerSlug={adminPayerSlug}
 				/>
+			</ContentErrorBoundary>
+			<ContentErrorBoundary
+				title="Não foi possível exibir os insights"
+				description="Os insights prioritários não puderam ser calculados agora."
+			>
+				<PriorityInsightsCard period={selectedPeriod} userId={user.id} />
 			</ContentErrorBoundary>
 			<ContentErrorBoundary
 				title="Não foi possível exibir os widgets"
