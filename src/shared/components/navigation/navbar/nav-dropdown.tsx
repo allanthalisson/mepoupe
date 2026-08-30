@@ -79,11 +79,32 @@ function FinanceEntityLinks({
 	});
 }
 
-export function NavDropdown({ items, financeLinks }: NavDropdownProps) {
+export function NavDropdownSections({
+	sections,
+	financeLinks,
+}: {
+	sections: { label: string; items: NavItem[] }[];
+	financeLinks?: NavbarFinanceLinks;
+}) {
+	return (
+		<div className="grid max-h-[75vh] w-[42rem] max-w-[90vw] grid-cols-1 gap-x-6 overflow-y-auto p-3 sm:grid-cols-2">
+			{sections.map((section) => (
+				<div key={section.label}>
+					<p className="px-2 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+						{section.label}
+					</p>
+					<NavDropdownItems items={section.items} financeLinks={financeLinks} />
+				</div>
+			))}
+		</div>
+	);
+}
+
+function NavDropdownItems({ items, financeLinks }: NavDropdownProps) {
 	const pathname = usePathname();
 
 	return (
-		<ul className="grid w-72 gap-0.5 p-2">
+		<ul className="grid gap-0.5">
 			{items.map((item) => {
 				const isActive =
 					pathname === item.href || pathname.startsWith(`${item.href}/`);

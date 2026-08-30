@@ -45,18 +45,42 @@ type NavSection = {
 	items: NavItem[];
 };
 
+/**
+ * Itens de primeiro nível da navegação (ao lado de "Início"), conforme a
+ * simplificação do produto em torno de Registrar → Entender → Economizar →
+ * Investir. Tudo que não é essencial no dia a dia continua existindo, só
+ * que reunido no dropdown "Mais" (ver `NAV_SECTIONS`) em vez de ocupar
+ * espaço na navegação principal.
+ */
+export const PRIMARY_NAV_ITEMS: NavItem[] = [
+	{
+		href: "/transactions",
+		label: "Lançamentos",
+		description: "Registre e gerencie suas transações",
+		icon: <RiArrowLeftRightLine className="size-4" />,
+		iconClass: "text-primary",
+		preservePeriod: true,
+	},
+	{
+		href: "/cards",
+		label: "Cartões",
+		description: "Faturas e limites dos seus cartões",
+		icon: <RiBankCard2Line className="size-4" />,
+		iconClass: "text-primary",
+	},
+	{
+		href: "/investments",
+		label: "Investimentos",
+		description: "Patrimônio, alocação e renda passiva",
+		icon: <RiFundsLine className="size-4" />,
+		iconClass: "text-primary",
+	},
+];
+
 export const NAV_SECTIONS: NavSection[] = [
 	{
 		label: "Lançamentos",
 		items: [
-			{
-				href: "/transactions",
-				label: "Lançamentos",
-				description: "Registre e gerencie suas transações",
-				icon: <RiArrowLeftRightLine className="size-4" />,
-				iconClass: "text-primary",
-				preservePeriod: true,
-			},
 			{
 				href: "/inbox",
 				label: "Pré-lançamentos",
@@ -82,20 +106,6 @@ export const NAV_SECTIONS: NavSection[] = [
 				label: "Planejamento",
 				description: "Diagnóstico, metas e plano para dívidas",
 				icon: <RiTargetLine className="size-4" />,
-				iconClass: "text-primary",
-			},
-			{
-				href: "/investments",
-				label: "Investimentos",
-				description: "Patrimônio, alocação e renda passiva",
-				icon: <RiFundsLine className="size-4" />,
-				iconClass: "text-primary",
-			},
-			{
-				href: "/cards",
-				label: "Cartões",
-				description: "Faturas e limites dos seus cartões",
-				icon: <RiBankCard2Line className="size-4" />,
 				iconClass: "text-primary",
 			},
 			{

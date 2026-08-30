@@ -27,8 +27,12 @@ import {
 	MobileLink,
 	MobileSectionLabel,
 } from "./mobile-link";
-import { NavDropdown } from "./nav-dropdown";
-import { NAV_SECTIONS, type NavbarFinanceLinks } from "./nav-items";
+import { NavDropdownSections } from "./nav-dropdown";
+import {
+	NAV_SECTIONS,
+	type NavbarFinanceLinks,
+	PRIMARY_NAV_ITEMS,
+} from "./nav-items";
 import { NavPill } from "./nav-pill";
 import { MobileTools, NavToolsDropdown } from "./nav-tools";
 
@@ -48,6 +52,11 @@ export function NavMenu({
 	const [calculatorOpen, setCalculatorOpen] = useState(false);
 	const close = () => setSheetOpen(false);
 	const openCalculator = () => setCalculatorOpen(true);
+	const isMoreActive = NAV_SECTIONS.some((section) =>
+		section.items.some(
+			(item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+		),
+	);
 
 	return (
 		<>
@@ -60,44 +69,35 @@ export function NavMenu({
 					<NavigationMenuList className="gap-2">
 						<NavigationMenuItem>
 							<NavPill href="/dashboard" preservePeriod>
-								Dashboard
+								Início
 							</NavPill>
 						</NavigationMenuItem>
 
-						{NAV_SECTIONS.map((section) => {
-							const isSectionActive = section.items.some(
-								(item) =>
-									pathname === item.href ||
-									pathname.startsWith(`${item.href}/`),
-							);
-							return (
-								<NavigationMenuItem key={section.label}>
-									<NavigationMenuTrigger
-										className={cn(
-											triggerClass,
-											isSectionActive && triggerActiveClass,
-											"capitalize",
-										)}
-									>
-										{section.label}
-									</NavigationMenuTrigger>
-									<NavigationMenuContent
-										className={
-											section.label === "Finanças"
-												? "overflow-visible!"
-												: undefined
-										}
-									>
-										<NavDropdown
-											items={section.items}
-											financeLinks={
-												section.label === "Finanças" ? financeLinks : undefined
-											}
-										/>
-									</NavigationMenuContent>
-								</NavigationMenuItem>
-							);
-						})}
+						{PRIMARY_NAV_ITEMS.map((item) => (
+							<NavigationMenuItem key={item.href}>
+								<NavPill href={item.href} preservePeriod={item.preservePeriod}>
+									{item.label}
+								</NavPill>
+							</NavigationMenuItem>
+						))}
+
+						<NavigationMenuItem>
+							<NavigationMenuTrigger
+								className={cn(
+									triggerClass,
+									isMoreActive && triggerActiveClass,
+									"capitalize",
+								)}
+							>
+								Mais
+							</NavigationMenuTrigger>
+							<NavigationMenuContent className="overflow-visible!">
+								<NavDropdownSections
+									sections={NAV_SECTIONS}
+									financeLinks={financeLinks}
+								/>
+							</NavigationMenuContent>
+						</NavigationMenuItem>
 
 						<NavigationMenuItem>
 							<NavigationMenuTrigger className={triggerClass}>
@@ -137,8 +137,31 @@ export function NavMenu({
 							onClick={close}
 							preservePeriod
 						>
-							dashboard
+							Início
 						</MobileLink>
+
+						{PRIMARY_NAV_ITEMS.map((item) => (
+							<div key={item.href}>
+								<MobileLink
+									href={item.href}
+									icon={item.icon}
+									onClick={close}
+									preservePeriod={item.preservePeriod}
+									description={item.description}
+								>
+									{item.label}
+								</MobileLink>
+								{item.href === "/cards" && financeLinks.cards.length ? (
+									<MobileFinanceEntityLinks
+										type="cards"
+										items={financeLinks.cards}
+										onClick={close}
+									/>
+								) : null}
+							</div>
+						))}
+
+						<MobileSectionLabel label="Mais" />
 
 						{NAV_SECTIONS.map((section) => {
 							const mobileItems = section.items.filter(
