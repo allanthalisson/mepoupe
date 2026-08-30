@@ -10,6 +10,7 @@
 import "server-only";
 import { tool } from "ai";
 import { z } from "zod";
+import { getGoalPlan } from "@/features/assistant/lib/goal-plan";
 import { getInvestmentCapacity } from "@/features/assistant/lib/investment-capacity";
 import { fetchSuggestedCategoryBudgets } from "@/features/budgets/queries";
 import { getExpensesByCategory } from "@/shared/lib/financial-analysis/category-breakdown";
@@ -118,6 +119,21 @@ export function buildAssistantTools(userId: string) {
 				"Quanto o usuário consegue investir por mês sem apertar o orçamento (capacidade conservadora de aporte), com os componentes do cálculo (renda média, despesas essenciais, compromissos recorrentes, provisão de gasto variável, margem de segurança). Use para 'quanto consigo investir', 'quero economizar/investir R$X, onde corto' e similares.",
 			inputSchema: z.object({}),
 			execute: async () => getInvestmentCapacity(userId),
+		}),
+
+		getGoalPlan: tool({
+			description:
+				"O que muda pra atingir uma meta financeira ativa: valor necessário por mês, capacidade atual de aporte, a diferença (gap) e quais categorias cortar pra fechar essa diferença. Use para 'o que preciso mudar para atingir minha meta' ou similar. Sem parâmetro, usa a meta ativa de maior prioridade. Devolve null se o usuário não tiver nenhuma meta ativa.",
+			inputSchema: z.object({
+				goalId: z
+					.string()
+					.uuid()
+					.optional()
+					.describe(
+						"ID de uma meta específica. Omitido: usa a meta ativa de maior prioridade.",
+					),
+			}),
+			execute: async ({ goalId }) => getGoalPlan(userId, goalId),
 		}),
 	};
 }
