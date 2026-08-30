@@ -1519,3 +1519,84 @@ export const establishmentLogosRelations = relations(
 		}),
 	}),
 );
+
+/**
+ * Histórico de conversas do Assistente financeiro. Estrutura mínima
+ * (conversa + mensagens) — ver `features/assistant`.
+ */
+export const assistantConversations = pgTable(
+	"conversas_assistente",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		title: text("titulo").notNull(),
+		createdAt: timestamp("created_at", {
+			mode: "date",
+			withTimezone: true,
+		})
+			.notNull()
+			.defaultNow(),
+		updatedAt: timestamp("updated_at", {
+			mode: "date",
+			withTimezone: true,
+		})
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => ({
+		userIdIdx: index("conversas_assistente_user_id_idx").on(
+			table.userId,
+			table.updatedAt,
+		),
+	}),
+);
+
+export const assistantMessages = pgTable(
+	"mensagens_assistente",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		conversationId: uuid("conversa_id")
+			.notNull()
+			.references(() => assistantConversations.id, { onDelete: "cascade" }),
+		role: text("papel").notNull(), // "user" | "assistant"
+		content: text("conteudo").notNull(),
+		createdAt: timestamp("created_at", {
+			mode: "date",
+			withTimezone: true,
+		})
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => ({
+		conversationIdIdx: index("mensagens_assistente_conversa_id_idx").on(
+			table.conversationId,
+			table.createdAt,
+		),
+	}),
+);
+
+export const assistantConversationsRelations = relations(
+	assistantConversations,
+	({ one, many }) => ({
+		user: one(user, {
+			fields: [assistantConversations.userId],
+			references: [user.id],
+		}),
+		messages: many(assistantMessages),
+	}),
+);
+
+export const assistantMessagesRelations = relations(
+	assistantMessages,
+	({ one }) => ({
+		conversation: one(assistantConversations, {
+			fields: [assistantMessages.conversationId],
+			references: [assistantConversations.id],
+		}),
+	}),
+);
+
+export type AssistantConversation = typeof assistantConversations.$inferSelect;
+export type AssistantMessage = typeof assistantMessages.$inferSelect;

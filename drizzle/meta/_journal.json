@@ -281,6 +281,13 @@
       "when": 1788040135159,
       "tag": "0040_lovely_ender_wiggin",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1788054282004,
+      "tag": "0041_confused_gargoyle",
+      "breakpoints": true
     }
   ]
 }
