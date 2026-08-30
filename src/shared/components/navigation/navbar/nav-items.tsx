@@ -10,6 +10,7 @@ import {
 	RiFundsLine,
 	RiGroupLine,
 	RiPriceTag3Line,
+	RiRobot2Line,
 	RiSecurePaymentLine,
 	RiSparklingLine,
 	RiStore2Line,
@@ -66,6 +67,13 @@ export const PRIMARY_NAV_ITEMS: NavItem[] = [
 		label: "Cartões",
 		description: "Faturas e limites dos seus cartões",
 		icon: <RiBankCard2Line className="size-4" />,
+		iconClass: "text-primary",
+	},
+	{
+		href: "/assistant",
+		label: "Assistente",
+		description: "Converse com seus dados financeiros",
+		icon: <RiRobot2Line className="size-4" />,
 		iconClass: "text-primary",
 	},
 	{
