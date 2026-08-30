@@ -1,14 +1,35 @@
-import { and, asc, eq, inArray, isNull, or, sql, sum } from "drizzle-orm";
+import {
+	and,
+	asc,
+	eq,
+	inArray,
+	isNotNull,
+	isNull,
+	or,
+	sql,
+	sum,
+} from "drizzle-orm";
 import {
 	budgets,
 	categories,
 	financialAccounts,
 	transactions,
 } from "@/db/schema";
+import {
+	buildSuggestedCategoryBudgets,
+	type CategoryBudgetInput,
+	type SuggestedCategoryBudget,
+} from "@/features/budgets/lib/suggested-budgets";
 import { ACCOUNT_AUTO_INVOICE_NOTE_PREFIX } from "@/shared/lib/accounts/constants";
+import { buildFinancialAdminAccessFilter } from "@/shared/lib/accounts/financial-access";
 import { excludeTransactionsFromExcludedAccounts } from "@/shared/lib/accounts/query-filters";
 import { db } from "@/shared/lib/db";
 import { getAdminPayerId } from "@/shared/lib/payers/get-admin-id";
+import {
+	buildPeriodWindow,
+	dateToPeriod,
+	getPreviousPeriod,
+} from "@/shared/utils/period";
 
 const toNumber = (value: string | number | null | undefined) => {
 	if (typeof value === "number") return value;
@@ -191,4 +212,108 @@ export async function fetchCategoryBudgetSummary(
 		amount: toNumber(budget.amount),
 		spent: Math.abs(toNumber(totals[0]?.totalAmount ?? 0)),
 	};
+}
+
+const SUGGESTED_BUDGET_HISTORY_MONTHS = 6;
+
+/**
+ * Monta o histórico de gastos por categoria (últimos 6 meses completos
+ * antes de `targetPeriod`) e devolve as metas sugeridas já calculadas por
+ * `buildSuggestedCategoryBudgets`. Zero-fill dos meses sem lançamento, mas
+ * só a partir do mês em que a categoria foi criada — uma categoria nova
+ * não deve aparecer com 6 meses de histórico "zerado".
+ */
+export async function fetchSuggestedCategoryBudgets(
+	userId: string,
+	targetPeriod: string,
+): Promise<SuggestedCategoryBudget[]> {
+	const adminPayerId = await getAdminPayerId(userId);
+	if (!adminPayerId) return [];
+
+	const historyPeriods = buildPeriodWindow(
+		getPreviousPeriod(targetPeriod),
+		SUGGESTED_BUDGET_HISTORY_MONTHS,
+	);
+	const allPeriods = [...historyPeriods, targetPeriod];
+
+	const [categoryRows, transactionRows] = await Promise.all([
+		db.query.categories.findMany({
+			columns: { id: true, name: true, createdAt: true },
+			where: and(eq(categories.userId, userId), eq(categories.type, "despesa")),
+		}),
+		db
+			.select({
+				categoryId: transactions.categoryId,
+				period: transactions.period,
+				condition: transactions.condition,
+				amount: transactions.amount,
+			})
+			.from(transactions)
+			.leftJoin(
+				financialAccounts,
+				eq(transactions.accountId, financialAccounts.id),
+			)
+			.where(
+				and(
+					buildFinancialAdminAccessFilter({ userId, adminPayerId }),
+					inArray(transactions.period, allPeriods),
+					eq(transactions.transactionType, "Despesa"),
+					isNotNull(transactions.categoryId),
+					or(
+						isNull(transactions.note),
+						sql`${transactions.note} NOT LIKE ${`${ACCOUNT_AUTO_INVOICE_NOTE_PREFIX}%`}`,
+					),
+					excludeTransactionsFromExcludedAccounts(),
+				),
+			),
+	]);
+
+	type Bucket = {
+		amount: number;
+		recurringAmount: number;
+		installmentAmount: number;
+	};
+	const byCategoryPeriod = new Map<string, Map<string, Bucket>>();
+	for (const row of transactionRows) {
+		if (!row.categoryId) continue;
+		const amount = Math.abs(toNumber(row.amount));
+		const periodMap = byCategoryPeriod.get(row.categoryId) ?? new Map();
+		const bucket = periodMap.get(row.period) ?? {
+			amount: 0,
+			recurringAmount: 0,
+			installmentAmount: 0,
+		};
+		bucket.amount += amount;
+		if (row.condition === "Recorrente") bucket.recurringAmount += amount;
+		if (row.condition === "Parcelado") bucket.installmentAmount += amount;
+		periodMap.set(row.period, bucket);
+		byCategoryPeriod.set(row.categoryId, periodMap);
+	}
+
+	const inputs: CategoryBudgetInput[] = categoryRows.map((category) => {
+		const categoryCreatedPeriod = dateToPeriod(category.createdAt);
+		const periodMap = byCategoryPeriod.get(category.id);
+		const relevantHistoryPeriods = historyPeriods.filter(
+			(period) => period >= categoryCreatedPeriod,
+		);
+		const history = relevantHistoryPeriods.map((period) => {
+			const bucket = periodMap?.get(period);
+			return {
+				period,
+				amount: bucket?.amount ?? 0,
+				recurringAmount: bucket?.recurringAmount ?? 0,
+				installmentAmount: bucket?.installmentAmount ?? 0,
+			};
+		});
+		const currentBucket = periodMap?.get(targetPeriod);
+
+		return {
+			categoryId: category.id,
+			categoryName: category.name,
+			history,
+			currentMonthSpent: currentBucket?.amount ?? 0,
+		};
+	});
+
+	return buildSuggestedCategoryBudgets(inputs);
 }

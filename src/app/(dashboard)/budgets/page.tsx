@@ -1,6 +1,9 @@
 import { connection } from "next/server";
 import { BudgetsPage } from "@/features/budgets/components/budgets-page";
-import { fetchBudgetsForUser } from "@/features/budgets/queries";
+import {
+	fetchBudgetsForUser,
+	fetchSuggestedCategoryBudgets,
+} from "@/features/budgets/queries";
 import MonthNavigation from "@/shared/components/month-picker/month-navigation";
 import { getUserId } from "@/shared/lib/auth/server";
 import { parsePeriodParam } from "@/shared/utils/period";
@@ -26,9 +29,21 @@ export default async function Page({ searchParams }: PageProps) {
 	const resolvedSearchParams = searchParams ? await searchParams : undefined;
 	const periodoParam = getSingleParam(resolvedSearchParams, "periodo");
 	const { period: selectedPeriod } = parsePeriodParam(periodoParam);
-	const { budgets, categoriesOptions } = await fetchBudgetsForUser(
-		userId,
-		selectedPeriod,
+	const [{ budgets, categoriesOptions }, suggestedBudgets] = await Promise.all([
+		fetchBudgetsForUser(userId, selectedPeriod),
+		fetchSuggestedCategoryBudgets(userId, selectedPeriod).catch((error) => {
+			console.error("Falha ao calcular metas sugeridas:", error);
+			return [];
+		}),
+	]);
+
+	const budgetedCategoryIds = new Set(
+		budgets
+			.map((budget) => budget.category?.id)
+			.filter((id): id is string => Boolean(id)),
+	);
+	const suggestions = suggestedBudgets.filter(
+		(suggestion) => !budgetedCategoryIds.has(suggestion.categoryId),
 	);
 
 	return (
@@ -38,6 +53,7 @@ export default async function Page({ searchParams }: PageProps) {
 				budgets={budgets}
 				categories={categoriesOptions}
 				selectedPeriod={selectedPeriod}
+				suggestions={suggestions}
 			/>
 		</main>
 	);

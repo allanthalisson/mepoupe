@@ -7,24 +7,28 @@ import {
 	deleteBudgetAction,
 	duplicatePreviousMonthBudgetsAction,
 } from "@/features/budgets/actions";
+import type { SuggestedCategoryBudget } from "@/features/budgets/lib/suggested-budgets";
 import { ConfirmActionDialog } from "@/shared/components/confirm-action-dialog";
 import { EmptyState } from "@/shared/components/feedback/empty-state";
 import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
 import { BudgetCard } from "./budget-card";
 import { BudgetDialog } from "./budget-dialog";
+import { SuggestedBudgetsCard } from "./suggested-budgets-card";
 import type { Budget, BudgetCategory } from "./types";
 
 interface BudgetsPageProps {
 	budgets: Budget[];
 	categories: BudgetCategory[];
 	selectedPeriod: string;
+	suggestions?: SuggestedCategoryBudget[];
 }
 
 export function BudgetsPage({
 	budgets,
 	categories,
 	selectedPeriod,
+	suggestions = [],
 }: BudgetsPageProps) {
 	const [editOpen, setEditOpen] = useState(false);
 	const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
@@ -103,6 +107,13 @@ export function BudgetsPage({
 	return (
 		<>
 			<div className="flex w-full flex-col gap-6">
+				{suggestions.length > 0 && (
+					<SuggestedBudgetsCard
+						suggestions={suggestions}
+						period={selectedPeriod}
+					/>
+				)}
+
 				<div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
 					<BudgetDialog
 						mode="create"
