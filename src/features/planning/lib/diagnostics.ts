@@ -1,3 +1,9 @@
+import {
+	roundMoney,
+	roundPercentage,
+	savingsRate,
+} from "@/shared/utils/number";
+
 export type DiagnosticTransaction = {
 	name: string;
 	period: string;
@@ -50,12 +56,6 @@ export type FinancialDiagnosis = {
 	suggestions: string[];
 	status: "critical" | "attention" | "building" | "healthy";
 };
-
-const roundMoney = (value: number) => Math.round(value * 100) / 100;
-const roundPercentage = (value: number) => Math.round(value * 10) / 10;
-
-const savingsRate = (income: number, expenses: number) =>
-	income > 0 ? roundPercentage(((income - expenses) / income) * 100) : null;
 
 function resolveStatus(rate: number | null, averageSavings: number) {
 	if (averageSavings < 0 || (rate !== null && rate < 0)) return "critical";

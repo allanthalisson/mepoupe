@@ -31,3 +31,13 @@ export function safeToNumber(value: unknown, defaultValue: number = 0): number {
 	const parsed = Number(value);
 	return Number.isNaN(parsed) ? defaultValue : parsed;
 }
+
+export const roundMoney = (value: number) => Math.round(value * 100) / 100;
+export const roundPercentage = (value: number) => Math.round(value * 10) / 10;
+
+/**
+ * Taxa de poupança: (receita - despesa) / receita, em %. `null` sem receita
+ * (não dá pra calcular uma taxa sensata contra base zero).
+ */
+export const savingsRate = (income: number, expenses: number) =>
+	income > 0 ? roundPercentage(((income - expenses) / income) * 100) : null;
