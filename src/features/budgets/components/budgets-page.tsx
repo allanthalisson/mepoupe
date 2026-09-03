@@ -1,6 +1,12 @@
 "use client";
 
-import { RiAddFill, RiFileCopyLine, RiFundsLine } from "@remixicon/react";
+import {
+	RiAddFill,
+	RiDashboard3Line,
+	RiFileCopyLine,
+	RiFundsLine,
+} from "@remixicon/react";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -137,6 +143,12 @@ export function BudgetsPage({
 					>
 						<RiFileCopyLine className="size-4" />
 						Copiar orçamentos do último mês
+					</Button>
+					<Button asChild variant="secondary" className="w-full sm:w-auto">
+						<Link href="/budgets/painel">
+							<RiDashboard3Line className="size-4" />
+							Ver painel de gastos
+						</Link>
 					</Button>
 				</div>
 
