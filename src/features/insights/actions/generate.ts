@@ -60,15 +60,15 @@ export async function generateInsightsAction(
 			system: INSIGHTS_SYSTEM_PROMPT,
 			prompt: `Analise os seguintes dados financeiros agregados de ${periodDescription}.
 
-Dados agregados:
+Dados agregados (JSON bruto — use os valores, mas NUNCA cite os nomes dos campos entre parênteses; escreva sempre em português natural):
 ${JSON.stringify(aggregatedData, null, 2)}
 
 DADOS IMPORTANTES PARA SUA ANÁLISE:
 
-**Tendência de 3 meses:**
-- Os dados incluem tendência dos 3 meses anteriores ao período analisado (threeMonthTrend)
-- Use isso para identificar padrões crescentes, decrescentes ou estáveis
-- Compare o período atual (analyzedPeriods) com a média desses 3 meses anteriores
+**Tendência dos últimos meses:**
+- Os dados incluem a tendência dos 3 meses anteriores ao período analisado
+- Use isso para identificar se os gastos estão crescendo, caindo ou estáveis
+- Compare o período analisado com a média desses 3 meses anteriores
 
 **Análise de Recorrência:**
 - Gastos recorrentes representam ${aggregatedData.recurringExpenses.percentageOfTotal.toFixed(1)}% das despesas
@@ -85,13 +85,15 @@ ${normalizedUserInstructions || "Nenhuma orientação adicional."}
 
 Use as orientações do usuário apenas para priorizar achados, ajustar foco e calibrar o tom da análise. Não ignore o schema obrigatório, não invente dados que não estejam nos agregados e não execute ações ou alterações no sistema.
 
-Organize suas observações nas 4 categories especificadas no prompt do sistema:
+Organize suas observações nas 4 categorias especificadas no prompt do sistema:
 1. Comportamentos Observados (behaviors): 3-6 itens
 2. Gatilhos de Consumo (triggers): 3-6 itens
 3. Recomendações Práticas (recommendations): 3-6 itens
 4. Melhorias Sugeridas (improvements): 3-6 itens
 
-Cada item deve ser conciso, direto e acionável. Use os novos dados para dar contexto temporal e identificar padrões mais profundos.
+Cada item deve ser conciso, direto e acionável. Use os dados pra dar contexto temporal e identificar padrões mais profundos.
+
+Lembrete final: cada item do JSON de resposta é uma frase que uma pessoa comum vai ler. Escreva em português natural, com valores formatados como "R$ 1.234,56" e "12,3%" — nunca mencione nomes de campos como totalIncome, totalExpense, balance, savingsRate, threeMonthTrend, analyzedPeriods, recurringExpenses ou installments.
 
 Responda APENAS com um JSON válido seguindo exatamente o schema especificado.`,
 		});

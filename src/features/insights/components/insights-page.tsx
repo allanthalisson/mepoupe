@@ -27,19 +27,26 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import type { FinancialSummary } from "@/shared/lib/financial-analysis/financial-summary";
 import type { InsightsResponse } from "@/shared/lib/schemas/insights";
 import { buildPeriodRangeKey, buildPeriodWindow } from "@/shared/utils/period";
 import { InsightsGrid } from "./insights-grid";
+import { InsightsTrendChart } from "./insights-trend-chart";
 import { ModelSelector } from "./model-selector";
 
 const SELECTABLE_PERIODS_WINDOW = 12;
 
 interface InsightsPageProps {
 	period: string;
+	trend?: FinancialSummary[];
 	onAnalyze?: () => void;
 }
 
-export function InsightsPage({ period, onAnalyze }: InsightsPageProps) {
+export function InsightsPage({
+	period,
+	trend = [],
+	onAnalyze,
+}: InsightsPageProps) {
 	const queryClient = useQueryClient();
 	const [selectedPeriods, setSelectedPeriods] = useState<string[]>([period]);
 	const periodKey = useMemo(
@@ -186,6 +193,7 @@ export function InsightsPage({ period, onAnalyze }: InsightsPageProps) {
 
 	return (
 		<div className="flex flex-col gap-6">
+			<InsightsTrendChart data={trend} />
 			<ModelSelector
 				value={selectedModel}
 				onValueChange={setSelectedModelOverride}
